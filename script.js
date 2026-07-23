@@ -517,8 +517,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     7. ATS Analyzer Diagnostics Engine & Client-Side Calculation
+     7. ATS Analyzer Diagnostics Engine & Gemini 2.5 Flash AI Integration
      ========================================================================== */
+  const GEMINI_API_KEY = ""; // Define default Gemini API Key here if desired
+
   const atsDropZone = document.getElementById('atsDropZone');
   const btnSelectPdfFile = document.getElementById('btnSelectPdfFile');
   const pdfFileInput = document.getElementById('pdfFileInput');
@@ -526,6 +528,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectedFileName = document.getElementById('selectedFileName');
   const btnRunAtsAnalysis = document.getElementById('btnRunAtsAnalysis');
   const btnRunAtsText = document.getElementById('btnRunAtsText');
+
+  const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+  const btnSaveGeminiKey = document.getElementById('btnSaveGeminiKey');
 
   const atsLoadingState = document.getElementById('atsLoadingState');
   const atsProgressFill = document.getElementById('atsProgressFill');
@@ -544,6 +549,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const recommendationsGridContainer = document.getElementById('recommendationsGridContainer');
 
   let uploadedFileText = "";
+
+  // Load saved Gemini API Key from localStorage
+  if (geminiApiKeyInput) {
+    const savedKey = localStorage.getItem('resuai-gemini-api-key') || GEMINI_API_KEY;
+    if (savedKey) geminiApiKeyInput.value = savedKey;
+  }
+
+  if (btnSaveGeminiKey && geminiApiKeyInput) {
+    btnSaveGeminiKey.addEventListener('click', (e) => {
+      e.preventDefault();
+      const keyVal = geminiApiKeyInput.value.trim();
+      if (keyVal) {
+        localStorage.setItem('resuai-gemini-api-key', keyVal);
+        btnSaveGeminiKey.textContent = 'Saved!';
+        setTimeout(() => { btnSaveGeminiKey.textContent = 'Save Key'; }, 2000);
+      }
+    });
+  }
 
   // Configure PDF.js worker URL if library is loaded
   if (window.pdfjsLib) {
@@ -636,56 +659,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Common technical and professional keywords list for ATS matching
-  const KNOWN_KEYWORDS = [
-    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
-    'Node', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
-    'Project Management', 'System Architecture', 'Python', 'Git', 'Agile'
-  ];
-
   /**
-   * Evaluates job description text against candidate profile & skills,
-   * extracts matched vs missing keywords, and calculates a dynamic ATS score.
+   * Renders the ATS diagnostic report UI given structured data.
+   * @param {Object} report - { score, matchedKeywords, missingKeywords, recommendations }
    */
-  function runClientAtsDiagnostic() {
-    const jdRawText = (atsJdInput ? atsJdInput.value : "") + " " + uploadedFileText;
-    const jdLower = jdRawText.toLowerCase();
-
-    // Candidate skills from form inputs & draft storage
-    let candidateSkillsText = "";
-    if (inputJobTitle) candidateSkillsText += " " + inputJobTitle.value;
-    if (bulletPoints) candidateSkillsText += " " + bulletPoints.value;
-
-    const skillTags = document.querySelectorAll('#skillsTagsContainer .tag');
-    skillTags.forEach(tag => {
-      candidateSkillsText += " " + tag.textContent;
-    });
-
-    const candidateLower = (candidateSkillsText + " " + uploadedFileText).toLowerCase();
-
-    // Extract keywords present in the JD
-    const jdKeywordsPresent = KNOWN_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
-    
-    // If JD is sparse or custom, ensure default fallback list for clean display
-    const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
-      ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
-
-    const matched = [];
-    const missing = [];
-
-    activeJdKeywords.forEach(kw => {
-      if (candidateLower.includes(kw.toLowerCase())) {
-        matched.push(kw);
-      } else {
-        missing.push(kw);
-      }
-    });
-
-    // Calculate dynamic score between 70% and 94%
-    const total = activeJdKeywords.length || 1;
-    const matchRatio = matched.length / total;
-    const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
+  function renderAtsReportUI(report) {
+    const dynamicScore = Math.min(100, Math.max(0, parseInt(report.score) || 85));
+    const matched = report.matchedKeywords || [];
+    const missing = report.missingKeywords || [];
+    const recommendations = report.recommendations || [];
 
     // Render score & progress circle
     if (scoreNumber) scoreNumber.textContent = `${dynamicScore}%`;
@@ -696,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scoreSummaryHeading && scoreSummaryDesc) {
       if (dynamicScore >= 85) {
         scoreSummaryHeading.textContent = "High Match Potential";
-        scoreSummaryDesc.textContent = `Your resume matches ${dynamicScore}% of core qualifications for target developer roles.`;
+        scoreSummaryDesc.textContent = `Your resume matches ${dynamicScore}% of core qualifications for target roles.`;
       } else {
         scoreSummaryHeading.textContent = "Moderate Match — Action Required";
         scoreSummaryDesc.textContent = `Your resume matches ${dynamicScore}% of core requirements. Add missing technical keywords to boost ATS rank.`;
@@ -725,43 +707,155 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render Actionable Recommendations
     if (recommendationsGridContainer) {
-      const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
-      recommendationsGridContainer.innerHTML = `
-        <div class="rec-card">
-          <div class="rec-number">1</div>
-          <div class="rec-content">
-            <strong>Incorporate Key Missing Keywords:</strong>
-            <p>Add 1-2 instances of <em>${topMissing}</em> under your experience bullet points to satisfy automated keyword parsers.</p>
+      if (recommendations.length > 0) {
+        recommendationsGridContainer.innerHTML = recommendations.map((recText, idx) => `
+          <div class="rec-card">
+            <div class="rec-number">${idx + 1}</div>
+            <div class="rec-content">
+              <strong>Recommendation #${idx + 1}:</strong>
+              <p>${recText}</p>
+            </div>
           </div>
-        </div>
-        <div class="rec-card">
-          <div class="rec-number">2</div>
-          <div class="rec-content">
-            <strong>Quantify Impact Metrics:</strong>
-            <p>Highlight specific web vitals or latency reductions with exact numbers (e.g. <em>"Improved LCP by 42%"</em>).</p>
-          </div>
-        </div>
-        <div class="rec-card">
-          <div class="rec-number">3</div>
-          <div class="rec-content">
-            <strong>Standard Section Formatting:</strong>
-            <p>Ensure standard section headings like <em>"TECHNICAL EXPERTISE"</em> and <em>"PROFESSIONAL EXPERIENCE"</em> are used for Lever & Greenhouse parsing.</p>
-          </div>
-        </div>
-      `;
+        `).join('');
+      }
     }
 
     if (window.feather) feather.replace();
   }
 
-  // Run ATS Analysis Action
+  // Common technical and professional keywords list for local fallback matching
+  const KNOWN_KEYWORDS = [
+    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
+    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
+    'Node', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
+    'Project Management', 'System Architecture', 'Python', 'Git', 'Agile'
+  ];
+
+  /**
+   * Local Client-Side Fallback Evaluator (used when no API key is set or if offline)
+   */
+  function runClientAtsDiagnostic() {
+    const jdRawText = (atsJdInput ? atsJdInput.value : "") + " " + uploadedFileText;
+    const jdLower = jdRawText.toLowerCase();
+
+    let candidateSkillsText = "";
+    if (inputJobTitle) candidateSkillsText += " " + inputJobTitle.value;
+    if (bulletPoints) candidateSkillsText += " " + bulletPoints.value;
+
+    const skillTags = document.querySelectorAll('#skillsTagsContainer .tag');
+    skillTags.forEach(tag => {
+      candidateSkillsText += " " + tag.textContent;
+    });
+
+    const candidateLower = (candidateSkillsText + " " + uploadedFileText).toLowerCase();
+    const jdKeywordsPresent = KNOWN_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
+    const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
+      ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
+
+    const matched = [];
+    const missing = [];
+
+    activeJdKeywords.forEach(kw => {
+      if (candidateLower.includes(kw.toLowerCase())) {
+        matched.push(kw);
+      } else {
+        missing.push(kw);
+      }
+    });
+
+    const total = activeJdKeywords.length || 1;
+    const matchRatio = matched.length / total;
+    const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
+
+    const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
+
+    renderAtsReportUI({
+      score: dynamicScore,
+      matchedKeywords: matched,
+      missingKeywords: missing,
+      recommendations: [
+        `Add 1-2 instances of missing keywords (${topMissing}) under your technical project bullet points.`,
+        `Quantify Web Vitals or performance metrics with explicit percentage improvements (e.g. Reduced LCP by 42%).`,
+        `Maintain standard section headings like TECHNICAL EXPERTISE for 100% parsing accuracy in Lever & Greenhouse.`
+      ]
+    });
+  }
+
+  /**
+   * Calls Google Gemini 2.5 Flash REST API for structured JSON ATS analysis.
+   * @param {string} jdText 
+   * @param {string} resumeText 
+   * @param {string} apiKey 
+   */
+  async function fetchGeminiAtsAnalysis(jdText, resumeText, apiKey) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
+Analyze the following Candidate Resume against the Target Job Description for ATS compatibility.
+
+JOB DESCRIPTION:
+${jdText}
+
+CANDIDATE RESUME & SKILLS TEXT:
+${resumeText}
+
+Evaluate keyword overlap, hard technical requirements, and section formatting.
+Respond STRICTLY with a valid JSON object following this exact JSON schema:
+{
+  "score": <number between 0 and 100 representing ATS match percentage>,
+  "matchedKeywords": [<array of technical skills, frameworks, and requirements matched in both>],
+  "missingKeywords": [<array of required skills, frameworks, or qualifications missing in resume>],
+  "recommendations": [
+    "<actionable recommendation 1 for 95%+ match>",
+    "<actionable recommendation 2>",
+    "<actionable recommendation 3>"
+  ]
+}`;
+
+    const payload = {
+      contents: [
+        {
+          parts: [
+            { text: prompt }
+          ]
+        }
+      ],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    };
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) throw new Error("Empty response from Gemini API");
+
+    return JSON.parse(rawText);
+  }
+
+  // Run ATS Analysis Action Button Handler
   if (btnRunAtsAnalysis) {
-    btnRunAtsAnalysis.addEventListener('click', (e) => {
+    btnRunAtsAnalysis.addEventListener('click', async (e) => {
       e.preventDefault();
+
+      const activeApiKey = (geminiApiKeyInput ? geminiApiKeyInput.value.trim() : "") || 
+                           localStorage.getItem('resuai-gemini-api-key') || 
+                           GEMINI_API_KEY;
 
       // Show loading button state
       const origBtnHTML = btnRunAtsAnalysis.innerHTML;
-      if (btnRunAtsText) btnRunAtsText.textContent = "Analyzing JD & Skills...";
+      if (btnRunAtsText) {
+        btnRunAtsText.textContent = activeApiKey ? "Analyzing with Gemini 2.5 Flash AI..." : "Analyzing JD & Skills...";
+      }
       btnRunAtsAnalysis.disabled = true;
 
       // Hide results card if previously visible
@@ -777,7 +871,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (atsProgressFill) atsProgressFill.style.width = '0%';
       if (atsProgressPercent) atsProgressPercent.textContent = '0%';
 
-      const steps = [
+      const steps = activeApiKey ? [
+        "Connecting to Gemini 2.5 Flash AI Engine...",
+        "Parsing resume document structure & PDF items...",
+        "Evaluating job requirements with Gemini LLM...",
+        "Generating structured JSON ATS diagnostic report..."
+      ] : [
         "Scanning resume document structure...",
         "Extracting candidate technical skill matrix...",
         "Parsing job description requirements...",
@@ -796,27 +895,79 @@ document.addEventListener('DOMContentLoaded', () => {
           else loadingStepText.textContent = steps[3];
         }
 
-        if (progress >= 100) {
+        if (progress >= 90) clearInterval(interval);
+      }, 60);
+
+      const jdText = atsJdInput ? atsJdInput.value : "";
+      
+      // Build candidate resume text fallback
+      let candidateResumeText = uploadedFileText;
+      if (!candidateResumeText) {
+        if (inputFullName) candidateResumeText += " " + inputFullName.value;
+        if (inputJobTitle) candidateResumeText += " " + inputJobTitle.value;
+        if (bulletPoints) candidateResumeText += " " + bulletPoints.value;
+        document.querySelectorAll('#skillsTagsContainer .tag').forEach(tag => {
+          candidateResumeText += " " + tag.textContent;
+        });
+      }
+
+      try {
+        if (activeApiKey) {
+          const aiData = await fetchGeminiAtsAnalysis(jdText, candidateResumeText, activeApiKey);
+          
           clearInterval(interval);
+          if (atsProgressFill) atsProgressFill.style.width = '100%';
+          if (atsProgressPercent) atsProgressPercent.textContent = '100%';
 
           setTimeout(() => {
-            // Restore button state
             btnRunAtsAnalysis.innerHTML = origBtnHTML;
             btnRunAtsAnalysis.disabled = false;
             if (window.feather) feather.replace();
 
-            // Hide loading card, show results container
             if (atsLoadingState) atsLoadingState.style.display = 'none';
-            
-            runClientAtsDiagnostic();
+            renderAtsReportUI(aiData);
 
             if (atsResults) {
               atsResults.style.display = 'block';
               atsResults.scrollIntoView({ behavior: 'smooth' });
             }
           }, 300);
+        } else {
+          // No API key provided — use client-side heuristic analyzer
+          setTimeout(() => {
+            clearInterval(interval);
+            if (atsProgressFill) atsProgressFill.style.width = '100%';
+            if (atsProgressPercent) atsProgressPercent.textContent = '100%';
+
+            btnRunAtsAnalysis.innerHTML = origBtnHTML;
+            btnRunAtsAnalysis.disabled = false;
+            if (window.feather) feather.replace();
+
+            if (atsLoadingState) atsLoadingState.style.display = 'none';
+            runClientAtsDiagnostic();
+
+            if (atsResults) {
+              atsResults.style.display = 'block';
+              atsResults.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 700);
         }
-      }, 60);
+      } catch (error) {
+        console.warn("Gemini API call failed, using client-side fallback:", error);
+        clearInterval(interval);
+
+        btnRunAtsAnalysis.innerHTML = origBtnHTML;
+        btnRunAtsAnalysis.disabled = false;
+        if (window.feather) feather.replace();
+
+        if (atsLoadingState) atsLoadingState.style.display = 'none';
+        runClientAtsDiagnostic();
+
+        if (atsResults) {
+          atsResults.style.display = 'block';
+          atsResults.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
     });
   }
 
