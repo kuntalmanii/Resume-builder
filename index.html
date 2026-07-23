@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResuAI // Developer Platform Dashboard</title>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Feather Icons for modern vector icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="light-modern">
+  
+  <!-- Auth Screen Container (Displayed when user is logged out) -->
+  <div class="auth-container" id="authContainer">
+    <div class="auth-top-bar">
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <i data-feather="cpu"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">ResuAI</span>
+          <span class="brand-slashes">//</span>
+        </div>
+      </div>
+
+      <!-- Theme Switcher in Auth View -->
+      <div class="theme-switcher-bar" title="Switch UI Theme">
+        <span class="switcher-label">Theme</span>
+        <div class="theme-options">
+          <button class="theme-btn active" data-theme-id="light-modern" title="Light Modern">
+            <span class="theme-swatch swatch-light"></span>
+            <span class="theme-name">Light</span>
+          </button>
+          <button class="theme-btn" data-theme-id="dark-obsidian" title="Dark Obsidian">
+            <span class="theme-swatch swatch-obsidian"></span>
+            <span class="theme-name">Obsidian</span>
+          </button>
+          <button class="theme-btn" data-theme-id="cyber-purple" title="Cyber Purple">
+            <span class="theme-swatch swatch-cyber"></span>
+            <span class="theme-name">Cyber</span>
+          </button>
+          <button class="theme-btn" data-theme-id="emerald-slate" title="Emerald Slate">
+            <span class="theme-swatch swatch-emerald"></span>
+            <span class="theme-name">Emerald</span>
+          </button>
+          <button class="theme-btn" data-theme-id="sunset-amber" title="Sunset Amber">
+            <span class="theme-swatch swatch-amber"></span>
+            <span class="theme-name">Amber</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-card-wrapper">
+      <div class="auth-card glass-card">
+        <div class="auth-header">
+          <div class="auth-badge">
+            <i data-feather="lock"></i>
+            <span>Developer Portal // Security</span>
+          </div>
+          <h2 id="authTitle">Welcome back</h2>
+          <p id="authSubtitle">Sign in to your ResuAI workspace to access your resumes & ATS metrics.</p>
+        </div>
+
+        <form class="auth-form" id="authForm">
+          <div class="form-group signup-only-field" id="nameField" style="display: none;">
+            <label for="authName">Full Name</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="user"></i>
+              <input type="text" id="authName" class="form-input" placeholder="Manish Kuntal" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="authEmail">Work Email Address</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="mail"></i>
+              <input type="email" id="authEmail" class="form-input" placeholder="manish@company.com" required value="developer@resuai.dev" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="authPassword">Password</label>
+              <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
+            </div>
+            <div class="input-icon-wrapper">
+              <i data-feather="key"></i>
+              <input type="password" id="authPassword" class="form-input" placeholder="••••••••••••" required value="password123" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary btn-full btn-auth" id="authSubmitBtn">
+            <span id="authSubmitText">Sign In to Dashboard</span>
+            <i data-feather="arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="auth-divider">
+          <span>OR CONTINUE WITH</span>
+        </div>
+
+        <div class="sso-buttons">
+          <button type="button" class="btn-sso" id="ssoGithubBtn">
+            <i data-feather="github"></i>
+            <span>GitHub</span>
+          </button>
+          <button type="button" class="btn-sso" id="ssoGoogleBtn">
+            <i data-feather="globe"></i>
+            <span>Google</span>
+          </button>
+        </div>
+
+        <div class="auth-footer">
+          <span id="authToggleQuestion">Don't have an account?</span>
+          <a href="#" id="authToggleBtn">Sign Up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="appContainer">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <i data-feather="cpu"></i>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">ResuAI</span>
+            <span class="brand-slashes">//</span>
+          </div>
+        </div>
+        <button class="mobile-close-btn" id="mobileCloseBtn" aria-label="Close menu">
+          <i data-feather="x"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">PLATFORM</div>
+        <a href="#resume-builder" class="nav-item active" data-tab="resume-builder">
+          <i data-feather="file-text"></i>
+          <span>Resume Builder</span>
+          <span class="nav-badge">v2.4</span>
+        </a>
+        <a href="#ats-analyzer" class="nav-item" data-tab="ats-analyzer">
+          <i data-feather="pie-chart"></i>
+          <span>ATS Analyzer</span>
+          <span class="nav-badge spark-badge">AI</span>
+        </a>
+        <a href="#job-tracker" class="nav-item" data-tab="job-tracker">
+          <i data-feather="briefcase"></i>
+          <span>Job Applications</span>
+        </a>
+        <a href="#templates" class="nav-item" data-tab="templates">
+          <i data-feather="layers"></i>
+          <span>Templates Library</span>
+        </a>
+
+        <div class="nav-section-title">MANAGEMENT</div>
+        <a href="#analytics" class="nav-item" data-tab="analytics">
+          <i data-feather="bar-chart-2"></i>
+          <span>Score Analytics</span>
+        </a>
+        <a href="#settings" class="nav-item" data-tab="settings">
+          <i data-feather="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- Upgrade Promo Card -->
+      <div class="upgrade-card">
+        <div class="upgrade-icon">
+          <i data-feather="zap"></i>
+        </div>
+        <div class="upgrade-content">
+          <h4>Upgrade to Pro //</h4>
+          <p>Unlock AI Resume Engine, unlimited ATS scans & custom domains.</p>
+          <button class="btn-upgrade">
+            <span>Upgrade Now</span>
+            <i data-feather="arrow-right"></i>
+          </button>
+        </div>
+        <div class="upgrade-bg-glow"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="#logout" class="nav-item logout-link" id="logoutBtn">
+          <i data-feather="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileToggleBtn" aria-label="Toggle menu">
+            <i data-feather="menu"></i>
+          </button>
+          
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <span class="breadcrumb-item">Workspace</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item" id="breadcrumbCategory">ResuAI</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active" id="breadcrumbActive">Resume Builder</span>
+          </nav>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- 5-Theme Switcher Bar -->
+          <div class="theme-switcher-bar" title="Switch UI Theme">
+            <span class="switcher-label">Theme</span>
+            <div class="theme-options">
+              <button class="theme-btn active" data-theme-id="light-modern" title="Light Modern">
+                <span class="theme-swatch swatch-light"></span>
+                <span class="theme-name">Light</span>
+              </button>
+              <button class="theme-btn" data-theme-id="dark-obsidian" title="Dark Obsidian">
+                <span class="theme-swatch swatch-obsidian"></span>
+                <span class="theme-name">Obsidian</span>
+              </button>
+              <button class="theme-btn" data-theme-id="cyber-purple" title="Cyber Purple">
+                <span class="theme-swatch swatch-cyber"></span>
+                <span class="theme-name">Cyber</span>
+              </button>
+              <button class="theme-btn" data-theme-id="emerald-slate" title="Emerald Slate">
+                <span class="theme-swatch swatch-emerald"></span>
+                <span class="theme-name">Emerald</span>
+              </button>
+              <button class="theme-btn" data-theme-id="sunset-amber" title="Sunset Amber">
+                <span class="theme-swatch swatch-amber"></span>
+                <span class="theme-name">Amber</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="user-profile-pill">
+            <div class="user-avatar">MK</div>
+            <div class="user-info">
+              <span class="user-name">Manish K.</span>
+              <span class="user-role">Senior Dev</span>
+            </div>
+          </div>
+
+          <button class="btn-signout" id="topSignoutBtn" title="Sign Out">
+            <i data-feather="log-out"></i>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Container -->
+      <main class="main-content">
+        <!-- Content Header Banner -->
+        <div class="content-header">
+          <div class="header-titles">
+            <div class="header-badge">
+              <i data-feather="activity"></i>
+              <span>AI Engine Active // GPT-4o Resume Matcher</span>
+            </div>
+            <h1 id="pageTitle">Senior Developer Resume Studio</h1>
+            <p id="pageDescription">Optimize your developer resume for high-tier tech companies & ATS scanners with real-time scoring.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary">
+              <i data-feather="download-cloud"></i>
+              <span>Export JSON / PDF</span>
+            </button>
+            <button class="btn-primary">
+              <i data-feather="plus"></i>
+              <span>New Resume Version</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric KPI Cards Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Overall ATS Match Score</span>
+              <div class="metric-icon icon-emerald"><i data-feather="check-circle"></i></div>
+            </div>
+            <div class="metric-body">
+              <span class="metric-value">94%</span>
+              <span class="metric-trend trend-up"><i data-feather="trending-up"></i> +12% vs last week</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill" style="width: 94%;"></div>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Keyword Density Score</span>
+              <div class="metric-icon icon-purple"><i data-feather="target"></i></div>
+            </div>
+            <div class="metric-body">
+              <span class="metric-value">88 / 100</span>
+              <span class="metric-trend trend-up"><i data-feather="trending-up"></i> Top 5% Applicant</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-purple" style="width: 88%;"></div>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">AI Enhancements Suggested</span>
+              <div class="metric-icon icon-amber"><i data-feather="sliders"></i></div>
+            </div>
+            <div class="metric-body">
+              <span class="metric-value">3 Action Items</span>
+              <span class="metric-trend trend-neutral"><i data-feather="alert-circle"></i> Needs impact metrics</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-amber" style="width: 65%;"></div>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Monthly AI Credits</span>
+              <div class="metric-icon icon-cyan"><i data-feather="zap"></i></div>
+            </div>
+            <div class="metric-body">
+              <span class="metric-value">450 / 500</span>
+              <span class="metric-trend trend-up"><i data-feather="shield"></i> Pro Plan Active</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-cyan" style="width: 90%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Tab Views -->
+        <div class="tab-content-container">
+          <!-- TAB 1: RESUME BUILDER -->
+          <div class="tab-pane active" id="tab-resume-builder">
+            <!-- Step Indicator Bar -->
+            <div class="step-indicator-bar" id="stepIndicatorBar">
+              <div class="step-item active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-info">
+                  <span class="step-title">Fill Details</span>
+                  <span class="step-sub">Personal & Experience</span>
+                </div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-info">
+                  <span class="step-title">Generate Resume</span>
+                  <span class="step-sub">AI Optimization</span>
+                </div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-info">
+                  <span class="step-title">Preview & Export</span>
+                  <span class="step-sub">Download PDF</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-split-grid">
+              <!-- Left: Form Controls & AI Editor -->
+              <div class="dashboard-card editor-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="edit-3"></i>
+                    <h3>Developer Details Form</h3>
+                  </div>
+                  <div class="card-actions">
+                    <button class="btn-ghost-sm" id="btnSaveDraft">
+                      <i data-feather="save"></i>
+                      <span>Save Draft</span>
+                    </button>
+                    <button class="btn-ghost-sm" id="btnAutoOptimize">
+                      <i data-feather="sparkles"></i>
+                      <span>Auto-Optimize</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label for="inputFullName">Full Name</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="user"></i>
+                        <input type="text" id="inputFullName" class="form-input live-sync" value="Manish Kuntal" placeholder="John Doe" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="inputJobTitle">Target Job Title</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="briefcase"></i>
+                        <input type="text" id="inputJobTitle" class="form-input live-sync" value="Senior UI/UX Engineer & Systems Architect" placeholder="Full Stack Developer" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label for="inputEmail">Email Address</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="mail"></i>
+                        <input type="email" id="inputEmail" class="form-input live-sync" value="manish@resuai.dev" placeholder="name@company.com" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="inputPhone">Phone Number</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="phone"></i>
+                        <input type="text" id="inputPhone" class="form-input live-sync" value="+1 (415) 890-2341" placeholder="+1 (555) 000-0000" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="inputEducation">Education & Credentials</label>
+                    <div class="input-icon-wrapper">
+                      <i data-feather="award"></i>
+                      <input type="text" id="inputEducation" class="form-input live-sync" value="B.S. Computer Science & Design — Stanford University (2022)" placeholder="Degree, University, Year" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="techStack">Core Skills & Technologies</label>
+                    <div class="tags-input-container" id="skillsTagsContainer">
+                      <span class="tag">TypeScript <i data-feather="x"></i></span>
+                      <span class="tag">React / Next.js <i data-feather="x"></i></span>
+                      <span class="tag">Design Systems <i data-feather="x"></i></span>
+                      <span class="tag">Tailwind & Vanilla CSS <i data-feather="x"></i></span>
+                      <span class="tag">GraphQL <i data-feather="x"></i></span>
+                      <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill & hit Enter" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="label-row-with-badge">
+                      <label for="bulletPoints">Work Experience & Key Impact Projects</label>
+                      <div class="ai-enabled-badge">
+                        <i data-feather="cpu"></i>
+                        <span>AI Assistant Enabled</span>
+                      </div>
+                    </div>
+                    <textarea id="bulletPoints" class="form-textarea live-sync" rows="6" placeholder="Describe your achievements and technical leadership impact...">Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.
+Engineered 5-theme customizable SaaS dashboard shell with responsive layout algorithms and CSS custom property architecture.</textarea>
+                    <div class="textarea-footer">
+                      <span class="help-text">Use bullet points for optimal ATS parsing</span>
+                      <span class="char-counter" id="charCounter">245 / 2000 characters</span>
+                    </div>
+                  </div>
+
+                  <div class="editor-action-bar">
+                    <button class="btn-secondary" id="btnDraftSaveFooter">
+                      <i data-feather="save"></i>
+                      <span>Save Draft</span>
+                    </button>
+                    <button class="btn-primary" id="btnNextStep">
+                      <span>Next → Generate Resume</span>
+                      <i data-feather="arrow-right"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Real-time Live Preview & Suggestions -->
+              <div class="dashboard-card preview-card" id="previewCardSection">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="eye"></i>
+                    <h3>Live AI Resume Preview</h3>
+                  </div>
+                  <div class="card-actions">
+                    <button class="btn-primary btn-sm btn-print" id="btnPrintPdf" title="Print or Save as PDF">
+                      <i data-feather="printer"></i>
+                      <span>Download PDF / Print</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <!-- Print Target Wrapper -->
+                  <div class="resume-preview-document" id="printableResumeDoc">
+                    <div class="preview-doc-header">
+                      <div class="doc-name" id="previewName">MANISH KUNTAL</div>
+                      <div class="doc-role" id="previewRole">SENIOR UI/UX ENGINEER & SYSTEMS ARCHITECT</div>
+                      <div class="doc-meta" id="previewMeta">San Francisco, CA • manish@resuai.dev • +1 (415) 890-2341</div>
+                    </div>
+
+                    <div class="preview-section">
+                      <div class="section-title">EDUCATION & CREDENTIALS</div>
+                      <p class="section-content" id="previewEducation">B.S. Computer Science & Design — Stanford University (2022)</p>
+                    </div>
+
+                    <div class="preview-section">
+                      <div class="section-title">TECHNICAL EXPERTISE</div>
+                      <p class="section-content" id="previewSkills">TypeScript, React / Next.js, Design Systems, Tailwind & Vanilla CSS, GraphQL</p>
+                    </div>
+
+                    <div class="preview-section">
+                      <div class="section-title">PROFESSIONAL EXPERIENCE & ACHIEVEMENTS</div>
+                      <div class="experience-block">
+                        <div class="exp-header">
+                          <strong>Staff Frontend Engineer // ResuAI Platform</strong>
+                          <span>2023 - Present</span>
+                        </div>
+                        <ul class="exp-list" id="previewBullets">
+                          <li>Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.</li>
+                          <li>Engineered 5-theme customizable SaaS dashboard shell with responsive layout algorithms and CSS custom property architecture.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- AI Recommendations box -->
+                  <div class="ai-recommendations-box">
+                    <div class="ai-box-header">
+                      <i data-feather="cpu"></i>
+                      <span>AI Feedback Engine // Real-time Analysis</span>
+                    </div>
+                    <div class="recommendation-item">
+                      <i data-feather="check-square" class="rec-icon"></i>
+                      <div>
+                        <strong>ATS Optimization:</strong> High keyword density detected for UI Systems & Architecture.
+                      </div>
+                    </div>
+                    <div class="recommendation-item">
+                      <i data-feather="check-square" class="rec-icon"></i>
+                      <div>
+                        <strong>Formatting Check:</strong> Clean single-page structure verified for Lever & Greenhouse ATS engines.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: ATS ANALYZER -->
+          <div class="tab-pane" id="tab-ats-analyzer">
+            <div class="dashboard-split-grid">
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="upload-cloud"></i>
+                    <h3>Upload Job Description & Resume</h3>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="drop-zone" id="dropZone">
+                    <i data-feather="file-text" class="drop-icon"></i>
+                    <h4>Drag & Drop your Resume (.pdf, .docx, .txt)</h4>
+                    <p>Or click to browse from your workspace files</p>
+                    <button class="btn-secondary btn-sm">Select Document</button>
+                  </div>
+
+                  <div class="form-group margin-top-lg">
+                    <label for="jdText">Paste Job Description for AI Matching</label>
+                    <textarea id="jdText" class="form-textarea" rows="5" placeholder="Paste the target job description requirements here..."></textarea>
+                  </div>
+                  <button class="btn-primary btn-full">
+                    <i data-feather="activity"></i>
+                    <span>Run Deep ATS Analysis</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="list"></i>
+                    <h3>ATS Keyword Gap Breakdown</h3>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="gap-list">
+                    <div class="gap-item match">
+                      <div class="gap-info">
+                        <span class="gap-name">Design Systems</span>
+                        <span class="gap-status">Matched (4 mentions)</span>
+                      </div>
+                      <span class="badge-tag green">100% Match</span>
+                    </div>
+
+                    <div class="gap-item match">
+                      <div class="gap-info">
+                        <span class="gap-name">CSS Custom Properties</span>
+                        <span class="gap-status">Matched (3 mentions)</span>
+                      </div>
+                      <span class="badge-tag green">100% Match</span>
+                    </div>
+
+                    <div class="gap-item missing">
+                      <div class="gap-info">
+                        <span class="gap-name">GraphQL Schema Stitching</span>
+                        <span class="gap-status">Missing from resume</span>
+                      </div>
+                      <span class="badge-tag red">Missing Keyword</span>
+                    </div>
+
+                    <div class="gap-item warning">
+                      <div class="gap-info">
+                        <span class="gap-name">Web Vitals LCP Optimization</span>
+                        <span class="gap-status">Low frequency (1 mention)</span>
+                      </div>
+                      <span class="badge-tag amber">Add 1-2 instances</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: OTHER TABS (PLACEHOLDER FOR FULLNESS) -->
+          <div class="tab-pane" id="tab-job-tracker">
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i data-feather="briefcase"></i>
+                  <h3>Active Job Applications Pipeline</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="pipeline-grid">
+                  <div class="pipeline-column">
+                    <div class="column-header">Applied (4)</div>
+                    <div class="pipeline-card">
+                      <strong>Google // Senior UI Engineer</strong>
+                      <p>Mountain View, CA • Applied 2d ago</p>
+                    </div>
+                    <div class="pipeline-card">
+                      <strong>Stripe // Frontend Architect</strong>
+                      <p>Remote • Applied 4d ago</p>
+                    </div>
+                  </div>
+                  <div class="pipeline-column">
+                    <div class="column-header">Interviewing (2)</div>
+                    <div class="pipeline-card highlight-border">
+                      <strong>Vercel // Staff Design Systems</strong>
+                      <p>Technical Interview scheduled</p>
+                    </div>
+                  </div>
+                  <div class="pipeline-column">
+                    <div class="column-header">Offer (1)</div>
+                    <div class="pipeline-card offer-border">
+                      <strong>Linear // Product Engineer</strong>
+                      <p>Offer Review Phase</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="tab-templates">
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i data-feather="layers"></i>
+                  <h3>Developer Resume Templates</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <p>Choose from battle-tested ATS-parsed modern templates optimized for developer platforms.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="tab-analytics">
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i data-feather="bar-chart-2"></i>
+                  <h3>Performance & Match Analytics</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <p>Historical match rate analytics and profile scoring over time.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="tab-settings">
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i data-feather="settings"></i>
+                  <h3>Platform Settings & Preferences</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <p>Manage your account settings, API keys, and theme defaults.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
