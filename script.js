@@ -1,29 +1,42 @@
 /**
- * ResuAI // SaaS Dashboard & Auth State Logic
- * Handles 5 UI Themes, Auth Screen Toggle, Sidebar Navigation & Tab Switching
+ * ResuAI // Modern Developer SaaS Platform Engine
+ * Pure Vanilla JavaScript — Zero External Heavy Framework Dependencies
+ *
+ * Modules:
+ * 1. Theme Management (5 CSS Custom Property Themes)
+ * 2. Auth State & View Switching (Login / Register vs Dashboard)
+ * 3. Tab & Sidebar Navigation (Resume Builder, ATS Analyzer, etc.)
+ * 4. Mobile Navigation Drawer
+ * 5. Automatic Form Data Persistence (LocalStorage Auto-Save)
+ * 6. Live Resume Builder & PDF Export Trigger
+ * 7. ATS Analyzer Diagnostic Report & Scanner Engine
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Feather Icons
+  // Initialize Feather Vector Icons
   if (window.feather) {
     feather.replace();
   }
 
-  /* --------------------------------------------------------------------------
+  /* ==========================================================================
      1. Theme Management (5 UI Themes via body[data-theme])
-     -------------------------------------------------------------------------- */
+     ========================================================================== */
   const THEME_STORAGE_KEY = 'resuai-dashboard-theme';
   const themeButtons = document.querySelectorAll('.theme-btn');
   const body = document.body;
 
-  // Function to apply a selected theme across all theme switchers
+  /**
+   * Applies the chosen theme ID to the <body> data-theme attribute,
+   * updates active states on theme switcher buttons, and saves to localStorage.
+   * @param {string} themeId - e.g. 'light-modern', 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber'
+   */
   function setTheme(themeId) {
     if (!themeId) return;
     
-    // Set attribute on body tag
+    // Update data-theme attribute on <body>
     body.setAttribute('data-theme', themeId);
 
-    // Update active button state across all top bar theme switchers (Auth & Main Dashboard)
+    // Update active button state across all top-bar theme switchers
     themeButtons.forEach((btn) => {
       const btnTheme = btn.getAttribute('data-theme-id');
       if (btnTheme === themeId) {
@@ -33,15 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Save to localStorage
+    // Persist preference to localStorage
     try {
       localStorage.setItem(THEME_STORAGE_KEY, themeId);
     } catch (e) {
-      console.warn('LocalStorage not accessible:', e);
+      console.warn('LocalStorage not accessible for theme persistence:', e);
     }
   }
 
-  // Add click listeners to theme switcher buttons
+  // Attach click listeners to all theme switcher buttons
   themeButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const selectedTheme = btn.getAttribute('data-theme-id');
@@ -49,13 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Load saved theme from localStorage (default: light-modern)
+  // Restore saved theme on initial page load (default: 'light-modern')
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light-modern';
   setTheme(savedTheme);
 
-  /* --------------------------------------------------------------------------
-     2. Auth State & View Toggle (Login / Sign Up vs Main Dashboard)
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     2. Auth State & Screen View Toggle
+     ========================================================================== */
   const AUTH_STORAGE_KEY = 'resuai-logged-in';
   const authContainer = document.getElementById('authContainer');
   const appContainer = document.getElementById('appContainer');
@@ -68,9 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const authToggleBtn = document.getElementById('authToggleBtn');
   const ssoGithubBtn = document.getElementById('ssoGithubBtn');
   const ssoGoogleBtn = document.getElementById('ssoGoogleBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const topSignoutBtn = document.getElementById('topSignoutBtn');
 
   let isSignUpMode = false;
 
+  /**
+   * Reads authentication state from localStorage and toggles between the Login screen
+   * and the Main Dashboard layout.
+   */
   function updateAuthStateView() {
     const isLoggedIn = localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
     if (isLoggedIn) {
@@ -82,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Toggle between Login and Sign Up form state
+  // Toggle between "Sign In" and "Sign Up" form state
   if (authToggleBtn) {
     authToggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -107,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Login / Register Form Submission handler
+  // Form Submission handler
   if (authForm) {
     authForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -115,17 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = document.getElementById('authPassword').value;
 
       if (!email || !password) {
-        alert('Please fill in your email and password.');
+        alert('Please enter your email address and password.');
         return;
       }
 
-      // Mock authentication success
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
     });
   }
 
-  // SSO Quick Sign In
+  // SSO Action handlers
   if (ssoGithubBtn) {
     ssoGithubBtn.addEventListener('click', () => {
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
@@ -140,10 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Sign out buttons
-  const logoutBtn = document.getElementById('logoutBtn');
-  const topSignoutBtn = document.getElementById('topSignoutBtn');
-
+  // Sign out handlers
   function handleSignOut(e) {
     e.preventDefault();
     localStorage.setItem(AUTH_STORAGE_KEY, 'false');
@@ -153,12 +168,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
   if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
 
-  // Initialize view state on page load
+  // Initialize view state
   updateAuthStateView();
 
-  /* --------------------------------------------------------------------------
-     3. Navigation & Tab Switching Logic
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     3. Tab & Sidebar Navigation Engine
+     ========================================================================== */
   const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const breadcrumbActive = document.getElementById('breadcrumbActive');
@@ -198,10 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  /**
+   * Switches the active view tab using CSS `.active` class toggling
+   * and updates breadcrumb headers smoothly without page reloads.
+   * @param {string} tabId - ID of target tab (e.g. 'resume-builder', 'ats-analyzer')
+   */
   function switchTab(tabId) {
     if (!tabId || !TAB_METADATA[tabId]) return;
 
-    // Update active nav link
+    // Toggle active state on sidebar navigation links
     navItems.forEach((item) => {
       if (item.getAttribute('data-tab') === tabId) {
         item.classList.add('active');
@@ -210,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Show corresponding tab pane
+    // Toggle active state on content tab panes
     tabPanes.forEach((pane) => {
       if (pane.id === `tab-${tabId}`) {
         pane.classList.add('active');
@@ -219,17 +239,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Update breadcrumb and header text
+    // Update top bar breadcrumbs and workspace header
     const meta = TAB_METADATA[tabId];
     if (breadcrumbActive) breadcrumbActive.textContent = meta.breadcrumb;
     if (pageTitle) pageTitle.textContent = meta.title;
     if (pageDescription) pageDescription.textContent = meta.description;
 
-    // Close mobile sidebar if open
+    // Close mobile drawer if active
     closeMobileSidebar();
   }
 
-  // Attach click events to nav links
+  // Attach click event handlers to all sidebar navigation links
   navItems.forEach((item) => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
@@ -238,9 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* --------------------------------------------------------------------------
-     4. Mobile Sidebar Navigation Toggle
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     4. Mobile Sidebar Navigation Drawer
+     ========================================================================== */
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
   const mobileToggleBtn = document.getElementById('mobileToggleBtn');
@@ -260,65 +280,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileCloseBtn) mobileCloseBtn.addEventListener('click', closeMobileSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileSidebar);
 
-  /* --------------------------------------------------------------------------
-     5. Interactive Form & UI Feedbacks
-     -------------------------------------------------------------------------- */
-  
-  // Auto-Optimize Button Animation
-  const btnAutoOptimize = document.getElementById('btnAutoOptimize');
-  if (btnAutoOptimize) {
-    btnAutoOptimize.addEventListener('click', () => {
-      const originalHTML = btnAutoOptimize.innerHTML;
-      btnAutoOptimize.innerHTML = `<i data-feather="loader"></i> <span>Optimizing...</span>`;
-      if (window.feather) feather.replace();
+  /* ==========================================================================
+     5. Automatic Form Persistence (LocalStorage Auto-Save)
+     ========================================================================== */
+  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
 
-      setTimeout(() => {
-        btnAutoOptimize.innerHTML = `<i data-feather="check"></i> <span>Optimized!</span>`;
-        if (window.feather) feather.replace();
-        
-        setTimeout(() => {
-          btnAutoOptimize.innerHTML = originalHTML;
-          if (window.feather) feather.replace();
-        }, 2000);
-      }, 800);
-    });
-  }
-
-  // Tag removal and addition
-  const tagsContainer = document.getElementById('skillsTagsContainer');
-  const skillInputField = document.getElementById('skillInputField');
-
-  if (tagsContainer) {
-    tagsContainer.addEventListener('click', (e) => {
-      const closeSvg = e.target.closest('svg');
-      if (closeSvg && closeSvg.parentElement.classList.contains('tag')) {
-        closeSvg.parentElement.remove();
-        syncLiveSkills();
-      }
-    });
-  }
-
-  if (skillInputField) {
-    skillInputField.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && skillInputField.value.trim() !== '') {
-        e.preventDefault();
-        const skillText = skillInputField.value.trim();
-        const newTag = document.createElement('span');
-        newTag.className = 'tag';
-        newTag.innerHTML = `${skillText} <i data-feather="x"></i>`;
-        tagsContainer.insertBefore(newTag, skillInputField);
-        skillInputField.value = '';
-        if (window.feather) feather.replace();
-        syncLiveSkills();
-      }
-    });
-  }
-
-  /* --------------------------------------------------------------------------
-     6. Resume Builder Step Bar, Live Document Sync, Draft Save & Print PDF
-     -------------------------------------------------------------------------- */
-  
-  // Elements for live sync
   const inputFullName = document.getElementById('inputFullName');
   const inputJobTitle = document.getElementById('inputJobTitle');
   const inputEmail = document.getElementById('inputEmail');
@@ -326,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputEducation = document.getElementById('inputEducation');
   const bulletPoints = document.getElementById('bulletPoints');
   const charCounter = document.getElementById('charCounter');
+  const atsJdInput = document.getElementById('atsJdInput');
 
   const previewName = document.getElementById('previewName');
   const previewRole = document.getElementById('previewRole');
@@ -334,13 +301,62 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewSkills = document.getElementById('previewSkills');
   const previewBullets = document.getElementById('previewBullets');
 
-  const stepItems = document.querySelectorAll('.step-item');
-  const btnNextStep = document.getElementById('btnNextStep');
   const btnSaveDraft = document.getElementById('btnSaveDraft');
   const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
+  const btnNextStep = document.getElementById('btnNextStep');
   const btnPrintPdf = document.getElementById('btnPrintPdf');
+  const stepItems = document.querySelectorAll('.step-item');
 
-  // Character Counter update
+  /**
+   * Saves all current form fields and skill tags to localStorage automatically.
+   */
+  function autoSaveFormFields() {
+    const draftData = {
+      fullName: inputFullName ? inputFullName.value : '',
+      jobTitle: inputJobTitle ? inputJobTitle.value : '',
+      email: inputEmail ? inputEmail.value : '',
+      phone: inputPhone ? inputPhone.value : '',
+      education: inputEducation ? inputEducation.value : '',
+      bulletPoints: bulletPoints ? bulletPoints.value : '',
+      atsJdText: atsJdInput ? atsJdInput.value : '',
+      skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => t.textContent.replace('x', '').trim())
+    };
+
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+    } catch (e) {
+      console.warn('Could not auto-save form fields to LocalStorage:', e);
+    }
+  }
+
+  /**
+   * Restores form fields from localStorage on startup.
+   */
+  function loadSavedFormFields() {
+    try {
+      const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (draft.fullName && inputFullName) inputFullName.value = draft.fullName;
+        if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
+        if (draft.email && inputEmail) inputEmail.value = draft.email;
+        if (draft.phone && inputPhone) inputPhone.value = draft.phone;
+        if (draft.education && inputEducation) inputEducation.value = draft.education;
+        if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
+        if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
+
+        syncLivePreview();
+        syncLiveSkills();
+      }
+    } catch (e) {
+      console.warn('Could not restore form fields from LocalStorage:', e);
+    }
+  }
+
+  /* ==========================================================================
+     6. Live Resume Document Sync & PDF Print Trigger
+     ========================================================================== */
+  
   function updateCharCounter() {
     if (bulletPoints && charCounter) {
       const len = bulletPoints.value.length;
@@ -348,7 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Synchronize Live Skills list from tags
   function syncLiveSkills() {
     if (!previewSkills) return;
     const tagElements = document.querySelectorAll('#skillsTagsContainer .tag');
@@ -356,7 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
     previewSkills.textContent = skillList.length > 0 ? skillList.join(', ') : 'TypeScript, React, Design Systems';
   }
 
-  // Synchronize Live Resume document
   function syncLivePreview() {
     if (inputFullName && previewName) {
       previewName.textContent = inputFullName.value.trim().toUpperCase() || 'MANISH KUNTAL';
@@ -381,68 +395,72 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     updateCharCounter();
+    autoSaveFormFields();
   }
 
-  // Add input listeners for live synchronization
+  // Bind input events for live preview sync & automatic localStorage saving
   const liveSyncInputs = document.querySelectorAll('.live-sync');
   liveSyncInputs.forEach(input => {
-    input.addEventListener('input', syncLivePreview);
+    input.addEventListener('input', () => {
+      syncLivePreview();
+      autoSaveFormFields();
+    });
   });
 
-  // Save Draft to LocalStorage
-  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
-
-  function saveDraftToStorage(buttonEl) {
-    const draftData = {
-      fullName: inputFullName ? inputFullName.value : '',
-      jobTitle: inputJobTitle ? inputJobTitle.value : '',
-      email: inputEmail ? inputEmail.value : '',
-      phone: inputPhone ? inputPhone.value : '',
-      education: inputEducation ? inputEducation.value : '',
-      bulletPoints: bulletPoints ? bulletPoints.value : '',
-      skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => t.textContent.replace('x', '').trim())
-    };
-
-    try {
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
-      if (buttonEl) {
-        const originalText = buttonEl.innerHTML;
-        buttonEl.innerHTML = `<i data-feather="check"></i> <span>Draft Saved!</span>`;
-        if (window.feather) feather.replace();
-        setTimeout(() => {
-          buttonEl.innerHTML = originalText;
-          if (window.feather) feather.replace();
-        }, 2000);
-      }
-    } catch (e) {
-      console.warn('Could not save draft to LocalStorage:', e);
-    }
+  if (atsJdInput) {
+    atsJdInput.addEventListener('input', autoSaveFormFields);
   }
 
-  // Load Draft from LocalStorage on startup
-  function loadDraftFromStorage() {
-    try {
-      const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (saved) {
-        const draft = JSON.parse(saved);
-        if (draft.fullName && inputFullName) inputFullName.value = draft.fullName;
-        if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
-        if (draft.email && inputEmail) inputEmail.value = draft.email;
-        if (draft.phone && inputPhone) inputPhone.value = draft.phone;
-        if (draft.education && inputEducation) inputEducation.value = draft.education;
-        if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
-        syncLivePreview();
+  // Tag removal & addition
+  const tagsContainer = document.getElementById('skillsTagsContainer');
+  const skillInputField = document.getElementById('skillInputField');
+
+  if (tagsContainer) {
+    tagsContainer.addEventListener('click', (e) => {
+      const closeSvg = e.target.closest('svg');
+      if (closeSvg && closeSvg.parentElement.classList.contains('tag')) {
+        closeSvg.parentElement.remove();
         syncLiveSkills();
+        autoSaveFormFields();
       }
-    } catch (e) {
-      console.warn('Could not read draft from LocalStorage:', e);
+    });
+  }
+
+  if (skillInputField) {
+    skillInputField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && skillInputField.value.trim() !== '') {
+        e.preventDefault();
+        const skillText = skillInputField.value.trim();
+        const newTag = document.createElement('span');
+        newTag.className = 'tag';
+        newTag.innerHTML = `${skillText} <i data-feather="x"></i>`;
+        tagsContainer.insertBefore(newTag, skillInputField);
+        skillInputField.value = '';
+        if (window.feather) feather.replace();
+        syncLiveSkills();
+        autoSaveFormFields();
+      }
+    });
+  }
+
+  // Save Draft button visual feedback
+  function handleManualSave(buttonEl) {
+    autoSaveFormFields();
+    if (buttonEl) {
+      const originalText = buttonEl.innerHTML;
+      buttonEl.innerHTML = `<i data-feather="check"></i> <span>Draft Saved!</span>`;
+      if (window.feather) feather.replace();
+      setTimeout(() => {
+        buttonEl.innerHTML = originalText;
+        if (window.feather) feather.replace();
+      }, 2000);
     }
   }
 
-  if (btnSaveDraft) btnSaveDraft.addEventListener('click', () => saveDraftToStorage(btnSaveDraft));
-  if (btnDraftSaveFooter) btnDraftSaveFooter.addEventListener('click', () => saveDraftToStorage(btnDraftSaveFooter));
+  if (btnSaveDraft) btnSaveDraft.addEventListener('click', () => handleManualSave(btnSaveDraft));
+  if (btnDraftSaveFooter) btnDraftSaveFooter.addEventListener('click', () => handleManualSave(btnDraftSaveFooter));
 
-  // Step Navigation Logic (Step 1 -> Step 2 -> Step 3)
+  // Step Progress Bar (Step 1 -> 2 -> 3)
   function setStep(stepNumber) {
     stepItems.forEach(item => {
       const step = parseInt(item.getAttribute('data-step'));
@@ -466,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Next Step / Generate Resume Action
   if (btnNextStep) {
     btnNextStep.addEventListener('click', () => {
       setStep(2);
@@ -479,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnNextStep.innerHTML = `<i data-feather="check-circle"></i> <span>Resume Generated!</span>`;
         if (window.feather) feather.replace();
 
-        // Highlight preview card
         const previewCard = document.getElementById('previewCardSection');
         if (previewCard) {
           previewCard.scrollIntoView({ behavior: 'smooth' });
@@ -493,22 +509,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Print PDF Button Handler
+  // Print PDF Trigger
   if (btnPrintPdf) {
     btnPrintPdf.addEventListener('click', () => {
       window.print();
     });
   }
 
-  // Initialize live preview & draft load
-  loadDraftFromStorage();
-  syncLivePreview();
-  syncLiveSkills();
-
-  /* --------------------------------------------------------------------------
-     7. ATS Analyzer View Logic (Drag & Drop, Scanner Animation & Report Generator)
-     -------------------------------------------------------------------------- */
-  
+  /* ==========================================================================
+     7. ATS Analyzer Diagnostics Engine
+     ========================================================================== */
   const atsDropZone = document.getElementById('atsDropZone');
   const btnSelectPdfFile = document.getElementById('btnSelectPdfFile');
   const pdfFileInput = document.getElementById('pdfFileInput');
@@ -524,14 +534,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const scoreNumber = document.getElementById('scoreNumber');
   const scoreCircle = document.getElementById('scoreCircle');
 
-  // Trigger hidden file input click
   if (btnSelectPdfFile && pdfFileInput) {
-    btnSelectPdfFile.addEventListener('click', () => {
-      pdfFileInput.click();
-    });
+    btnSelectPdfFile.addEventListener('click', () => pdfFileInput.click());
   }
 
-  // Update selected file badge on file input change
   function handleFileSelected(file) {
     if (!file) return;
     if (selectedFileName && selectedFileBadge) {
@@ -548,7 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Drag and Drop Event Listeners for ATS PDF Upload
   if (atsDropZone) {
     ['dragenter', 'dragover'].forEach(eventName => {
       atsDropZone.addEventListener(eventName, (e) => {
@@ -577,13 +582,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Run ATS Analysis button handler
   if (btnRunAtsAnalysis) {
     btnRunAtsAnalysis.addEventListener('click', () => {
-      // Hide report if previously shown
       if (atsReportContainer) atsReportContainer.style.display = 'none';
 
-      // Show loading card
       if (atsLoadingState) {
         atsLoadingState.style.display = 'flex';
         atsLoadingState.scrollIntoView({ behavior: 'smooth' });
@@ -605,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (atsProgressFill) atsProgressFill.style.width = `${progress}%`;
         if (atsProgressPercent) atsProgressPercent.textContent = `${progress}%`;
 
-        // Update step status text
         if (loadingStepText) {
           if (progress < 25) loadingStepText.textContent = steps[0];
           else if (progress < 55) loadingStepText.textContent = steps[1];
@@ -616,15 +617,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (progress >= 100) {
           clearInterval(interval);
 
-          // Hide loading, show report
           setTimeout(() => {
             if (atsLoadingState) atsLoadingState.style.display = 'none';
             if (atsReportContainer) {
               atsReportContainer.style.display = 'block';
               atsReportContainer.scrollIntoView({ behavior: 'smooth' });
 
-              // Calculate dynamic score based on JD input
-              const jdText = document.getElementById('atsJdInput') ? document.getElementById('atsJdInput').value.toLowerCase() : '';
+              const jdText = atsJdInput ? atsJdInput.value.toLowerCase() : '';
               let score = 87;
               if (jdText.includes('kubernetes') && jdText.includes('redis')) score = 82;
               else if (jdText.length > 500) score = 91;
@@ -639,6 +638,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 50);
     });
   }
+
+  // Restore form persistence & initial live preview sync
+  loadSavedFormFields();
+  syncLivePreview();
+  syncLiveSkills();
 });
-
-
