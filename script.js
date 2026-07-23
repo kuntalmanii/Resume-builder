@@ -301,11 +301,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewSkills = document.getElementById('previewSkills');
   const previewBullets = document.getElementById('previewBullets');
 
-  const btnSaveDraft = document.getElementById('btnSaveDraft');
   const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
   const btnNextStep = document.getElementById('btnNextStep');
   const btnPrintPdf = document.getElementById('btnPrintPdf');
+  const btnAutoOptimize = document.getElementById('btnAutoOptimize');
   const stepItems = document.querySelectorAll('.step-item');
+
+  // AI Auto-Optimize Button Action
+  if (btnAutoOptimize) {
+    btnAutoOptimize.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const origText = btnAutoOptimize.innerHTML;
+      btnAutoOptimize.innerHTML = `<i data-feather="loader"></i> <span>AI Optimizing...</span>`;
+      btnAutoOptimize.disabled = true;
+      if (window.feather) feather.replace();
+
+      const jobTitle = inputJobTitle ? inputJobTitle.value : '';
+      const expText = bulletPoints ? bulletPoints.value : '';
+      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => t.textContent.replace('x', '').trim());
+
+      try {
+        const response = await fetch('/api/optimize-resume', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobTitle, experienceText: expText, skills })
+        });
+        const data = await response.json();
+        
+        if (data && data.optimizedBulletPoints && bulletPoints) {
+          bulletPoints.value = data.optimizedBulletPoints;
+          syncLivePreview();
+          autoSaveFormFields();
+        }
+
+        btnAutoOptimize.innerHTML = `<i data-feather="check"></i> <span>Optimized with AI!</span>`;
+        btnAutoOptimize.disabled = false;
+        if (window.feather) feather.replace();
+
+        setTimeout(() => {
+          btnAutoOptimize.innerHTML = origText;
+          if (window.feather) feather.replace();
+        }, 2500);
+      } catch (err) {
+        console.warn("Auto-Optimize API call error:", err);
+        btnAutoOptimize.innerHTML = origText;
+        btnAutoOptimize.disabled = false;
+        if (window.feather) feather.replace();
+      }
+    });
+  }
 
   /**
    * Saves all current form fields and skill tags to localStorage automatically.

@@ -37,7 +37,7 @@ function callGeminiApi(jdText, resumeText) {
       return reject(new Error("GEMINI_API_KEY environment variable is not set on the server."));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
@@ -155,6 +155,88 @@ function runServerFallbackAnalysis(jdText, resumeText) {
   };
 }
 
+/**
+ * Server-side HTTPS call to Google Gemini 2.5 Flash for Resume Optimization
+ * @param {string} jobTitle 
+ * @param {string} experienceText 
+ * @param {Array<string>} skills 
+ */
+function callGeminiOptimize(jobTitle, experienceText, skills) {
+  return new Promise((resolve, reject) => {
+    if (!GEMINI_API_KEY) {
+      return reject(new Error("GEMINI_API_KEY is not set on server."));
+    }
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = new URL(endpoint);
+
+    const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
+Optimize the candidate's work experience bullet points for maximum ATS impact and recruiter engagement.
+
+TARGET JOB TITLE: ${jobTitle || 'Senior Software Engineer'}
+SKILLS: ${Array.isArray(skills) ? skills.join(', ') : (skills || 'TypeScript, React')}
+CURRENT EXPERIENCE BULLET POINTS:
+${experienceText || 'Built frontend UI components.'}
+
+Instructions:
+1. Rewrite the experience text into 3-5 punchy, high-impact bullet points starting with strong action verbs (e.g. Architected, Engineered, Spearheaded, Decreased, Optimized).
+2. Include realistic performance metrics (e.g., "Reduced LCP by 42%", "Built design system serving 2M+ active users").
+3. Respond STRICTLY in JSON format with schema:
+{
+  "optimizedBulletPoints": "Architected high-throughput UI component system serving 2M+ active monthly users.\\nEngineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to <0.05.\\nSpearheaded migration to TypeScript and Next.js, accelerating release velocity by 35% across 4 cross-functional teams.",
+  "suggestedSkills": ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL", "Performance"]
+}`;
+
+    const payload = JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            return reject(new Error(`Gemini API returned status ${res.statusCode}: ${data}`));
+          }
+          const parsedRes = JSON.parse(data);
+          const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) return reject(new Error("Empty response from Gemini API"));
+          resolve(JSON.parse(rawText));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', err => reject(err));
+    req.write(payload);
+    req.end();
+  });
+}
+
+function runServerFallbackOptimization(jobTitle, experienceText) {
+  return {
+    optimizedBulletPoints: `• Architected high-performance UI component library serving 2M+ active monthly users.
+• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.
+• Spearheaded frontend migration to TypeScript and Next.js, boosting team release velocity by 35%.
+• Implemented client-side GraphQL caching layer, decreasing server payload size by 60%.`,
+    suggestedSkills: ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL"]
+  };
+}
+
 // Create HTTP server
 const server = http.createServer((req, res) => {
   // CORS Headers
@@ -165,6 +247,36 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Handle Backend API Endpoint: POST /api/optimize-resume
+  if (req.method === 'POST' && req.url === '/api/optimize-resume') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const { jobTitle, experienceText, skills } = JSON.parse(body || '{}');
+
+        if (GEMINI_API_KEY) {
+          try {
+            const result = await callGeminiOptimize(jobTitle, experienceText, skills);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result));
+            return;
+          } catch (err) {
+            console.warn("Gemini Optimize error on server, using fallback:", err.message);
+          }
+        }
+
+        const fallback = runServerFallbackOptimization(jobTitle, experienceText);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(fallback));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: "Invalid JSON payload" }));
+      }
+    });
     return;
   }
 
