@@ -568,9 +568,9 @@ Key Requirements:
                     </div>
                   </div>
 
-                  <button class="btn-primary btn-full margin-top-lg" id="btnRunAtsAnalysis">
+                  <button type="button" class="btn-primary btn-full margin-top-lg" id="btnRunAtsAnalysis">
                     <i data-feather="activity"></i>
-                    <span>Run ATS Analysis</span>
+                    <span id="btnRunAtsText">Run ATS Analysis</span>
                   </button>
                 </div>
               </div>
@@ -588,14 +588,14 @@ Key Requirements:
               </div>
             </div>
 
-            <!-- Mock Diagnostic Report Container (Displayed after analysis) -->
-            <div class="ats-report-card margin-top-lg" id="atsReportContainer">
+            <!-- Diagnostic Report Container (Hidden by default, shown after analysis) -->
+            <div class="ats-report-card margin-top-lg" id="ats-results" style="display: none;">
               <div class="card-header">
                 <div class="card-title">
                   <i data-feather="bar-chart-2"></i>
                   <h3>ATS Diagnostic & Feedback Report</h3>
                 </div>
-                <span class="badge-tag green">Analysis Complete</span>
+                <span class="badge-tag green" id="analysisStatusBadge">Analysis Complete</span>
               </div>
 
               <div class="card-body">
@@ -609,8 +609,8 @@ Key Requirements:
                       </div>
                     </div>
                     <div class="score-summary-text">
-                      <h4>High Match Potential</h4>
-                      <p>Your resume matches 87% of core qualifications for Senior Frontend Architect roles.</p>
+                      <h4 id="scoreSummaryHeading">High Match Potential</h4>
+                      <p id="scoreSummaryDesc">Your resume matches 87% of core qualifications for Senior Frontend Architect roles.</p>
                     </div>
                   </div>
 
@@ -619,24 +619,16 @@ Key Requirements:
                     <h4>Keyword Match Breakdown</h4>
                     <div class="keyword-lists-grid">
                       <div class="keyword-col">
-                        <span class="col-title green"><i data-feather="check"></i> Matched Keywords (8)</span>
-                        <div class="keyword-tags">
-                          <span class="badge-tag green">TypeScript</span>
-                          <span class="badge-tag green">React / Next.js</span>
-                          <span class="badge-tag green">Design Systems</span>
-                          <span class="badge-tag green">Vanilla CSS</span>
-                          <span class="badge-tag green">Web Vitals</span>
-                          <span class="badge-tag green">GraphQL</span>
-                          <span class="badge-tag green">Performance</span>
+                        <span class="col-title green" id="matchedKeywordsTitle"><i data-feather="check"></i> Matched Keywords (6)</span>
+                        <div class="keyword-tags" id="matchedKeywordsContainer">
+                          <!-- Dynamically populated -->
                         </div>
                       </div>
 
                       <div class="keyword-col">
-                        <span class="col-title red"><i data-feather="x"></i> Missing / Gap Keywords (3)</span>
-                        <div class="keyword-tags">
-                          <span class="badge-tag red">Kubernetes</span>
-                          <span class="badge-tag red">Redis Caching</span>
-                          <span class="badge-tag amber">CI/CD Pipelines</span>
+                        <span class="col-title red" id="missingKeywordsTitle"><i data-feather="x"></i> Missing / Gap Keywords (3)</span>
+                        <div class="keyword-tags" id="missingKeywordsContainer">
+                          <!-- Dynamically populated -->
                         </div>
                       </div>
                     </div>
@@ -646,30 +638,8 @@ Key Requirements:
                 <!-- Actionable Recommendations -->
                 <div class="recommendations-section margin-top-lg">
                   <h4><i data-feather="cpu"></i> Actionable Recommendations for 95%+ Match</h4>
-                  <div class="recommendations-grid">
-                    <div class="rec-card">
-                      <div class="rec-number">1</div>
-                      <div class="rec-content">
-                        <strong>Incorporate Infrastructure Keywords:</strong>
-                        <p>Add 1-2 instances of <em>Kubernetes</em> or <em>Container Orchestration</em> under your technical project bullet points to clear hard ATS filters.</p>
-                      </div>
-                    </div>
-
-                    <div class="rec-card">
-                      <div class="rec-number">2</div>
-                      <div class="rec-content">
-                        <strong>Quantify Performance Metrics:</strong>
-                        <p>Highlight specific LCP, CLS, or INP web vital improvements with percentages (e.g. <em>"Reduced LCP by 42%"</em>).</p>
-                      </div>
-                    </div>
-
-                    <div class="rec-card">
-                      <div class="rec-number">3</div>
-                      <div class="rec-content">
-                        <strong>Format Verification:</strong>
-                        <p>Maintain clean standard section headers ("PROFESSIONAL EXPERIENCE") to ensure 100% parsing accuracy in Lever & Workday.</p>
-                      </div>
-                    </div>
+                  <div class="recommendations-grid" id="recommendationsGridContainer">
+                    <!-- Dynamically populated -->
                   </div>
                 </div>
               </div>

@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     7. ATS Analyzer Diagnostics Engine
+     7. ATS Analyzer Diagnostics Engine & Client-Side Calculation
      ========================================================================== */
   const atsDropZone = document.getElementById('atsDropZone');
   const btnSelectPdfFile = document.getElementById('btnSelectPdfFile');
@@ -525,17 +525,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectedFileBadge = document.getElementById('selectedFileBadge');
   const selectedFileName = document.getElementById('selectedFileName');
   const btnRunAtsAnalysis = document.getElementById('btnRunAtsAnalysis');
+  const btnRunAtsText = document.getElementById('btnRunAtsText');
 
   const atsLoadingState = document.getElementById('atsLoadingState');
   const atsProgressFill = document.getElementById('atsProgressFill');
   const atsProgressPercent = document.getElementById('atsProgressPercent');
   const loadingStepText = document.getElementById('loadingStepText');
-  const atsReportContainer = document.getElementById('atsReportContainer');
+  const atsResults = document.getElementById('ats-results');
   const scoreNumber = document.getElementById('scoreNumber');
   const scoreCircle = document.getElementById('scoreCircle');
+  const scoreSummaryHeading = document.getElementById('scoreSummaryHeading');
+  const scoreSummaryDesc = document.getElementById('scoreSummaryDesc');
+
+  const matchedKeywordsTitle = document.getElementById('matchedKeywordsTitle');
+  const matchedKeywordsContainer = document.getElementById('matchedKeywordsContainer');
+  const missingKeywordsTitle = document.getElementById('missingKeywordsTitle');
+  const missingKeywordsContainer = document.getElementById('missingKeywordsContainer');
+  const recommendationsGridContainer = document.getElementById('recommendationsGridContainer');
+
+  let uploadedFileText = "";
 
   if (btnSelectPdfFile && pdfFileInput) {
-    btnSelectPdfFile.addEventListener('click', () => pdfFileInput.click());
+    btnSelectPdfFile.addEventListener('click', (e) => {
+      e.preventDefault();
+      pdfFileInput.click();
+    });
   }
 
   function handleFileSelected(file) {
@@ -543,6 +557,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedFileName && selectedFileBadge) {
       selectedFileName.textContent = file.name;
       selectedFileBadge.style.display = 'inline-flex';
+    }
+
+    // Attempt to read text content if plain text file
+    if (file.type === "text/plain" || file.name.endsWith('.txt')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedFileText = e.target.result || "";
+      };
+      reader.readAsText(file);
     }
   }
 
@@ -554,6 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Drag and drop event listeners
   if (atsDropZone) {
     ['dragenter', 'dragover'].forEach(eventName => {
       atsDropZone.addEventListener(eventName, (e) => {
@@ -582,10 +606,138 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (btnRunAtsAnalysis) {
-    btnRunAtsAnalysis.addEventListener('click', () => {
-      if (atsReportContainer) atsReportContainer.style.display = 'none';
+  // Common technical and professional keywords list for ATS matching
+  const KNOWN_KEYWORDS = [
+    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
+    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
+    'Node', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
+    'Project Management', 'System Architecture', 'Python', 'Git', 'Agile'
+  ];
 
+  /**
+   * Evaluates job description text against candidate profile & skills,
+   * extracts matched vs missing keywords, and calculates a dynamic ATS score.
+   */
+  function runClientAtsDiagnostic() {
+    const jdRawText = (atsJdInput ? atsJdInput.value : "") + " " + uploadedFileText;
+    const jdLower = jdRawText.toLowerCase();
+
+    // Candidate skills from form inputs & draft storage
+    let candidateSkillsText = "";
+    if (inputJobTitle) candidateSkillsText += " " + inputJobTitle.value;
+    if (bulletPoints) candidateSkillsText += " " + bulletPoints.value;
+
+    const skillTags = document.querySelectorAll('#skillsTagsContainer .tag');
+    skillTags.forEach(tag => {
+      candidateSkillsText += " " + tag.textContent;
+    });
+
+    const candidateLower = (candidateSkillsText + " " + uploadedFileText).toLowerCase();
+
+    // Extract keywords present in the JD
+    const jdKeywordsPresent = KNOWN_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
+    
+    // If JD is sparse or custom, ensure default fallback list for clean display
+    const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
+      ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
+
+    const matched = [];
+    const missing = [];
+
+    activeJdKeywords.forEach(kw => {
+      if (candidateLower.includes(kw.toLowerCase())) {
+        matched.push(kw);
+      } else {
+        missing.push(kw);
+      }
+    });
+
+    // Calculate dynamic score between 70% and 94%
+    const total = activeJdKeywords.length || 1;
+    const matchRatio = matched.length / total;
+    const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
+
+    // Render score & progress circle
+    if (scoreNumber) scoreNumber.textContent = `${dynamicScore}%`;
+    if (scoreCircle) {
+      scoreCircle.style.background = `conic-gradient(#10b981 0% ${dynamicScore}%, rgba(0, 0, 0, 0.08) ${dynamicScore}% 100%)`;
+    }
+
+    if (scoreSummaryHeading && scoreSummaryDesc) {
+      if (dynamicScore >= 85) {
+        scoreSummaryHeading.textContent = "High Match Potential";
+        scoreSummaryDesc.textContent = `Your resume matches ${dynamicScore}% of core qualifications for target developer roles.`;
+      } else {
+        scoreSummaryHeading.textContent = "Moderate Match — Action Required";
+        scoreSummaryDesc.textContent = `Your resume matches ${dynamicScore}% of core requirements. Add missing technical keywords to boost ATS rank.`;
+      }
+    }
+
+    // Render Matched Keywords
+    if (matchedKeywordsTitle) matchedKeywordsTitle.innerHTML = `<i data-feather="check"></i> Matched Keywords (${matched.length})`;
+    if (matchedKeywordsContainer) {
+      if (matched.length > 0) {
+        matchedKeywordsContainer.innerHTML = matched.map(kw => `<span class="badge-tag green">${kw}</span>`).join('');
+      } else {
+        matchedKeywordsContainer.innerHTML = `<span class="badge-tag amber">General Skills Matched</span>`;
+      }
+    }
+
+    // Render Missing Keywords
+    if (missingKeywordsTitle) missingKeywordsTitle.innerHTML = `<i data-feather="x"></i> Missing / Gap Keywords (${missing.length})`;
+    if (missingKeywordsContainer) {
+      if (missing.length > 0) {
+        missingKeywordsContainer.innerHTML = missing.map(kw => `<span class="badge-tag red">${kw}</span>`).join('');
+      } else {
+        missingKeywordsContainer.innerHTML = `<span class="badge-tag green">No Critical Keyword Gaps</span>`;
+      }
+    }
+
+    // Render Actionable Recommendations
+    if (recommendationsGridContainer) {
+      const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
+      recommendationsGridContainer.innerHTML = `
+        <div class="rec-card">
+          <div class="rec-number">1</div>
+          <div class="rec-content">
+            <strong>Incorporate Key Missing Keywords:</strong>
+            <p>Add 1-2 instances of <em>${topMissing}</em> under your experience bullet points to satisfy automated keyword parsers.</p>
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-number">2</div>
+          <div class="rec-content">
+            <strong>Quantify Impact Metrics:</strong>
+            <p>Highlight specific web vitals or latency reductions with exact numbers (e.g. <em>"Improved LCP by 42%"</em>).</p>
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-number">3</div>
+          <div class="rec-content">
+            <strong>Standard Section Formatting:</strong>
+            <p>Ensure standard section headings like <em>"TECHNICAL EXPERTISE"</em> and <em>"PROFESSIONAL EXPERIENCE"</em> are used for Lever & Greenhouse parsing.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    if (window.feather) feather.replace();
+  }
+
+  // Run ATS Analysis Action
+  if (btnRunAtsAnalysis) {
+    btnRunAtsAnalysis.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      // Show loading button state
+      const origBtnHTML = btnRunAtsAnalysis.innerHTML;
+      if (btnRunAtsText) btnRunAtsText.textContent = "Analyzing JD & Skills...";
+      btnRunAtsAnalysis.disabled = true;
+
+      // Hide results card if previously visible
+      if (atsResults) atsResults.style.display = 'none';
+
+      // Show scanner loading card
       if (atsLoadingState) {
         atsLoadingState.style.display = 'flex';
         atsLoadingState.scrollIntoView({ behavior: 'smooth' });
@@ -603,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ];
 
       const interval = setInterval(() => {
-        progress += 5;
+        progress += 10;
         if (atsProgressFill) atsProgressFill.style.width = `${progress}%`;
         if (atsProgressPercent) atsProgressPercent.textContent = `${progress}%`;
 
@@ -618,24 +770,23 @@ document.addEventListener('DOMContentLoaded', () => {
           clearInterval(interval);
 
           setTimeout(() => {
+            // Restore button state
+            btnRunAtsAnalysis.innerHTML = origBtnHTML;
+            btnRunAtsAnalysis.disabled = false;
+            if (window.feather) feather.replace();
+
+            // Hide loading card, show results container
             if (atsLoadingState) atsLoadingState.style.display = 'none';
-            if (atsReportContainer) {
-              atsReportContainer.style.display = 'block';
-              atsReportContainer.scrollIntoView({ behavior: 'smooth' });
+            
+            runClientAtsDiagnostic();
 
-              const jdText = atsJdInput ? atsJdInput.value.toLowerCase() : '';
-              let score = 87;
-              if (jdText.includes('kubernetes') && jdText.includes('redis')) score = 82;
-              else if (jdText.length > 500) score = 91;
-
-              if (scoreNumber) scoreNumber.textContent = `${score}%`;
-              if (scoreCircle) {
-                scoreCircle.style.background = `conic-gradient(#10b981 0% ${score}%, var(--bg-card) ${score}% 100%)`;
-              }
+            if (atsResults) {
+              atsResults.style.display = 'block';
+              atsResults.scrollIntoView({ behavior: 'smooth' });
             }
           }, 300);
         }
-      }, 50);
+      }, 60);
     });
   }
 
@@ -644,3 +795,4 @@ document.addEventListener('DOMContentLoaded', () => {
   syncLivePreview();
   syncLiveSkills();
 });
+

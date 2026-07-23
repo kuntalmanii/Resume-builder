@@ -1881,15 +1881,21 @@ button, input, select, textarea {
 }
 
 .circular-progress {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  background: conic-gradient(#10b981 0% 87%, var(--bg-card) 87% 100%);
-  display: flex;
+  width: 120px !important;
+  height: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  min-height: 120px !important;
+  max-height: 120px !important;
+  border-radius: 50% !important;
+  background: conic-gradient(#10b981 0% 87%, rgba(0, 0, 0, 0.08) 87% 100%);
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+  margin-bottom: 0.85rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
+  overflow: hidden;
 }
 
 .circle-inner {
