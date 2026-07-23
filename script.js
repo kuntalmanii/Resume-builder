@@ -529,27 +529,72 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   if (btnNextStep) {
-    btnNextStep.addEventListener('click', () => {
+    btnNextStep.addEventListener('click', async () => {
+      const origHTML = btnNextStep.innerHTML;
+
+      // Step 2: AI Generating state
       setStep(2);
-      const origText = btnNextStep.innerHTML;
-      btnNextStep.innerHTML = `<i data-feather="loader"></i> <span>Generating AI Match...</span>`;
+      btnNextStep.innerHTML = `<i data-feather="loader"></i> <span>Generating with AI...</span>`;
+      btnNextStep.disabled = true;
       if (window.feather) feather.replace();
 
-      setTimeout(() => {
+      const jobTitle = inputJobTitle ? inputJobTitle.value.trim() : '';
+      const expText = bulletPoints ? bulletPoints.value.trim() : '';
+      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
+        .map(t => t.textContent.replace('×', '').replace('x', '').trim())
+        .filter(Boolean);
+
+      try {
+        const response = await fetch('/api/optimize-resume', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobTitle, experienceText: expText, skills })
+        });
+
+        const data = await response.json();
+
+        // Step 3: Apply optimized content and show preview
+        if (data && data.optimizedBulletPoints && bulletPoints) {
+          bulletPoints.value = data.optimizedBulletPoints;
+          syncLivePreview();
+          autoSaveFormFields();
+        }
+
         setStep(3);
         btnNextStep.innerHTML = `<i data-feather="check-circle"></i> <span>Resume Generated!</span>`;
+        btnNextStep.disabled = false;
+        if (window.feather) feather.replace();
+
+        // Scroll to live preview card
+        const previewCard = document.getElementById('previewCardSection');
+        if (previewCard) {
+          previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Reset button after 3 seconds
+        setTimeout(() => {
+          btnNextStep.innerHTML = origHTML;
+          btnNextStep.disabled = false;
+          if (window.feather) feather.replace();
+        }, 3000);
+
+      } catch (err) {
+        console.warn("Generate Resume API error, using local preview:", err);
+
+        // Fallback: just advance to step 3 and show preview as-is
+        setStep(3);
+        btnNextStep.innerHTML = `<i data-feather="check-circle"></i> <span>Resume Ready!</span>`;
+        btnNextStep.disabled = false;
         if (window.feather) feather.replace();
 
         const previewCard = document.getElementById('previewCardSection');
-        if (previewCard) {
-          previewCard.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         setTimeout(() => {
-          btnNextStep.innerHTML = origText;
+          btnNextStep.innerHTML = origHTML;
           if (window.feather) feather.replace();
-        }, 2500);
-      }, 1000);
+        }, 3000);
+      }
     });
   }
 
