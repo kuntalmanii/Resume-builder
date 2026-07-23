@@ -782,64 +782,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Calls Google Gemini 2.5 Flash REST API for structured JSON ATS analysis.
+   * Calls secure Node.js backend endpoint /api/analyze (which communicates with Gemini API server-side).
    * @param {string} jdText 
    * @param {string} resumeText 
-   * @param {string} apiKey 
    */
-  async function fetchGeminiAtsAnalysis(jdText, resumeText, apiKey) {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
-Analyze the following Candidate Resume against the Target Job Description for ATS compatibility.
-
-JOB DESCRIPTION:
-${jdText}
-
-CANDIDATE RESUME & SKILLS TEXT:
-${resumeText}
-
-Evaluate keyword overlap, hard technical requirements, and section formatting.
-Respond STRICTLY with a valid JSON object following this exact JSON schema:
-{
-  "score": <number between 0 and 100 representing ATS match percentage>,
-  "matchedKeywords": [<array of technical skills, frameworks, and requirements matched in both>],
-  "missingKeywords": [<array of required skills, frameworks, or qualifications missing in resume>],
-  "recommendations": [
-    "<actionable recommendation 1 for 95%+ match>",
-    "<actionable recommendation 2>",
-    "<actionable recommendation 3>"
-  ]
-}`;
-
-    const payload = {
-      contents: [
-        {
-          parts: [
-            { text: prompt }
-          ]
-        }
-      ],
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
-    };
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+  async function fetchBackendAtsAnalysis(jdText, resumeText) {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jdText, resumeText })
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`);
+      throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) throw new Error("Empty response from Gemini API");
-
-    return JSON.parse(rawText);
+    return await response.json();
   }
 
   // Run ATS Analysis Action Button Handler
@@ -847,14 +805,10 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
     btnRunAtsAnalysis.addEventListener('click', async (e) => {
       e.preventDefault();
 
-      const activeApiKey = (geminiApiKeyInput ? geminiApiKeyInput.value.trim() : "") || 
-                           localStorage.getItem('resuai-gemini-api-key') || 
-                           GEMINI_API_KEY;
-
       // Show loading button state
       const origBtnHTML = btnRunAtsAnalysis.innerHTML;
       if (btnRunAtsText) {
-        btnRunAtsText.textContent = activeApiKey ? "Analyzing with Gemini 2.5 Flash AI..." : "Analyzing JD & Skills...";
+        btnRunAtsText.textContent = "Analyzing with Gemini 2.5 Flash AI...";
       }
       btnRunAtsAnalysis.disabled = true;
 
@@ -871,16 +825,11 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
       if (atsProgressFill) atsProgressFill.style.width = '0%';
       if (atsProgressPercent) atsProgressPercent.textContent = '0%';
 
-      const steps = activeApiKey ? [
+      const steps = [
         "Connecting to Gemini 2.5 Flash AI Engine...",
         "Parsing resume document structure & PDF items...",
         "Evaluating job requirements with Gemini LLM...",
         "Generating structured JSON ATS diagnostic report..."
-      ] : [
-        "Scanning resume document structure...",
-        "Extracting candidate technical skill matrix...",
-        "Parsing job description requirements...",
-        "Calculating Greenhouse & Lever ATS compatibility score..."
       ];
 
       const interval = setInterval(() => {
@@ -912,48 +861,27 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
       }
 
       try {
-        if (activeApiKey) {
-          const aiData = await fetchGeminiAtsAnalysis(jdText, candidateResumeText, activeApiKey);
-          
-          clearInterval(interval);
-          if (atsProgressFill) atsProgressFill.style.width = '100%';
-          if (atsProgressPercent) atsProgressPercent.textContent = '100%';
+        const aiData = await fetchBackendAtsAnalysis(jdText, candidateResumeText);
+        
+        clearInterval(interval);
+        if (atsProgressFill) atsProgressFill.style.width = '100%';
+        if (atsProgressPercent) atsProgressPercent.textContent = '100%';
 
-          setTimeout(() => {
-            btnRunAtsAnalysis.innerHTML = origBtnHTML;
-            btnRunAtsAnalysis.disabled = false;
-            if (window.feather) feather.replace();
+        setTimeout(() => {
+          btnRunAtsAnalysis.innerHTML = origBtnHTML;
+          btnRunAtsAnalysis.disabled = false;
+          if (window.feather) feather.replace();
 
-            if (atsLoadingState) atsLoadingState.style.display = 'none';
-            renderAtsReportUI(aiData);
+          if (atsLoadingState) atsLoadingState.style.display = 'none';
+          renderAtsReportUI(aiData);
 
-            if (atsResults) {
-              atsResults.style.display = 'block';
-              atsResults.scrollIntoView({ behavior: 'smooth' });
-            }
-          }, 300);
-        } else {
-          // No API key provided — use client-side heuristic analyzer
-          setTimeout(() => {
-            clearInterval(interval);
-            if (atsProgressFill) atsProgressFill.style.width = '100%';
-            if (atsProgressPercent) atsProgressPercent.textContent = '100%';
-
-            btnRunAtsAnalysis.innerHTML = origBtnHTML;
-            btnRunAtsAnalysis.disabled = false;
-            if (window.feather) feather.replace();
-
-            if (atsLoadingState) atsLoadingState.style.display = 'none';
-            runClientAtsDiagnostic();
-
-            if (atsResults) {
-              atsResults.style.display = 'block';
-              atsResults.scrollIntoView({ behavior: 'smooth' });
-            }
-          }, 700);
-        }
+          if (atsResults) {
+            atsResults.style.display = 'block';
+            atsResults.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 300);
       } catch (error) {
-        console.warn("Gemini API call failed, using client-side fallback:", error);
+        console.warn("Backend API call failed, using client-side fallback:", error);
         clearInterval(interval);
 
         btnRunAtsAnalysis.innerHTML = origBtnHTML;
