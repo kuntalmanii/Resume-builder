@@ -545,6 +545,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let uploadedFileText = "";
 
+  // Configure PDF.js worker URL if library is loaded
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  /**
+   * Extracts text content from a PDF file using PDF.js
+   * @param {File} file 
+   */
+  async function extractPdfText(file) {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      if (!window.pdfjsLib) return "";
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      let fullText = "";
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(" ");
+        fullText += pageText + " ";
+      }
+      return fullText;
+    } catch (err) {
+      console.warn("PDF.js parsing error:", err);
+      return "";
+    }
+  }
+
   if (btnSelectPdfFile && pdfFileInput) {
     btnSelectPdfFile.addEventListener('click', (e) => {
       e.preventDefault();
@@ -552,15 +581,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function handleFileSelected(file) {
+  async function handleFileSelected(file) {
     if (!file) return;
     if (selectedFileName && selectedFileBadge) {
       selectedFileName.textContent = file.name;
       selectedFileBadge.style.display = 'inline-flex';
     }
 
-    // Attempt to read text content if plain text file
-    if (file.type === "text/plain" || file.name.endsWith('.txt')) {
+    if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+      uploadedFileText = await extractPdfText(file);
+    } else if (file.type === "text/plain" || file.name.endsWith('.txt')) {
       const reader = new FileReader();
       reader.onload = (e) => {
         uploadedFileText = e.target.result || "";
