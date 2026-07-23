@@ -501,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (btnSaveDraft) btnSaveDraft.addEventListener('click', () => handleManualSave(btnSaveDraft));
   if (btnDraftSaveFooter) btnDraftSaveFooter.addEventListener('click', () => handleManualSave(btnDraftSaveFooter));
 
   // Step Progress Bar (Step 1 -> 2 -> 3)
@@ -606,9 +605,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     7. ATS Analyzer Diagnostics Engine & Gemini 2.5 Flash AI Integration
+     7. ATS Analyzer Diagnostics Engine & Gemini Backend API Integration
      ========================================================================== */
-  const GEMINI_API_KEY = ""; // Define default Gemini API Key here if desired
 
   const atsDropZone = document.getElementById('atsDropZone');
   const btnSelectPdfFile = document.getElementById('btnSelectPdfFile');
@@ -617,9 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectedFileName = document.getElementById('selectedFileName');
   const btnRunAtsAnalysis = document.getElementById('btnRunAtsAnalysis');
   const btnRunAtsText = document.getElementById('btnRunAtsText');
-
-  const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-  const btnSaveGeminiKey = document.getElementById('btnSaveGeminiKey');
 
   const atsLoadingState = document.getElementById('atsLoadingState');
   const atsProgressFill = document.getElementById('atsProgressFill');
@@ -638,24 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const recommendationsGridContainer = document.getElementById('recommendationsGridContainer');
 
   let uploadedFileText = "";
-
-  // Load saved Gemini API Key from localStorage
-  if (geminiApiKeyInput) {
-    const savedKey = localStorage.getItem('resuai-gemini-api-key') || GEMINI_API_KEY;
-    if (savedKey) geminiApiKeyInput.value = savedKey;
-  }
-
-  if (btnSaveGeminiKey && geminiApiKeyInput) {
-    btnSaveGeminiKey.addEventListener('click', (e) => {
-      e.preventDefault();
-      const keyVal = geminiApiKeyInput.value.trim();
-      if (keyVal) {
-        localStorage.setItem('resuai-gemini-api-key', keyVal);
-        btnSaveGeminiKey.textContent = 'Saved!';
-        setTimeout(() => { btnSaveGeminiKey.textContent = 'Save Key'; }, 2000);
-      }
-    });
-  }
 
   // Configure PDF.js worker URL if library is loaded
   if (window.pdfjsLib) {

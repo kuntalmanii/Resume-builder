@@ -1670,13 +1670,8 @@ button, input, select, textarea {
    -------------------------------------------------------------------------- */
 
 @media print {
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-size: 11pt;
-  }
-
-  /* Hide UI chrome */
+  /* Hide everything except the resume preview document */
+  body > *,
   .sidebar,
   .top-bar,
   .step-indicator-bar,
@@ -1686,35 +1681,52 @@ button, input, select, textarea {
   .ai-recommendations-box,
   .auth-container,
   .card-header,
+  .editor-action-bar,
+  .textarea-footer,
   .sidebar-overlay,
-  button {
+  .tab-nav,
+  .tab-pane:not(.active),
+  #tab-ats-analyzer,
+  button,
+  .btn-print {
     display: none !important;
   }
 
-  .main-wrapper {
-    margin-left: 0 !important;
+  /* Reset layout so preview card fills entire page */
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    margin: 0 !important;
     padding: 0 !important;
   }
 
-  .main-content {
-    padding: 0 !important;
-  }
-
-  .dashboard-split-grid {
+  .main-wrapper,
+  .main-content,
+  .dashboard-content,
+  .tab-pane.active,
+  .dashboard-split-grid,
+  #tab-resume-builder {
     display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
 
   .preview-card {
+    display: block !important;
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
     background: #ffffff !important;
+    width: 100% !important;
   }
 
   .resume-preview-document {
+    display: block !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
+    padding: 24pt 28pt !important;
     background: #ffffff !important;
     color: #000000 !important;
     width: 100% !important;
@@ -1741,6 +1753,16 @@ button, input, select, textarea {
     border-bottom: 1.5px solid #000000 !important;
   }
 
+  .doc-bullet-list li {
+    color: #111111 !important;
+    font-size: 10pt !important;
+  }
+
+  .doc-skills-text {
+    color: #222222 !important;
+    font-size: 10pt !important;
+  }
+}
 /* --------------------------------------------------------------------------
    10. ATS Analyzer View, Circular Score Ring & Diagnostic Report
    -------------------------------------------------------------------------- */
