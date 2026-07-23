@@ -504,5 +504,141 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDraftFromStorage();
   syncLivePreview();
   syncLiveSkills();
+
+  /* --------------------------------------------------------------------------
+     7. ATS Analyzer View Logic (Drag & Drop, Scanner Animation & Report Generator)
+     -------------------------------------------------------------------------- */
+  
+  const atsDropZone = document.getElementById('atsDropZone');
+  const btnSelectPdfFile = document.getElementById('btnSelectPdfFile');
+  const pdfFileInput = document.getElementById('pdfFileInput');
+  const selectedFileBadge = document.getElementById('selectedFileBadge');
+  const selectedFileName = document.getElementById('selectedFileName');
+  const btnRunAtsAnalysis = document.getElementById('btnRunAtsAnalysis');
+
+  const atsLoadingState = document.getElementById('atsLoadingState');
+  const atsProgressFill = document.getElementById('atsProgressFill');
+  const atsProgressPercent = document.getElementById('atsProgressPercent');
+  const loadingStepText = document.getElementById('loadingStepText');
+  const atsReportContainer = document.getElementById('atsReportContainer');
+  const scoreNumber = document.getElementById('scoreNumber');
+  const scoreCircle = document.getElementById('scoreCircle');
+
+  // Trigger hidden file input click
+  if (btnSelectPdfFile && pdfFileInput) {
+    btnSelectPdfFile.addEventListener('click', () => {
+      pdfFileInput.click();
+    });
+  }
+
+  // Update selected file badge on file input change
+  function handleFileSelected(file) {
+    if (!file) return;
+    if (selectedFileName && selectedFileBadge) {
+      selectedFileName.textContent = file.name;
+      selectedFileBadge.style.display = 'inline-flex';
+    }
+  }
+
+  if (pdfFileInput) {
+    pdfFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileSelected(e.target.files[0]);
+      }
+    });
+  }
+
+  // Drag and Drop Event Listeners for ATS PDF Upload
+  if (atsDropZone) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      atsDropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        atsDropZone.style.borderColor = 'var(--accent-primary)';
+        atsDropZone.style.backgroundColor = 'var(--bg-active)';
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      atsDropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        atsDropZone.style.borderColor = 'var(--border-color)';
+        atsDropZone.style.backgroundColor = 'var(--bg-hover)';
+      }, false);
+    });
+
+    atsDropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files[0]) {
+        handleFileSelected(files[0]);
+      }
+    });
+  }
+
+  // Run ATS Analysis button handler
+  if (btnRunAtsAnalysis) {
+    btnRunAtsAnalysis.addEventListener('click', () => {
+      // Hide report if previously shown
+      if (atsReportContainer) atsReportContainer.style.display = 'none';
+
+      // Show loading card
+      if (atsLoadingState) {
+        atsLoadingState.style.display = 'flex';
+        atsLoadingState.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      let progress = 0;
+      if (atsProgressFill) atsProgressFill.style.width = '0%';
+      if (atsProgressPercent) atsProgressPercent.textContent = '0%';
+
+      const steps = [
+        "Scanning resume document structure...",
+        "Extracting candidate technical skill matrix...",
+        "Parsing job description requirements...",
+        "Calculating Greenhouse & Lever ATS compatibility score..."
+      ];
+
+      const interval = setInterval(() => {
+        progress += 5;
+        if (atsProgressFill) atsProgressFill.style.width = `${progress}%`;
+        if (atsProgressPercent) atsProgressPercent.textContent = `${progress}%`;
+
+        // Update step status text
+        if (loadingStepText) {
+          if (progress < 25) loadingStepText.textContent = steps[0];
+          else if (progress < 55) loadingStepText.textContent = steps[1];
+          else if (progress < 85) loadingStepText.textContent = steps[2];
+          else loadingStepText.textContent = steps[3];
+        }
+
+        if (progress >= 100) {
+          clearInterval(interval);
+
+          // Hide loading, show report
+          setTimeout(() => {
+            if (atsLoadingState) atsLoadingState.style.display = 'none';
+            if (atsReportContainer) {
+              atsReportContainer.style.display = 'block';
+              atsReportContainer.scrollIntoView({ behavior: 'smooth' });
+
+              // Calculate dynamic score based on JD input
+              const jdText = document.getElementById('atsJdInput') ? document.getElementById('atsJdInput').value.toLowerCase() : '';
+              let score = 87;
+              if (jdText.includes('kubernetes') && jdText.includes('redis')) score = 82;
+              else if (jdText.length > 500) score = 91;
+
+              if (scoreNumber) scoreNumber.textContent = `${score}%`;
+              if (scoreCircle) {
+                scoreCircle.style.background = `conic-gradient(#10b981 0% ${score}%, var(--bg-card) ${score}% 100%)`;
+              }
+            }
+          }, 300);
+        }
+      }, 50);
+    });
+  }
 });
+
 

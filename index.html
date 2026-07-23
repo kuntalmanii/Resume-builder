@@ -554,72 +554,165 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
 
           <!-- TAB 2: ATS ANALYZER -->
           <div class="tab-pane" id="tab-ats-analyzer">
-            <div class="dashboard-split-grid">
+            <!-- Header Banner for ATS Diagnostics -->
+            <div class="ats-header-card">
+              <div class="ats-header-content">
+                <div class="header-badge">
+                  <i data-feather="shield"></i>
+                  <span>ATS Engine // Greenhouse & Lever Parser Diagnostic</span>
+                </div>
+                <h2>ATS Resume Diagnostics & Feedback</h2>
+                <p>Paste your target job description and upload your resume PDF to run deep keyword gap analysis & receive instant actionable ATS optimization recommendations.</p>
+              </div>
+            </div>
+
+            <!-- Two-Column Input Grid -->
+            <div class="dashboard-split-grid margin-top-lg">
+              <!-- Left Column: Job Description Text Area -->
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="file-text"></i>
+                    <h3>Target Job Description</h3>
+                  </div>
+                  <span class="card-status-pill"><span class="status-dot green"></span> Ready for matching</span>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="atsJdInput">Paste Job Requirements & Key Qualifications</label>
+                    <textarea id="atsJdInput" class="form-textarea" rows="8" placeholder="Paste the job description here (e.g. Senior Frontend Engineer requirements, core tech stack, qualifications)...">We are looking for a Staff / Senior Frontend Architect to lead UI component design systems and web vitals optimization.
+
+Key Requirements:
+- 5+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
+- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management.
+- Experience with GraphQL, REST APIs, and client-side performance optimization.
+- Familiarity with CI/CD deployment pipelines, Kubernetes, and Redis caching is a plus.</textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Sleek Drag & Drop PDF Upload Zone -->
               <div class="dashboard-card">
                 <div class="card-header">
                   <div class="card-title">
                     <i data-feather="upload-cloud"></i>
-                    <h3>Upload Job Description & Resume</h3>
+                    <h3>Resume Upload Zone</h3>
                   </div>
                 </div>
                 <div class="card-body">
-                  <div class="drop-zone" id="dropZone">
-                    <i data-feather="file-text" class="drop-icon"></i>
-                    <h4>Drag & Drop your Resume (.pdf, .docx, .txt)</h4>
-                    <p>Or click to browse from your workspace files</p>
-                    <button class="btn-secondary btn-sm">Select Document</button>
+                  <div class="drop-zone" id="atsDropZone">
+                    <i data-feather="upload-cloud" class="drop-icon"></i>
+                    <h4>Drag or click to upload PDF</h4>
+                    <p>Supports .pdf, .docx, and .txt developer resumes</p>
+                    <button type="button" class="btn-secondary btn-sm" id="btnSelectPdfFile">Select File</button>
+                    <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display: none;" />
+                    <div class="selected-file-badge" id="selectedFileBadge" style="display: none;">
+                      <i data-feather="check-circle"></i>
+                      <span id="selectedFileName">manish_kuntal_resume.pdf</span>
+                    </div>
                   </div>
 
-                  <div class="form-group margin-top-lg">
-                    <label for="jdText">Paste Job Description for AI Matching</label>
-                    <textarea id="jdText" class="form-textarea" rows="5" placeholder="Paste the target job description requirements here..."></textarea>
-                  </div>
-                  <button class="btn-primary btn-full">
+                  <button class="btn-primary btn-full margin-top-lg" id="btnRunAtsAnalysis">
                     <i data-feather="activity"></i>
-                    <span>Run Deep ATS Analysis</span>
+                    <span>Run ATS Analysis</span>
                   </button>
                 </div>
               </div>
+            </div>
 
-              <div class="dashboard-card">
-                <div class="card-header">
-                  <div class="card-title">
-                    <i data-feather="list"></i>
-                    <h3>ATS Keyword Gap Breakdown</h3>
+            <!-- Loading Spinner & Progress Animation (Hidden by default) -->
+            <div class="ats-loading-card" id="atsLoadingState" style="display: none;">
+              <div class="spinner-ring"></div>
+              <div class="loading-text">
+                <h4 id="loadingStepText">Scanning keywords against job requirements...</h4>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" id="atsProgressFill"></div>
+                </div>
+                <span class="progress-percent" id="atsProgressPercent">0%</span>
+              </div>
+            </div>
+
+            <!-- Mock Diagnostic Report Container (Displayed after analysis) -->
+            <div class="ats-report-card margin-top-lg" id="atsReportContainer">
+              <div class="card-header">
+                <div class="card-title">
+                  <i data-feather="bar-chart-2"></i>
+                  <h3>ATS Diagnostic & Feedback Report</h3>
+                </div>
+                <span class="badge-tag green">Analysis Complete</span>
+              </div>
+
+              <div class="card-body">
+                <div class="report-overview-grid">
+                  <!-- ATS Compatibility Score Ring -->
+                  <div class="score-ring-box">
+                    <div class="circular-progress" id="scoreCircle">
+                      <div class="circle-inner">
+                        <span class="score-number" id="scoreNumber">87%</span>
+                        <span class="score-label">MATCH SCORE</span>
+                      </div>
+                    </div>
+                    <div class="score-summary-text">
+                      <h4>High Match Potential</h4>
+                      <p>Your resume matches 87% of core qualifications for Senior Frontend Architect roles.</p>
+                    </div>
+                  </div>
+
+                  <!-- Keyword Match Checklist -->
+                  <div class="keyword-checklist-box">
+                    <h4>Keyword Match Breakdown</h4>
+                    <div class="keyword-lists-grid">
+                      <div class="keyword-col">
+                        <span class="col-title green"><i data-feather="check"></i> Matched Keywords (8)</span>
+                        <div class="keyword-tags">
+                          <span class="badge-tag green">TypeScript</span>
+                          <span class="badge-tag green">React / Next.js</span>
+                          <span class="badge-tag green">Design Systems</span>
+                          <span class="badge-tag green">Vanilla CSS</span>
+                          <span class="badge-tag green">Web Vitals</span>
+                          <span class="badge-tag green">GraphQL</span>
+                          <span class="badge-tag green">Performance</span>
+                        </div>
+                      </div>
+
+                      <div class="keyword-col">
+                        <span class="col-title red"><i data-feather="x"></i> Missing / Gap Keywords (3)</span>
+                        <div class="keyword-tags">
+                          <span class="badge-tag red">Kubernetes</span>
+                          <span class="badge-tag red">Redis Caching</span>
+                          <span class="badge-tag amber">CI/CD Pipelines</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="card-body">
-                  <div class="gap-list">
-                    <div class="gap-item match">
-                      <div class="gap-info">
-                        <span class="gap-name">Design Systems</span>
-                        <span class="gap-status">Matched (4 mentions)</span>
+
+                <!-- Actionable Recommendations -->
+                <div class="recommendations-section margin-top-lg">
+                  <h4><i data-feather="cpu"></i> Actionable Recommendations for 95%+ Match</h4>
+                  <div class="recommendations-grid">
+                    <div class="rec-card">
+                      <div class="rec-number">1</div>
+                      <div class="rec-content">
+                        <strong>Incorporate Infrastructure Keywords:</strong>
+                        <p>Add 1-2 instances of <em>Kubernetes</em> or <em>Container Orchestration</em> under your technical project bullet points to clear hard ATS filters.</p>
                       </div>
-                      <span class="badge-tag green">100% Match</span>
                     </div>
 
-                    <div class="gap-item match">
-                      <div class="gap-info">
-                        <span class="gap-name">CSS Custom Properties</span>
-                        <span class="gap-status">Matched (3 mentions)</span>
+                    <div class="rec-card">
+                      <div class="rec-number">2</div>
+                      <div class="rec-content">
+                        <strong>Quantify Performance Metrics:</strong>
+                        <p>Highlight specific LCP, CLS, or INP web vital improvements with percentages (e.g. <em>"Reduced LCP by 42%"</em>).</p>
                       </div>
-                      <span class="badge-tag green">100% Match</span>
                     </div>
 
-                    <div class="gap-item missing">
-                      <div class="gap-info">
-                        <span class="gap-name">GraphQL Schema Stitching</span>
-                        <span class="gap-status">Missing from resume</span>
+                    <div class="rec-card">
+                      <div class="rec-number">3</div>
+                      <div class="rec-content">
+                        <strong>Format Verification:</strong>
+                        <p>Maintain clean standard section headers ("PROFESSIONAL EXPERIENCE") to ensure 100% parsing accuracy in Lever & Workday.</p>
                       </div>
-                      <span class="badge-tag red">Missing Keyword</span>
-                    </div>
-
-                    <div class="gap-item warning">
-                      <div class="gap-info">
-                        <span class="gap-name">Web Vitals LCP Optimization</span>
-                        <span class="gap-status">Low frequency (1 mention)</span>
-                      </div>
-                      <span class="badge-tag amber">Add 1-2 instances</span>
                     </div>
                   </div>
                 </div>
