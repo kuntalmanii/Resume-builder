@@ -1,5 +1,5 @@
 /**
- * ResuAI // Secure Backend Server & Gemini 1.5 Flash Proxy (Latest)
+ * ResuAI // Secure Backend Server & Gemini 2.5 Flash Proxy (Latest)
  * Pure Node.js — Zero External Dependencies Required!
  *
  * Keeps GEMINI_API_KEY completely secure on the backend server.
@@ -75,7 +75,7 @@ function callGeminiApi(jdText, resumeText) {
       return reject(new Error("GEMINI_API_KEY environment variable is not set on the server."));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
@@ -196,7 +196,7 @@ function runServerFallbackAnalysis(jdText, resumeText) {
 }
 
 /**
- * Server-side HTTPS call to Google Gemini 1.5 Flash for Resume Optimization
+ * Server-side HTTPS call to Google Gemini 2.5 Flash for Resume Optimization
  * @param {string} jobTitle 
  * @param {string} experienceText 
  * @param {Array<string>} skills 
@@ -207,7 +207,7 @@ function callGeminiOptimize(jobTitle, experienceText, skills) {
       return reject(new Error("GEMINI_API_KEY is not set on server."));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
@@ -278,7 +278,7 @@ function runServerFallbackOptimization(jobTitle, experienceText) {
 }
 
 /**
- * Server-side HTTPS call to Gemini 1.5 Flash for Tailored Resume Generation
+ * Server-side HTTPS call to Gemini 2.5 Flash for Tailored Resume Generation
  * @param {string} jdText - Target job description
  * @param {string} resumeText - User's existing resume/profile text
  */
@@ -288,7 +288,7 @@ function callGeminiTailoredResume(jdText, resumeText) {
       return reject(new Error('GEMINI_API_KEY is not set on server.'));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.

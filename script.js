@@ -1897,7 +1897,7 @@ Key Requirements:
       // Show loading button state
       const origBtnHTML = btnRunAtsAnalysis.innerHTML;
       if (btnRunAtsText) {
-        btnRunAtsText.textContent = "Analyzing with Gemini 1.5 Flash AI...";
+        btnRunAtsText.textContent = "Analyzing with Gemini 2.5 Flash AI...";
       }
       btnRunAtsAnalysis.disabled = true;
 
@@ -1915,7 +1915,7 @@ Key Requirements:
       if (atsProgressPercent) atsProgressPercent.textContent = '0%';
 
       const steps = [
-        "Connecting to Gemini 1.5 Flash AI Engine...",
+        "Connecting to Gemini 2.5 Flash AI Engine...",
         "Parsing resume document structure & PDF items...",
         "Evaluating job requirements with Gemini LLM...",
         "Generating structured JSON ATS diagnostic report..."
@@ -1974,7 +1974,7 @@ Key Requirements:
           const tailoredCtaDesc = tailoredCta ? tailoredCta.querySelector('.cta-text p') : null;
           if (tailoredCta) {
             if (uploadedFileText && uploadedFileText.trim().length > 50) {
-              tailoredCtaDesc && (tailoredCtaDesc.textContent = 'Let Gemini 1.5 Flash rewrite your resume, optimised specifically for this job description — with matched keywords, a custom summary, and impact-driven bullets.');
+              tailoredCtaDesc && (tailoredCtaDesc.textContent = 'Let Gemini 2.5 Flash rewrite your resume, optimised specifically for this job description — with matched keywords, a custom summary, and impact-driven bullets.');
               document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = false);
             } else {
               tailoredCtaDesc && (tailoredCtaDesc.textContent = '⚠️ No resume file detected. Please upload your resume PDF in the drop zone above and re-run analysis to enable tailored generation.');
