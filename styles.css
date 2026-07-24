@@ -1016,6 +1016,184 @@ button, input, select, textarea {
   min-width: 80px;
 }
 
+/* --- Core Skills Suggestions & Autocomplete Engine --- */
+.label-row-with-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+
+.btn-ai-suggest-skills {
+  font-size: 0.73rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(91, 95, 239, 0.08);
+  border: 1px solid rgba(91, 95, 239, 0.25);
+  color: var(--accent-primary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ai-suggest-skills:hover {
+  background: var(--accent-primary);
+  color: #ffffff;
+}
+
+.btn-ai-suggest-skills svg {
+  width: 12px;
+  height: 12px;
+}
+
+.skill-suggestions-wrapper {
+  margin-top: 0.65rem;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+}
+
+[data-theme="dark"] .skill-suggestions-wrapper {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.skill-suggestions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.suggestion-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.suggestion-label svg {
+  width: 13px;
+  height: 13px;
+  color: #f59e0b;
+}
+
+.skill-category-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.category-chip {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.category-chip:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.category-chip.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+.skill-pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.skill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.skill-pill:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.skill-pill.added {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-weight: 600;
+}
+
+.skill-pill.added::before {
+  content: "✓";
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* Autocomplete Dropdown */
+.skill-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 99;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.autocomplete-item {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.12s ease;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+  background: var(--accent-light);
+  color: var(--accent-primary);
+}
+
+.autocomplete-category {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* =========================================================
    Live AI Resume Preview — Premium UX Redesign
    ========================================================= */

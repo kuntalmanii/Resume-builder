@@ -329,14 +329,39 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="techStack">Core Skills & Technologies</label>
-                    <div class="tags-input-container" id="skillsTagsContainer">
+                    <div class="label-row-with-badge">
+                      <label for="techStack">Core Skills &amp; Technologies</label>
+                      <button type="button" class="btn-ghost-sm btn-ai-suggest-skills" id="btnSuggestAiSkills" title="Auto-suggest skills based on your Target Job Title">
+                        <i data-feather="sparkles"></i>
+                        <span>Suggest AI Skills</span>
+                      </button>
+                    </div>
+                    <div class="tags-input-container" id="skillsTagsContainer" style="position: relative;">
                       <span class="tag">TypeScript <i data-feather="x"></i></span>
                       <span class="tag">React / Next.js <i data-feather="x"></i></span>
                       <span class="tag">Design Systems <i data-feather="x"></i></span>
-                      <span class="tag">Tailwind & Vanilla CSS <i data-feather="x"></i></span>
+                      <span class="tag">Tailwind &amp; Vanilla CSS <i data-feather="x"></i></span>
                       <span class="tag">GraphQL <i data-feather="x"></i></span>
-                      <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill & hit Enter" />
+                      <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill &amp; hit Enter..." autocomplete="off" />
+                      <!-- Autocomplete Suggestions Dropdown -->
+                      <div class="skill-autocomplete-dropdown" id="skillAutocompleteDropdown" style="display: none;"></div>
+                    </div>
+
+                    <!-- Category Pills Quick Suggestions -->
+                    <div class="skill-suggestions-wrapper">
+                      <div class="skill-suggestions-header">
+                        <span class="suggestion-label"><i data-feather="zap"></i> Suggested Skills (Click to add):</span>
+                        <div class="skill-category-filters" id="skillCategoryFilters">
+                          <button type="button" class="category-chip active" data-category="popular">Popular</button>
+                          <button type="button" class="category-chip" data-category="frontend">Frontend</button>
+                          <button type="button" class="category-chip" data-category="backend">Backend</button>
+                          <button type="button" class="category-chip" data-category="devops">DevOps &amp; Cloud</button>
+                          <button type="button" class="category-chip" data-category="ai">AI &amp; Data</button>
+                        </div>
+                      </div>
+                      <div class="skill-pills-container" id="skillPillsContainer">
+                        <!-- Dynamically populated by JS -->
+                      </div>
                     </div>
                   </div>
 

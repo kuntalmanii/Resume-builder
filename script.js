@@ -471,6 +471,142 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tag removal & addition
   const tagsContainer = document.getElementById('skillsTagsContainer');
   const skillInputField = document.getElementById('skillInputField');
+  const skillPillsContainer = document.getElementById('skillPillsContainer');
+  const skillCategoryFilters = document.getElementById('skillCategoryFilters');
+  const btnSuggestAiSkills = document.getElementById('btnSuggestAiSkills');
+  const skillAutocompleteDropdown = document.getElementById('skillAutocompleteDropdown');
+
+  /* ==========================================================================
+     Core Skills Suggestions Database & Engine
+     ========================================================================== */
+  const SKILL_DATABASE = [
+    // Popular / Trending
+    { name: 'TypeScript', category: 'frontend', popular: true },
+    { name: 'React / Next.js', category: 'frontend', popular: true },
+    { name: 'Node.js', category: 'backend', popular: true },
+    { name: 'Python', category: 'backend', popular: true },
+    { name: 'Docker', category: 'devops', popular: true },
+    { name: 'AWS Cloud', category: 'devops', popular: true },
+    { name: 'GraphQL', category: 'frontend', popular: true },
+    { name: 'Tailwind CSS', category: 'frontend', popular: true },
+    { name: 'PostgreSQL', category: 'backend', popular: true },
+    { name: 'RESTful APIs', category: 'backend', popular: true },
+    { name: 'Git & Version Control', category: 'devops', popular: true },
+    { name: 'Gemini / OpenAI API', category: 'ai', popular: true },
+    { name: 'Microservices Architecture', category: 'backend', popular: true },
+    { name: 'Jest / Testing Library', category: 'frontend', popular: true },
+
+    // Frontend
+    { name: 'JavaScript (ES6+)', category: 'frontend' },
+    { name: 'Vue.js / Nuxt', category: 'frontend' },
+    { name: 'Angular', category: 'frontend' },
+    { name: 'Redux Toolkit', category: 'frontend' },
+    { name: 'HTML5 & Semantic Web', category: 'frontend' },
+    { name: 'Webpack / Vite', category: 'frontend' },
+    { name: 'Responsive Web Design', category: 'frontend' },
+    { name: 'Web Vitals & Performance', category: 'frontend' },
+    { name: 'WebSockets & Realtime', category: 'frontend' },
+
+    // Backend
+    { name: 'Express.js', category: 'backend' },
+    { name: 'Django / FastAPI', category: 'backend' },
+    { name: 'Java / Spring Boot', category: 'backend' },
+    { name: 'Go (Golang)', category: 'backend' },
+    { name: 'C# / .NET Core', category: 'backend' },
+    { name: 'MongoDB', category: 'backend' },
+    { name: 'Redis Caching', category: 'backend' },
+    { name: 'SQL & Database Design', category: 'backend' },
+    { name: 'Prisma ORM', category: 'backend' },
+    { name: 'gRPC & Protocol Buffers', category: 'backend' },
+
+    // DevOps & Cloud
+    { name: 'Kubernetes (K8s)', category: 'devops' },
+    { name: 'CI/CD Pipelines (GitHub Actions)', category: 'devops' },
+    { name: 'Terraform & IaC', category: 'devops' },
+    { name: 'Google Cloud Platform (GCP)', category: 'devops' },
+    { name: 'Microsoft Azure', category: 'devops' },
+    { name: 'Nginx & Load Balancing', category: 'devops' },
+    { name: 'Linux System Admin', category: 'devops' },
+    { name: 'Datadog & APM Monitoring', category: 'devops' },
+
+    // AI & Data
+    { name: 'PyTorch / TensorFlow', category: 'ai' },
+    { name: 'LLM Prompt Engineering', category: 'ai' },
+    { name: 'RAG Systems (LangChain / LlamaIndex)', category: 'ai' },
+    { name: 'Vector Databases (Pinecone / Milvus)', category: 'ai' },
+    { name: 'Data Engineering & ETL', category: 'ai' },
+    { name: 'Pandas & NumPy', category: 'ai' },
+    { name: 'Machine Learning Pipelines', category: 'ai' }
+  ];
+
+  // Helper to add skill tag dynamically
+  function addSkillTag(skillName) {
+    if (!tagsContainer || !skillName) return;
+    const cleanName = skillName.trim();
+    if (!cleanName) return;
+
+    const existing = Array.from(tagsContainer.querySelectorAll('.tag'))
+      .map(t => t.textContent.replace('x', '').trim().toLowerCase());
+    
+    if (existing.includes(cleanName.toLowerCase())) return;
+
+    const newTag = document.createElement('span');
+    newTag.className = 'tag';
+    newTag.innerHTML = `${cleanName} <i data-feather="x"></i>`;
+    if (skillInputField) {
+      tagsContainer.insertBefore(newTag, skillInputField);
+    } else {
+      tagsContainer.appendChild(newTag);
+    }
+
+    if (window.feather) feather.replace();
+    syncLiveSkills();
+    autoSaveFormFields();
+    updateSkillPillStates();
+  }
+
+  // Update highlighted state for skill pills
+  function updateSkillPillStates() {
+    if (!tagsContainer || !skillPillsContainer) return;
+    const currentSkills = Array.from(tagsContainer.querySelectorAll('.tag'))
+      .map(t => t.textContent.replace('x', '').trim().toLowerCase());
+
+    const pills = skillPillsContainer.querySelectorAll('.skill-pill');
+    pills.forEach(pill => {
+      const pName = pill.dataset.skill.toLowerCase();
+      if (currentSkills.includes(pName)) {
+        pill.classList.add('added');
+      } else {
+        pill.classList.remove('added');
+      }
+    });
+  }
+
+  // Render skill pills for active category filter
+  function renderSkillPills(category = 'popular') {
+    if (!skillPillsContainer) return;
+    skillPillsContainer.innerHTML = '';
+
+    let filtered = [];
+    if (category === 'popular') {
+      filtered = SKILL_DATABASE.filter(s => s.popular);
+    } else {
+      filtered = SKILL_DATABASE.filter(s => s.category === category);
+    }
+
+    filtered.forEach(item => {
+      const pill = document.createElement('span');
+      pill.className = 'skill-pill';
+      pill.dataset.skill = item.name;
+      pill.textContent = item.name;
+      pill.addEventListener('click', () => {
+        addSkillTag(item.name);
+      });
+      skillPillsContainer.appendChild(pill);
+    });
+
+    updateSkillPillStates();
+  }
 
   if (tagsContainer) {
     tagsContainer.addEventListener('click', (e) => {
@@ -479,6 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeSvg.parentElement.remove();
         syncLiveSkills();
         autoSaveFormFields();
+        updateSkillPillStates();
       }
     });
   }
@@ -487,15 +624,92 @@ document.addEventListener('DOMContentLoaded', () => {
     skillInputField.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && skillInputField.value.trim() !== '') {
         e.preventDefault();
-        const skillText = skillInputField.value.trim();
-        const newTag = document.createElement('span');
-        newTag.className = 'tag';
-        newTag.innerHTML = `${skillText} <i data-feather="x"></i>`;
-        tagsContainer.insertBefore(newTag, skillInputField);
+        addSkillTag(skillInputField.value);
         skillInputField.value = '';
+        if (skillAutocompleteDropdown) skillAutocompleteDropdown.style.display = 'none';
+      }
+    });
+  }
+
+  // Initialize Category Filters & Pills
+  if (skillCategoryFilters) {
+    renderSkillPills('popular');
+
+    skillCategoryFilters.addEventListener('click', (e) => {
+      const chip = e.target.closest('.category-chip');
+      if (!chip) return;
+      skillCategoryFilters.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderSkillPills(chip.dataset.category);
+    });
+  }
+
+  // Suggest AI Skills button click handler
+  if (btnSuggestAiSkills) {
+    btnSuggestAiSkills.addEventListener('click', () => {
+      const role = inputJobTitle ? inputJobTitle.value.trim().toLowerCase() : '';
+      let recommended = [];
+
+      if (role.includes('front') || role.includes('ui') || role.includes('ux') || role.includes('web')) {
+        recommended = ['TypeScript', 'React / Next.js', 'Tailwind CSS', 'GraphQL', 'Web Vitals & Performance', 'Jest / Testing Library'];
+      } else if (role.includes('back') || role.includes('api') || role.includes('system') || role.includes('data')) {
+        recommended = ['Node.js', 'Python', 'PostgreSQL', 'Microservices Architecture', 'Docker', 'Redis Caching'];
+      } else if (role.includes('devops') || role.includes('cloud') || role.includes('infra') || role.includes('site')) {
+        recommended = ['Docker', 'Kubernetes (K8s)', 'AWS Cloud', 'CI/CD Pipelines (GitHub Actions)', 'Terraform & IaC', 'Linux System Admin'];
+      } else if (role.includes('ai') || role.includes('ml') || role.includes('learning') || role.includes('intelligence')) {
+        recommended = ['Python', 'Gemini / OpenAI API', 'PyTorch / TensorFlow', 'RAG Systems (LangChain / LlamaIndex)', 'Vector Databases (Pinecone / Milvus)'];
+      } else {
+        recommended = ['TypeScript', 'React / Next.js', 'Node.js', 'Docker', 'PostgreSQL', 'RESTful APIs'];
+      }
+
+      recommended.forEach(sk => addSkillTag(sk));
+
+      const origHTML = btnSuggestAiSkills.innerHTML;
+      btnSuggestAiSkills.innerHTML = `<i data-feather="check"></i> <span>Added ${recommended.length} Skills!</span>`;
+      if (window.feather) feather.replace();
+      setTimeout(() => {
+        btnSuggestAiSkills.innerHTML = origHTML;
         if (window.feather) feather.replace();
-        syncLiveSkills();
-        autoSaveFormFields();
+      }, 2000);
+    });
+  }
+
+  // Autocomplete as user types in #skillInputField
+  if (skillInputField && skillAutocompleteDropdown) {
+    skillInputField.addEventListener('input', () => {
+      const val = skillInputField.value.trim().toLowerCase();
+      if (!val) {
+        skillAutocompleteDropdown.style.display = 'none';
+        return;
+      }
+
+      const matches = SKILL_DATABASE.filter(s => s.name.toLowerCase().includes(val)).slice(0, 6);
+      if (matches.length === 0) {
+        skillAutocompleteDropdown.style.display = 'none';
+        return;
+      }
+
+      skillAutocompleteDropdown.innerHTML = matches.map(m => `
+        <div class="autocomplete-item" data-name="${m.name}">
+          <span>${m.name}</span>
+          <span class="autocomplete-category">${m.category}</span>
+        </div>
+      `).join('');
+
+      skillAutocompleteDropdown.style.display = 'block';
+    });
+
+    skillAutocompleteDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.autocomplete-item');
+      if (!item) return;
+      addSkillTag(item.dataset.name);
+      skillInputField.value = '';
+      skillAutocompleteDropdown.style.display = 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (tagsContainer && !tagsContainer.contains(e.target)) {
+        skillAutocompleteDropdown.style.display = 'none';
       }
     });
   }
