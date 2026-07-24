@@ -741,7 +741,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                   <i data-feather="cpu"></i>
                   <span>Gemini 2.5 Flash AI Engine // Secure Backend ATS Parser</span>
                 </div>
-                <h2>ATS Resume Diagnostics & Feedback</h2>
+                <h2>ATS Resume Diagnostics &amp; Feedback</h2>
                 <p>Paste your target job description and upload your resume PDF to run AI keyword gap analysis powered by Google Gemini 2.5 Flash backend service.</p>
               </div>
             </div>
@@ -769,7 +769,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                     </div>
                   </div>
 
-                  <div class="form-group">
+                  <div class="form-group margin-top-md">
                     <div class="label-row-with-badge">
                       <label for="atsJdInput">Paste Job Requirements &amp; Key Qualifications</label>
                       <div class="sample-jd-wrapper">
@@ -783,62 +783,50 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                       </div>
                     </div>
                     <textarea id="atsJdInput" class="form-textarea" rows="8" placeholder="Paste the job description here (e.g. Senior Frontend Engineer requirements, core tech stack, qualifications)...">We are looking for a Staff / Senior Frontend Architect to lead UI component design systems and web vitals optimization.
-                </div>
-                <div class="card-body">
-                  <textarea id="inputJobDesc" class="form-textarea large" placeholder="Paste full Job Description text here (responsibilities, required skills, technical qualifications)..."></textarea>
-                  <div class="textarea-footer">
-                    <span class="char-count" id="jdCharCount">0 chars</span>
+
+Key Requirements:
+- 5+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
+- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management.
+- Experience with GraphQL, REST APIs, and client-side performance optimization.
+- Familiarity with CI/CD deployment pipelines, Kubernetes, and Redis caching is a plus.</textarea>
                   </div>
                 </div>
               </div>
 
-              <!-- Right Column: Resume Upload & Raw Skills Input -->
+              <!-- Right Column: Sleek Drag & Drop PDF Upload Zone -->
               <div class="dashboard-card">
                 <div class="card-header">
                   <div class="card-title">
                     <i data-feather="upload-cloud"></i>
-                    <h3>Candidate Resume / Skills Profile</h3>
+                    <h3>Resume Upload Zone</h3>
                   </div>
                 </div>
                 <div class="card-body">
-                  <!-- PDF Drag and Drop Area -->
-                  <div class="pdf-drop-zone" id="pdfDropZone">
-                    <div class="drop-zone-icon">
-                      <i data-feather="file"></i>
+                  <div class="drop-zone" id="atsDropZone">
+                    <i data-feather="upload-cloud" class="drop-icon"></i>
+                    <h4>Drag or click to upload PDF</h4>
+                    <p>Supports .pdf, .docx, and .txt developer resumes</p>
+                    <button type="button" class="btn-secondary btn-sm" id="btnSelectPdfFile">Select File</button>
+                    <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display: none;" />
+                    <div class="selected-file-badge" id="selectedFileBadge" style="display: none;">
+                      <i data-feather="check-circle"></i>
+                      <span id="selectedFileName">resume.pdf</span>
                     </div>
-                    <div class="drop-zone-text">
-                      <strong>Drag &amp; Drop your Resume PDF</strong>
-                      <span>or click to browse local files (.pdf)</span>
-                    </div>
-                    <input type="file" id="pdfFileInput" accept=".pdf" style="display:none;" />
-                  </div>
-                  <div class="pdf-file-badge" id="pdfFileBadge" style="display:none;">
-                    <i data-feather="file-text"></i>
-                    <span id="pdfFileName">resume.pdf</span>
-                    <button class="remove-pdf-btn" id="btnRemovePdf" title="Remove File">&times;</button>
                   </div>
 
-                  <div class="divider-or margin-top-sm margin-bottom-sm">
-                    <span>OR PASTE RAW RESUME TEXT BELOW</span>
-                  </div>
-
-                  <textarea id="inputResumeText" class="form-textarea" placeholder="Paste candidate resume text or skill inventory here..."></textarea>
-
-                  <div class="ats-action-container margin-top-md">
-                    <button class="btn-primary btn-full-width btn-lg" id="btnRunAtsScan">
-                      <i data-feather="zap"></i>
-                      <span id="btnRunAtsText">Run Gemini ATS Diagnostic Scan</span>
-                    </button>
-                  </div>
+                  <button type="button" class="btn-primary btn-full margin-top-lg" id="btnRunAtsAnalysis">
+                    <i data-feather="activity"></i>
+                    <span id="btnRunAtsText">Run ATS Analysis</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Diagnostics Loading State Bar -->
-            <div class="ats-loading-card margin-top-lg" id="atsLoadingState" style="display:none;">
+            <!-- Loading Spinner & Progress Animation -->
+            <div class="ats-loading-card margin-top-lg" id="atsLoadingState" style="display: none;">
               <div class="spinner-ring"></div>
               <div class="loading-text">
-                <h4 id="atsLoadingTitle">Analyzing ATS keyword compatibility with Gemini AI...</h4>
+                <h4 id="loadingStepText">Scanning keywords against job requirements...</h4>
                 <div class="progress-bar-container">
                   <div class="progress-bar-fill" id="atsProgressFill"></div>
                 </div>
