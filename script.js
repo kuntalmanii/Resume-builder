@@ -597,16 +597,249 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Print PDF Trigger
+  // Print PDF Trigger — opens isolated print window with only the resume content
   if (btnPrintPdf) {
     btnPrintPdf.addEventListener('click', () => {
+      const resumeDoc = document.getElementById('printableResumeDoc');
+      if (!resumeDoc) { window.print(); return; }
+
+      const printWindow = window.open('', '_blank', 'width=900,height=700');
+      if (!printWindow) { window.print(); return; }
+
+      const resumeHTML = resumeDoc.outerHTML;
+
+      printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Resume — ${document.getElementById('previewName')?.textContent || 'Resume'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #ffffff;
+      color: #111111;
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      padding: 24pt 28pt;
+    }
+    .resume-preview-document {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .preview-doc-header {
+      border-bottom: 2px solid #111;
+      padding-bottom: 10pt;
+      margin-bottom: 14pt;
+    }
+    .doc-name {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      font-size: 20pt;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #000;
+    }
+    .doc-role {
+      font-size: 9.5pt;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: #444;
+      margin-top: 2pt;
+    }
+    .doc-meta {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 4pt;
+    }
+    .preview-section {
+      margin-top: 14pt;
+    }
+    .section-title {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #000;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 3pt;
+      margin-bottom: 6pt;
+    }
+    .section-content {
+      font-size: 10pt;
+      color: #222;
+    }
+    .exp-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10pt;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4pt;
+    }
+    .exp-list {
+      padding-left: 14pt;
+      font-size: 10pt;
+      color: #222;
+    }
+    .exp-list li {
+      margin-bottom: 3pt;
+    }
+    @media print {
+      html, body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  ${resumeHTML}
+  <script>
+    window.onload = function() {
       window.print();
+      window.onafterprint = function() { window.close(); };
+    };
+  <\/script>
+</body>
+</html>`);
+
+      printWindow.document.close();
+    });
+  }
+
+  // New Resume Version Button — clears all fields and resets to Step 1
+  const btnNewResume = document.getElementById('btnNewResume');
+  if (btnNewResume) {
+    btnNewResume.addEventListener('click', () => {
+      const confirmed = window.confirm('Start a new resume? This will clear all current fields.');
+      if (!confirmed) return;
+
+      // Clear all text inputs and textarea
+      if (inputFullName)   inputFullName.value   = '';
+      if (inputJobTitle)   inputJobTitle.value   = '';
+      if (inputEmail)      inputEmail.value      = '';
+      if (inputPhone)      inputPhone.value      = '';
+      if (inputEducation)  inputEducation.value  = '';
+      if (bulletPoints)    bulletPoints.value    = '';
+
+      // Reset skill tags to a single default placeholder
+      const tagsContainer = document.getElementById('skillsTagsContainer');
+      const skillInput    = document.getElementById('skillInputField');
+      if (tagsContainer) {
+        // Remove all existing tags
+        tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
+        // Re-insert the input field if it was removed
+        if (skillInput && !tagsContainer.contains(skillInput)) {
+          tagsContainer.appendChild(skillInput);
+        }
+      }
+
+      // Reset live preview to blank defaults
+      if (previewName)      previewName.textContent      = 'YOUR NAME';
+      if (previewRole)      previewRole.textContent      = 'TARGET JOB TITLE';
+      if (previewMeta)      previewMeta.textContent      = 'City, Country • email@domain.com • +1 000 000 0000';
+      if (previewEducation) previewEducation.textContent = 'Degree, University (Year)';
+      if (previewSkills)    previewSkills.textContent    = '';
+      if (previewBullets)   previewBullets.innerHTML     = '<li>Your experience bullet points will appear here...</li>';
+
+      // Clear saved draft from localStorage
+      try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch(e) {}
+
+      // Reset step progress back to Step 1
+      setStep(1);
+
+      // Update character counter
+      updateCharCounter();
+
+      // Scroll to the top of the form
+      const editorCard = document.querySelector('.editor-card');
+      if (editorCard) editorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      if (window.feather) feather.replace();
+    });
+  }
+
+  /* ==========================================================================
+     7.5 Export JSON / PDF Dropdown
+     ========================================================================== */
+  const btnExportToggle   = document.getElementById('btnExportToggle');
+  const exportDropdownMenu = document.getElementById('exportDropdownMenu');
+  const btnExportJson     = document.getElementById('btnExportJson');
+  const btnExportPdf      = document.getElementById('btnExportPdf');
+
+  // Toggle dropdown open/close
+  if (btnExportToggle && exportDropdownMenu) {
+    btnExportToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = exportDropdownMenu.style.display !== 'none';
+      exportDropdownMenu.style.display = isOpen ? 'none' : 'block';
+      if (window.feather) feather.replace();
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', () => {
+      exportDropdownMenu.style.display = 'none';
+    });
+  }
+
+  // Export as JSON
+  if (btnExportJson) {
+    btnExportJson.addEventListener('click', () => {
+      exportDropdownMenu.style.display = 'none';
+
+      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
+        .map(t => t.textContent.replace('x', '').trim()).filter(Boolean);
+
+      const resumeData = {
+        meta: { exportedAt: new Date().toISOString(), version: '2.5', tool: 'ResuAI' },
+        personalInfo: {
+          fullName:  inputFullName  ? inputFullName.value.trim()  : '',
+          jobTitle:  inputJobTitle  ? inputJobTitle.value.trim()  : '',
+          email:     inputEmail     ? inputEmail.value.trim()     : '',
+          phone:     inputPhone     ? inputPhone.value.trim()     : '',
+          education: inputEducation ? inputEducation.value.trim() : '',
+        },
+        skills,
+        experience: bulletPoints ? bulletPoints.value.trim() : '',
+        preview: {
+          name:      previewName      ? previewName.textContent      : '',
+          role:      previewRole      ? previewRole.textContent      : '',
+          meta:      previewMeta      ? previewMeta.textContent      : '',
+          education: previewEducation ? previewEducation.textContent : '',
+          skills:    previewSkills    ? previewSkills.textContent    : '',
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(resumeData, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const safeName = (inputFullName && inputFullName.value.trim()
+        ? inputFullName.value.trim().replace(/\s+/g, '_').toLowerCase()
+        : 'resume');
+      link.href     = url;
+      link.download = `${safeName}_resuai.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // Export / Print as PDF (reuse same isolated print window)
+  if (btnExportPdf) {
+    btnExportPdf.addEventListener('click', () => {
+      exportDropdownMenu.style.display = 'none';
+      // Trigger the same isolated print window as the Download PDF button
+      if (btnPrintPdf) btnPrintPdf.click();
     });
   }
 
   /* ==========================================================================
      7. ATS Analyzer Diagnostics Engine & Gemini Backend API Integration
      ========================================================================== */
+
+
 
   const atsDropZone = document.getElementById('atsDropZone');
   const btnSelectPdfFile = document.getElementById('btnSelectPdfFile');

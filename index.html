@@ -143,14 +143,7 @@
           <span>ATS Analyzer</span>
           <span class="nav-badge spark-badge">AI</span>
         </a>
-        <a href="#job-tracker" class="nav-item" data-tab="job-tracker">
-          <i data-feather="briefcase"></i>
-          <span>Job Applications</span>
-        </a>
-        <a href="#templates" class="nav-item" data-tab="templates">
-          <i data-feather="layers"></i>
-          <span>Templates Library</span>
-        </a>
+
 
         <div class="nav-section-title">MANAGEMENT</div>
         <a href="#analytics" class="nav-item" data-tab="analytics">
@@ -236,11 +229,7 @@
             <p id="pageDescription">Optimize your developer resume for high-tier tech companies & ATS scanners with real-time scoring.</p>
           </div>
           <div class="header-actions">
-            <button class="btn-secondary">
-              <i data-feather="download-cloud"></i>
-              <span>Export JSON / PDF</span>
-            </button>
-            <button class="btn-primary">
+            <button class="btn-primary" id="btnNewResume">
               <i data-feather="plus"></i>
               <span>New Resume Version</span>
             </button>
@@ -445,6 +434,23 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                     <h3>Live AI Resume Preview</h3>
                   </div>
                   <div class="card-actions">
+                    <div class="export-dropdown-wrapper" id="exportDropdownWrapper">
+                      <button class="btn-secondary btn-sm" id="btnExportToggle">
+                        <i data-feather="download-cloud"></i>
+                        <span>Export JSON / PDF</span>
+                        <i data-feather="chevron-down" style="margin-left:4px;width:14px;height:14px;"></i>
+                      </button>
+                      <div class="export-dropdown-menu" id="exportDropdownMenu" style="display:none;">
+                        <button class="export-option" id="btnExportJson">
+                          <i data-feather="file-text"></i>
+                          <span>Export as JSON</span>
+                        </button>
+                        <button class="export-option" id="btnExportPdf">
+                          <i data-feather="file"></i>
+                          <span>Export / Print PDF</span>
+                        </button>
+                      </div>
+                    </div>
                     <button class="btn-primary btn-sm btn-print" id="btnPrintPdf" title="Print or Save as PDF">
                       <i data-feather="printer"></i>
                       <span>Download PDF / Print</span>
@@ -648,60 +654,7 @@ Key Requirements:
             </div>
           </div>
 
-          <!-- TAB 3: OTHER TABS (PLACEHOLDER FOR FULLNESS) -->
-          <div class="tab-pane" id="tab-job-tracker">
-            <div class="dashboard-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <i data-feather="briefcase"></i>
-                  <h3>Active Job Applications Pipeline</h3>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="pipeline-grid">
-                  <div class="pipeline-column">
-                    <div class="column-header">Applied (4)</div>
-                    <div class="pipeline-card">
-                      <strong>Google // Senior UI Engineer</strong>
-                      <p>Mountain View, CA • Applied 2d ago</p>
-                    </div>
-                    <div class="pipeline-card">
-                      <strong>Stripe // Frontend Architect</strong>
-                      <p>Remote • Applied 4d ago</p>
-                    </div>
-                  </div>
-                  <div class="pipeline-column">
-                    <div class="column-header">Interviewing (2)</div>
-                    <div class="pipeline-card highlight-border">
-                      <strong>Vercel // Staff Design Systems</strong>
-                      <p>Technical Interview scheduled</p>
-                    </div>
-                  </div>
-                  <div class="pipeline-column">
-                    <div class="column-header">Offer (1)</div>
-                    <div class="pipeline-card offer-border">
-                      <strong>Linear // Product Engineer</strong>
-                      <p>Offer Review Phase</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="tab-pane" id="tab-templates">
-            <div class="dashboard-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <i data-feather="layers"></i>
-                  <h3>Developer Resume Templates</h3>
-                </div>
-              </div>
-              <div class="card-body">
-                <p>Choose from battle-tested ATS-parsed modern templates optimized for developer platforms.</p>
-              </div>
-            </div>
-          </div>
 
           <div class="tab-pane" id="tab-analytics">
             <div class="dashboard-card">
