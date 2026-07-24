@@ -234,10 +234,17 @@
       </nav>
 
       <div class="sidebar-footer">
-        <a href="#logout" class="nav-item logout-link" id="logoutBtn">
+        <div class="user-profile-pill sidebar-profile-pill">
+          <div class="user-avatar" id="topUserAvatar">MK</div>
+          <div class="user-info">
+            <span class="user-name" id="topUserName">Manish K.</span>
+            <span class="user-role" id="topUserRole">Senior Dev</span>
+          </div>
+        </div>
+        <button class="btn-signout sidebar-signout-btn" id="topSignoutBtn" title="Sign Out">
           <i data-feather="log-out"></i>
-          <span>Logout</span>
-        </a>
+          <span>Sign Out</span>
+        </button>
       </div>
     </aside>
 
@@ -281,19 +288,6 @@
               </button>
             </div>
           </div>
-
-          <div class="user-profile-pill">
-            <div class="user-avatar" id="topUserAvatar">MK</div>
-            <div class="user-info">
-              <span class="user-name" id="topUserName">Manish K.</span>
-              <span class="user-role" id="topUserRole">Senior Dev</span>
-            </div>
-          </div>
-
-          <button class="btn-signout" id="topSignoutBtn" title="Sign Out">
-            <i data-feather="log-out"></i>
-            <span>Sign Out</span>
-          </button>
         </div>
       </header>
 
