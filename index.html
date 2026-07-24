@@ -1072,183 +1072,227 @@ Key Requirements:
           </div>
 
           <div class="tab-pane" id="tab-settings">
-            <div class="settings-grid">
-
-              <!-- 1. AI Engine & Gemini API Configuration -->
-              <div class="dashboard-card">
-                <div class="card-header">
-                  <div class="card-title">
-                    <i data-feather="cpu"></i>
-                    <h3>AI Engine & Gemini API Preferences</h3>
+            <div class="settings-layout-grid">
+              
+              <!-- LEFT COLUMN: DIAGNOSTICS & SYSTEM PRIVACY -->
+              <div class="settings-column">
+                
+                <!-- Card 1: System Diagnostics Dashboard -->
+                <div class="dashboard-card diagnostics-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="cpu"></i>
+                      <h3>Platform & API Diagnostics</h3>
+                    </div>
+                    <span class="card-status-pill green-pill">System Online</span>
                   </div>
-                  <span class="card-status-pill"><span class="status-dot green"></span> Active</span>
+                  <div class="card-body">
+                    <div class="diagnostics-metric-row">
+                      <span class="diag-label">Gemini API Engine</span>
+                      <span class="diag-value green-text"><span class="status-dot green"></span> Connected</span>
+                    </div>
+                    <div class="diagnostics-metric-row">
+                      <span class="diag-label">Active Workspace</span>
+                      <span class="diag-value font-mono">ResuAI Dev Studio</span>
+                    </div>
+                    <div class="diagnostics-metric-row">
+                      <span class="diag-label">Local Draft Payload</span>
+                      <span class="diag-value font-mono" id="diagPayloadSize">0.00 KB</span>
+                    </div>
+                    
+                    <div class="diagnostics-storage-section">
+                      <div class="storage-meta">
+                        <span>LocalStorage Space Used</span>
+                        <span id="storagePercentText">0.1% of 5MB</span>
+                      </div>
+                      <div class="storage-progress-bar">
+                        <div class="storage-progress-fill" id="storageProgressFill" style="width: 0.1%;"></div>
+                      </div>
+                    </div>
+
+                    <div class="diagnostics-metric-row border-top-divider">
+                      <span class="diag-label">Channel Encryption</span>
+                      <span class="diag-value"><i data-feather="shield" class="icon-inline"></i> 256-Bit SSL</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="card-body">
-                  <div class="form-group">
-                    <label for="settingGeminiModel">AI Model Engine</label>
-                    <div class="input-icon-wrapper">
-                      <i data-feather="box"></i>
-                      <select id="settingGeminiModel" class="form-input">
-                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Fast, Recommended for Real-time ATS)</option>
-                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning & Executive Resumes)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy Model)</option>
-                      </select>
-                    </div>
-                    <span class="help-text">Controls which Google Gemini model processes your ATS diagnostic reports & bullet rewrites.</span>
-                  </div>
 
-
-
-                  <div class="form-group">
-                    <label for="settingOptimizationSensitivity">AI Rewrite Creativity Level: <strong id="sensitivityVal">Balanced (0.7)</strong></label>
-                    <input type="range" id="settingOptimizationSensitivity" min="0.1" max="1.0" step="0.1" value="0.7" class="form-range" />
-                    <div class="range-labels">
-                      <span>Strict ATS Keywords</span>
-                      <span>Balanced</span>
-                      <span>Creative Impact</span>
+                <!-- Card 2: Privacy, Backup & Data Management -->
+                <div class="dashboard-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="shield"></i>
+                      <h3>Privacy & Data Control</h3>
                     </div>
                   </div>
+                  <div class="card-body">
+                    <div class="setting-toggle-row">
+                      <div>
+                        <strong>LocalStorage Draft Auto-Save</strong>
+                        <p class="help-text">Instantly saves changes locally in your browser.</p>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="settingAutoSaveToggle" checked />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
 
-                  <div class="settings-card-actions">
-                    <button class="btn-primary btn-sm" id="btnSaveAiSettings">
-                      <i data-feather="check"></i>
-                      <span>Save AI Preferences</span>
-                    </button>
+                    <div class="setting-danger-zone margin-top-md">
+                      <button class="btn-secondary btn-sm block-btn" id="btnExportAllData">
+                        <i data-feather="download"></i>
+                        <span>Backup Workspace (JSON)</span>
+                      </button>
+                      <button class="btn-danger-sm block-btn" id="btnResetAllData">
+                        <i data-feather="trash-2"></i>
+                        <span>Wipe Local Data</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- 2. Target ATS Parser & Seniority Preferences -->
-              <div class="dashboard-card">
-                <div class="card-header">
-                  <div class="card-title">
-                    <i data-feather="target"></i>
-                    <h3>ATS Scanner & Target Role Preferences</h3>
+              <!-- RIGHT COLUMN: CONFIGURATION PREFERENCES -->
+              <div class="settings-column">
+                
+                <!-- Card 3: AI & Matching Engine Preferences -->
+                <div class="dashboard-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="sliders"></i>
+                      <h3>AI Engine & Target Profile</h3>
+                    </div>
                   </div>
-                </div>
-                <div class="card-body">
-                  <div class="form-row-2">
-                    <div class="form-group">
-                      <label for="settingAtsEngine">Target ATS Parser Profile</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="layers"></i>
-                        <select id="settingAtsEngine" class="form-input">
-                          <option value="greenhouse-lever" selected>Greenhouse & Lever (Modern Tech & SaaS)</option>
-                          <option value="workday">Workday ATS (Enterprise Corporate)</option>
-                          <option value="taleo">Taleo / iCIMS (Legacy System Parser)</option>
-                          <option value="faang">FAANG & Big Tech Direct Referral</option>
-                        </select>
+                  <div class="card-body">
+                    <form id="aiEngineSettingsForm">
+                      <div class="form-group">
+                        <label for="settingGeminiModel">AI Model Engine</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="box"></i>
+                          <select id="settingGeminiModel" class="form-input">
+                            <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Fast, Recommended for Real-time ATS)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning & Executive Resumes)</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy Model)</option>
+                          </select>
+                        </div>
+                        <span class="help-text">Controls which Google Gemini model processes your ATS diagnostic reports & bullet rewrites.</span>
                       </div>
-                    </div>
 
-                    <div class="form-group">
-                      <label for="settingSeniority">Target Seniority Level Focus</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="award"></i>
-                        <select id="settingSeniority" class="form-input">
-                          <option value="junior">Junior / Associate (0-2 YOE)</option>
-                          <option value="mid">Mid-Level Engineer (3-5 YOE)</option>
-                          <option value="senior" selected>Senior Engineer (6-8 YOE)</option>
-                          <option value="staff">Staff / Principal / Architect (9+ YOE)</option>
-                        </select>
+                      <div class="form-group">
+                        <label for="settingOptimizationSensitivity">AI Rewrite Creativity Level: <strong id="sensitivityVal">Balanced (0.7)</strong></label>
+                        <input type="range" id="settingOptimizationSensitivity" min="0.1" max="1.0" step="0.1" value="0.7" class="form-range" />
+                        <div class="range-labels">
+                          <span>Strict ATS Keywords</span>
+                          <span>Balanced</span>
+                          <span>Creative Impact</span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div class="form-group">
-                    <label for="settingKeywordMatchStrategy">Keyword Gap Matching Mode</label>
-                    <div class="input-icon-wrapper">
-                      <i data-feather="git-commit"></i>
-                      <select id="settingKeywordMatchStrategy" class="form-input">
-                        <option value="semantic" selected>Semantic & Synonym Fuzzy Match (Recommended)</option>
-                        <option value="exact">Strict Exact String Matching Only</option>
-                      </select>
-                    </div>
-                  </div>
+                      <div class="form-row-2">
+                        <div class="form-group">
+                          <label for="settingAtsEngine">Target ATS Parser Profile</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="layers"></i>
+                            <select id="settingAtsEngine" class="form-input">
+                              <option value="greenhouse-lever" selected>Greenhouse & Lever (Modern Tech & SaaS)</option>
+                              <option value="workday">Workday ATS (Enterprise Corporate)</option>
+                              <option value="taleo">Taleo / iCIMS (Legacy System Parser)</option>
+                              <option value="faang">FAANG & Big Tech Direct Referral</option>
+                            </select>
+                          </div>
+                        </div>
 
-                  <div class="settings-card-actions">
-                    <button class="btn-primary btn-sm" id="btnSaveAtsSettings">
-                      <i data-feather="check"></i>
-                      <span>Save Target Profile</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 3. Document Format & PDF Export Preferences -->
-              <div class="dashboard-card">
-                <div class="card-header">
-                  <div class="card-title">
-                    <i data-feather="file-text"></i>
-                    <h3>PDF Export & Typography Settings</h3>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <div class="form-row-2">
-                    <div class="form-group">
-                      <label for="settingPaperSize">Default PDF Page Format</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="file"></i>
-                        <select id="settingPaperSize" class="form-input">
-                          <option value="letter" selected>US Letter (8.5 x 11 in — North America)</option>
-                          <option value="a4">A4 (210 x 297 mm — International)</option>
-                        </select>
+                        <div class="form-group">
+                          <label for="settingSeniority">Target Seniority Level Focus</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="award"></i>
+                            <select id="settingSeniority" class="form-input">
+                              <option value="junior">Junior / Associate (0-2 YOE)</option>
+                              <option value="mid">Mid-Level Engineer (3-5 YOE)</option>
+                              <option value="senior" selected>Senior Engineer (6-8 YOE)</option>
+                              <option value="staff">Staff / Principal / Architect (9+ YOE)</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div class="form-group">
-                      <label for="settingTypography">Export Typography Font</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="type"></i>
-                        <select id="settingTypography" class="form-input">
-                          <option value="inter-jakarta" selected>Inter + Plus Jakarta Sans (Modern Tech)</option>
-                          <option value="roboto-sans">Roboto + Open Sans (Google Clean)</option>
-                          <option value="georgia-serif">Georgia + Garamond (Executive Serif)</option>
-                        </select>
+                      <div class="form-group">
+                        <label for="settingKeywordMatchStrategy">Keyword Gap Matching Mode</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="git-commit"></i>
+                          <select id="settingKeywordMatchStrategy" class="form-input">
+                            <option value="semantic" selected>Semantic & Synonym Fuzzy Match (Recommended)</option>
+                            <option value="exact">Strict Exact String Matching Only</option>
+                          </select>
+                        </div>
                       </div>
+
+                      <!-- Integrated Workspace Themes Swatches -->
+                      <div class="form-group">
+                        <label>Workspace Visual Theme</label>
+                        <div class="settings-theme-swatches">
+                          <button type="button" class="settings-theme-swatch swatch-modern" data-theme-swatch="light-modern" title="Modern Light"></button>
+                          <button type="button" class="settings-theme-swatch swatch-obsidian" data-theme-swatch="dark-obsidian" title="Obsidian Dark"></button>
+                          <button type="button" class="settings-theme-swatch swatch-purple" data-theme-swatch="cyber-purple" title="Cyber Purple"></button>
+                          <button type="button" class="settings-theme-swatch swatch-emerald" data-theme-swatch="emerald-slate" title="Emerald Slate"></button>
+                          <button type="button" class="settings-theme-swatch swatch-amber" data-theme-swatch="sunset-amber" title="Sunset Amber"></button>
+                        </div>
+                      </div>
+
+                      <div class="settings-card-actions">
+                        <button type="submit" class="btn-primary btn-sm" id="btnSaveAiSettings">
+                          <i data-feather="check"></i>
+                          <span>Save AI Preferences</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Card 4: Document Format & PDF Export Preferences -->
+                <div class="dashboard-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="file-text"></i>
+                      <h3>PDF Export & Typography Settings</h3>
                     </div>
                   </div>
+                  <div class="card-body">
+                    <form id="pdfExportSettingsForm">
+                      <div class="form-row-2">
+                        <div class="form-group">
+                          <label for="settingPaperSize">Default PDF Page Format</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="file"></i>
+                            <select id="settingPaperSize" class="form-input">
+                              <option value="letter" selected>US Letter (8.5 x 11 in — North America)</option>
+                              <option value="a4">A4 (210 x 297 mm — International)</option>
+                            </select>
+                          </div>
+                        </div>
 
-                  <div class="settings-card-actions">
-                    <button class="btn-primary btn-sm" id="btnSavePdfSettings">
-                      <i data-feather="check"></i>
-                      <span>Save Format Defaults</span>
-                    </button>
+                        <div class="form-group">
+                          <label for="settingTypography">Export Typography Font</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="type"></i>
+                            <select id="settingTypography" class="form-input">
+                              <option value="inter-jakarta" selected>Inter + Plus Jakarta Sans (Modern Tech)</option>
+                              <option value="roboto-sans">Roboto + Open Sans (Google Clean)</option>
+                              <option value="georgia-serif">Georgia + Garamond (Executive Serif)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="settings-card-actions">
+                        <button type="submit" class="btn-primary btn-sm" id="btnSavePdfSettings">
+                          <i data-feather="check"></i>
+                          <span>Save Format Defaults</span>
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
-              </div>
 
-              <!-- 4. Privacy, Backup & Data Management -->
-              <div class="dashboard-card">
-                <div class="card-header">
-                  <div class="card-title">
-                    <i data-feather="shield"></i>
-                    <h3>Privacy, Storage & Data Backup</h3>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <div class="setting-toggle-row">
-                    <div>
-                      <strong>Enable LocalStorage Draft Auto-Save</strong>
-                      <p class="help-text">Automatically saves your resume inputs and ATS scanner text in your browser.</p>
-                    </div>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="settingAutoSaveToggle" checked />
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div class="setting-danger-zone margin-top-md">
-                    <button class="btn-secondary btn-sm" id="btnExportAllData">
-                      <i data-feather="download"></i>
-                      <span>Backup All Settings & Drafts (JSON)</span>
-                    </button>
-                    <button class="btn-danger-sm" id="btnResetAllData">
-                      <i data-feather="trash-2"></i>
-                      <span>Reset Local Workspace Data</span>
-                    </button>
-                  </div>
-                </div>
               </div>
 
             </div>
@@ -1258,6 +1302,8 @@ Key Requirements:
       </main>
     </div>
   </div>
+
+  <div class="toast-container" id="toastContainer"></div>
 
   <script src="script.js"></script>
 </body>

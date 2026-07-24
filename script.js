@@ -30,6 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
    * updates active states on theme switcher buttons, and saves to localStorage.
    * @param {string} themeId - e.g. 'light-modern', 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber'
    */
+  function syncSettingsThemeSwatches() {
+    const activeTheme = body.getAttribute('data-theme') || 'light-modern';
+    const swatches = document.querySelectorAll('.settings-theme-swatch');
+    swatches.forEach(swatch => {
+      const themeId = swatch.getAttribute('data-theme-swatch');
+      if (themeId === activeTheme) {
+        swatch.classList.add('active');
+      } else {
+        swatch.classList.remove('active');
+      }
+    });
+  }
+
   function setTheme(themeId) {
     if (!themeId) return;
     
@@ -52,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.warn('LocalStorage not accessible for theme persistence:', e);
     }
+
+    syncSettingsThemeSwatches();
   }
 
   // Attach click listeners to all theme switcher buttons
@@ -59,6 +74,19 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const selectedTheme = btn.getAttribute('data-theme-id');
       setTheme(selectedTheme);
+    });
+  });
+
+  // Attach click listeners to settings theme swatches
+  const settingsThemeSwatches = document.querySelectorAll('.settings-theme-swatch');
+  settingsThemeSwatches.forEach(swatch => {
+    swatch.addEventListener('click', (e) => {
+      e.preventDefault();
+      const themeId = swatch.getAttribute('data-theme-swatch');
+      setTheme(themeId);
+      if (typeof showToast === 'function') {
+        showToast(`Workspace theme updated to ${swatch.title}!`, 'success');
+      }
     });
   });
 
@@ -2348,7 +2376,11 @@ Key Requirements:
   function loadPlatformSettings() {
     try {
       const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (!saved) return;
+      if (!saved) {
+        syncSettingsThemeSwatches();
+        updateLocalStorageDiagnostics();
+        return;
+      }
       const s = JSON.parse(saved);
 
       if (s.geminiModel && settingGeminiModel) settingGeminiModel.value = s.geminiModel;
@@ -2368,19 +2400,81 @@ Key Requirements:
       if (s.paperSize && settingPaperSize) settingPaperSize.value = s.paperSize;
       if (s.typography && settingTypography) settingTypography.value = s.typography;
       if (typeof s.autoSave === 'boolean' && settingAutoSaveToggle) settingAutoSaveToggle.checked = s.autoSave;
+      
       applyTypographyToLivePreview();
+      syncSettingsThemeSwatches();
+      updateLocalStorageDiagnostics();
     } catch (e) {
       console.warn('Could not restore settings from LocalStorage:', e);
     }
   }
 
+  // --- Platform LocalStorage Diagnostics Size Calculator ---
+  function updateLocalStorageDiagnostics() {
+    let sizeInBytes = 0;
+    try {
+      const keys = ['resuai-draft-resume', 'resuai-platform-settings', 'resuai-dashboard-theme', 'resuai-analytics-history', 'resuai-logged-in'];
+      let totalStr = '';
+      keys.forEach(k => {
+        totalStr += (localStorage.getItem(k) || '');
+      });
+      sizeInBytes = totalStr.length * 2;
+    } catch(e) {}
+
+    const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+    const diagPayloadSize = document.getElementById('diagPayloadSize');
+    if (diagPayloadSize) diagPayloadSize.textContent = `${sizeInKB} KB`;
+
+    const percentUsed = Math.min(100, Math.max(0.01, (parseFloat(sizeInKB) / 5120) * 100));
+    
+    const storagePercentText = document.getElementById('storagePercentText');
+    const storageProgressFill = document.getElementById('storageProgressFill');
+    
+    if (storagePercentText) storagePercentText.textContent = `${percentUsed.toFixed(3)}% of 5MB limit`;
+    if (storageProgressFill) storageProgressFill.style.width = `${percentUsed}%`;
+  }
+
+  // --- Toast Notifications Engine ---
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-item ${type}`;
+
+    let iconName = 'check-circle';
+    if (type === 'info') iconName = 'info';
+    else if (type === 'warning') iconName = 'alert-triangle';
+    else if (type === 'error') iconName = 'alert-octagon';
+
+    toast.innerHTML = `
+      <span class="toast-icon ${type}"><i data-feather="${iconName}"></i></span>
+      <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    if (window.feather) feather.replace();
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }, 3000);
+  }
+  window.showToast = showToast;
+
   // Visual feedback for save buttons
   function handleSettingsSaveFeedback(buttonEl, label) {
     savePlatformSettings();
     applyTypographyToLivePreview();
+    updateLocalStorageDiagnostics();
+    if (typeof showToast === 'function') {
+      showToast(label || 'Saved Successfully!', 'success');
+    }
     if (buttonEl) {
       const orig = buttonEl.innerHTML;
-      buttonEl.innerHTML = `<i data-feather="check-circle"></i> <span>${label || 'Saved!'}</span>`;
+      buttonEl.innerHTML = `<i data-feather="check"></i> <span>Saved!</span>`;
       if (window.feather) feather.replace();
       setTimeout(() => {
         buttonEl.innerHTML = orig;
@@ -2389,12 +2483,29 @@ Key Requirements:
     }
   }
 
-  if (btnSaveAiSettings) btnSaveAiSettings.addEventListener('click', () => handleSettingsSaveFeedback(btnSaveAiSettings, 'AI Preferences Saved!'));
-  if (btnSaveAtsSettings) btnSaveAtsSettings.addEventListener('click', () => handleSettingsSaveFeedback(btnSaveAtsSettings, 'Target Profile Saved!'));
-  if (btnSavePdfSettings) btnSavePdfSettings.addEventListener('click', () => handleSettingsSaveFeedback(btnSavePdfSettings, 'Format Defaults Saved!'));
+  const aiEngineSettingsForm = document.getElementById('aiEngineSettingsForm');
+  const pdfExportSettingsForm = document.getElementById('pdfExportSettingsForm');
+
+  if (aiEngineSettingsForm) {
+    aiEngineSettingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSettingsSaveFeedback(btnSaveAiSettings, 'AI Engine & Target Profile Saved!');
+    });
+  }
+
+  if (pdfExportSettingsForm) {
+    pdfExportSettingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSettingsSaveFeedback(btnSavePdfSettings, 'Typography & Export Formats Saved!');
+    });
+  }
 
   if (settingAutoSaveToggle) {
-    settingAutoSaveToggle.addEventListener('change', savePlatformSettings);
+    settingAutoSaveToggle.addEventListener('change', () => {
+      savePlatformSettings();
+      updateLocalStorageDiagnostics();
+      showToast('Auto-save preference updated.', 'info');
+    });
   }
 
   // Backup All Workspace Data & Settings as JSON
@@ -2421,6 +2532,9 @@ Key Requirements:
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      if (typeof showToast === 'function') {
+        showToast('Workspace backup JSON exported successfully!', 'success');
+      }
     });
   }
 
