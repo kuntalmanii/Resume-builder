@@ -783,7 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function syncLivePreview() {
     if (inputFullName && previewName) {
-      previewName.textContent = inputFullName.value.trim().toUpperCase() || 'MANISH KUNTAL';
+      previewName.textContent = inputFullName.value.trim().toUpperCase() || 'YOUR NAME';
     }
     if (inputJobTitle && previewRole) {
       previewRole.textContent = inputJobTitle.value.trim().toUpperCase() || 'SENIOR DEVELOPER';
