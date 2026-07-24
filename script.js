@@ -169,14 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const email = authEmailInput ? authEmailInput.value : '';
       const password = authPasswordInput ? authPasswordInput.value : '';
+      const authNameInput = document.getElementById('authName');
 
       if (!email || !password) {
         alert('Please enter your email address and password.');
         return;
       }
 
+      if (authNameInput && authNameInput.value.trim() && inputFullName) {
+        inputFullName.value = authNameInput.value.trim();
+      }
+
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
+      syncLivePreview();
     });
   }
 
@@ -358,6 +364,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const strengthProgressFill = document.getElementById('strengthProgressFill');
   const strengthTip = document.getElementById('strengthTip');
   const verbChipsContainer = document.getElementById('verbChipsContainer');
+
+  const topUserAvatar = document.getElementById('topUserAvatar');
+  const topUserName   = document.getElementById('topUserName');
+  const topUserRole   = document.getElementById('topUserRole');
+
+  function updateTopUserProfile() {
+    const fullName = (inputFullName && inputFullName.value.trim()) ? inputFullName.value.trim() : 'Manish Kuntal';
+    const jobTitle = (inputJobTitle && inputJobTitle.value.trim()) ? inputJobTitle.value.trim() : 'Senior Developer';
+
+    const parts = fullName.split(/\s+/).filter(Boolean);
+    let initials = 'MK';
+    if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    } else if (parts.length === 1) {
+      initials = parts[0].substring(0, 2).toUpperCase();
+    }
+
+    if (topUserAvatar) topUserAvatar.textContent = initials;
+    if (topUserName)   topUserName.textContent = fullName;
+    if (topUserRole)   topUserRole.textContent = jobTitle;
+  }
 
   const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
   const btnNextStep = document.getElementById('btnNextStep');
@@ -605,6 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateCharCounter();
     calculateProfileStrength();
+    updateTopUserProfile();
     autoSaveFormFields();
   }
 
