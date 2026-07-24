@@ -1586,5 +1586,174 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ==========================================================================
+     9. Platform Settings & Preferences Manager Engine
+     ========================================================================== */
+  const SETTINGS_STORAGE_KEY = 'resuai-platform-settings';
+
+  const settingGeminiModel              = document.getElementById('settingGeminiModel');
+  const settingApiKey                   = document.getElementById('settingApiKey');
+  const btnToggleApiKeyEye              = document.getElementById('btnToggleApiKeyEye');
+  const settingOptimizationSensitivity  = document.getElementById('settingOptimizationSensitivity');
+  const sensitivityVal                  = document.getElementById('sensitivityVal');
+  const btnSaveAiSettings               = document.getElementById('btnSaveAiSettings');
+
+  const settingAtsEngine                = document.getElementById('settingAtsEngine');
+  const settingSeniority                = document.getElementById('settingSeniority');
+  const settingKeywordMatchStrategy     = document.getElementById('settingKeywordMatchStrategy');
+  const btnSaveAtsSettings              = document.getElementById('btnSaveAtsSettings');
+
+  const settingPaperSize                = document.getElementById('settingPaperSize');
+  const settingTypography               = document.getElementById('settingTypography');
+  const btnSavePdfSettings              = document.getElementById('btnSavePdfSettings');
+
+  const settingAutoSaveToggle           = document.getElementById('settingAutoSaveToggle');
+  const btnExportAllData                = document.getElementById('btnExportAllData');
+  const btnResetAllData                 = document.getElementById('btnResetAllData');
+
+  // Sensitivity range slider value text update
+  if (settingOptimizationSensitivity && sensitivityVal) {
+    settingOptimizationSensitivity.addEventListener('input', () => {
+      const val = parseFloat(settingOptimizationSensitivity.value);
+      let label = 'Balanced';
+      if (val <= 0.3) label = 'Strict ATS Keywords';
+      else if (val >= 0.8) label = 'Creative Impact';
+      sensitivityVal.textContent = `${label} (${val})`;
+    });
+  }
+
+  // Toggle API key mask eye icon
+  if (btnToggleApiKeyEye && settingApiKey) {
+    btnToggleApiKeyEye.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isPassword = settingApiKey.type === 'password';
+      settingApiKey.type = isPassword ? 'text' : 'password';
+      btnToggleApiKeyEye.innerHTML = `<i data-feather="${isPassword ? 'eye-off' : 'eye'}"></i>`;
+      if (window.feather) feather.replace();
+    });
+  }
+
+  // Save Settings state to LocalStorage
+  function savePlatformSettings() {
+    const settings = {
+      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.5-flash',
+      apiKey: settingApiKey ? settingApiKey.value.trim() : '',
+      sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
+      atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever',
+      seniority: settingSeniority ? settingSeniority.value : 'senior',
+      matchStrategy: settingKeywordMatchStrategy ? settingKeywordMatchStrategy.value : 'semantic',
+      paperSize: settingPaperSize ? settingPaperSize.value : 'letter',
+      typography: settingTypography ? settingTypography.value : 'inter-jakarta',
+      autoSave: settingAutoSaveToggle ? settingAutoSaveToggle.checked : true,
+      savedAt: new Date().toISOString()
+    };
+
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn('Could not save settings to LocalStorage:', e);
+    }
+  }
+
+  // Restore Settings state from LocalStorage on load
+  function loadPlatformSettings() {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (!saved) return;
+      const s = JSON.parse(saved);
+
+      if (s.geminiModel && settingGeminiModel) settingGeminiModel.value = s.geminiModel;
+      if (s.apiKey && settingApiKey) settingApiKey.value = s.apiKey;
+      if (s.sensitivity && settingOptimizationSensitivity) {
+        settingOptimizationSensitivity.value = s.sensitivity;
+        if (sensitivityVal) {
+          const val = parseFloat(s.sensitivity);
+          let label = 'Balanced';
+          if (val <= 0.3) label = 'Strict ATS Keywords';
+          else if (val >= 0.8) label = 'Creative Impact';
+          sensitivityVal.textContent = `${label} (${val})`;
+        }
+      }
+      if (s.atsEngine && settingAtsEngine) settingAtsEngine.value = s.atsEngine;
+      if (s.seniority && settingSeniority) settingSeniority.value = s.seniority;
+      if (s.matchStrategy && settingKeywordMatchStrategy) settingKeywordMatchStrategy.value = s.matchStrategy;
+      if (s.paperSize && settingPaperSize) settingPaperSize.value = s.paperSize;
+      if (s.typography && settingTypography) settingTypography.value = s.typography;
+      if (typeof s.autoSave === 'boolean' && settingAutoSaveToggle) settingAutoSaveToggle.checked = s.autoSave;
+    } catch (e) {
+      console.warn('Could not restore settings from LocalStorage:', e);
+    }
+  }
+
+  // Visual feedback for save buttons
+  function handleSettingsSaveFeedback(buttonEl, label) {
+    savePlatformSettings();
+    if (buttonEl) {
+      const orig = buttonEl.innerHTML;
+      buttonEl.innerHTML = `<i data-feather="check-circle"></i> <span>${label || 'Saved!'}</span>`;
+      if (window.feather) feather.replace();
+      setTimeout(() => {
+        buttonEl.innerHTML = orig;
+        if (window.feather) feather.replace();
+      }, 2000);
+    }
+  }
+
+  if (btnSaveAiSettings) btnSaveAiSettings.addEventListener('click', () => handleSettingsSaveFeedback(btnSaveAiSettings, 'AI Preferences Saved!'));
+  if (btnSaveAtsSettings) btnSaveAtsSettings.addEventListener('click', () => handleSettingsSaveFeedback(btnSaveAtsSettings, 'Target Profile Saved!'));
+  if (btnSavePdfSettings) btnSavePdfSettings.addEventListener('click', () => handleSettingsSaveFeedback(btnSavePdfSettings, 'Format Defaults Saved!'));
+
+  if (settingAutoSaveToggle) {
+    settingAutoSaveToggle.addEventListener('change', savePlatformSettings);
+  }
+
+  // Backup All Workspace Data & Settings as JSON
+  if (btnExportAllData) {
+    btnExportAllData.addEventListener('click', () => {
+      const draftRaw = localStorage.getItem('resuai-draft-resume');
+      const settingsRaw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      const themeRaw = localStorage.getItem('resuai-dashboard-theme');
+
+      const backupPackage = {
+        exportedAt: new Date().toISOString(),
+        version: '2.5',
+        theme: themeRaw || 'light-modern',
+        settings: settingsRaw ? JSON.parse(settingsRaw) : {},
+        draftResume: draftRaw ? JSON.parse(draftRaw) : {}
+      };
+
+      const blob = new Blob([JSON.stringify(backupPackage, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resuai_workspace_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // Danger Zone: Reset All Local Workspace Data
+  if (btnResetAllData) {
+    btnResetAllData.addEventListener('click', () => {
+      const confirm1 = window.confirm('DANGER: This will delete all saved resume drafts, ATS history, custom API keys, and workspace settings. Continue?');
+      if (!confirm1) return;
+
+      try {
+        localStorage.removeItem('resuai-draft-resume');
+        localStorage.removeItem(SETTINGS_STORAGE_KEY);
+        localStorage.removeItem('resuai-dashboard-theme');
+      } catch (e) {}
+
+      alert('Workspace reset complete. Reloading application...');
+      window.location.reload();
+    });
+  }
+
+  // Load saved settings on startup
+  loadPlatformSettings();
+
 });
+
 
