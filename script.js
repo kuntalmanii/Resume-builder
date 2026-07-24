@@ -610,7 +610,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Print PDF Trigger — opens isolated print window with only the resume content
+  /* ==========================================================================
+     Dynamic PDF Export & Typography Settings Engine
+     ========================================================================== */
+  function getPdfExportStyles() {
+    let paperSize = 'letter';
+    let typography = 'inter-jakarta';
+
+    try {
+      const saved = localStorage.getItem('resuai-platform-settings');
+      if (saved) {
+        const s = JSON.parse(saved);
+        if (s.paperSize) paperSize = s.paperSize;
+        if (s.typography) typography = s.typography;
+      }
+    } catch(e) {}
+
+    const pageSizeCss = (paperSize === 'a4') 
+      ? '@page { size: A4 portrait; margin: 12mm; }' 
+      : '@page { size: letter portrait; margin: 0.5in; }';
+
+    let fontLink = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap";
+    let bodyFont = "'Inter', Arial, sans-serif";
+    let headingFont = "'Plus Jakarta Sans', Arial, sans-serif";
+
+    if (typography === 'roboto-sans') {
+      fontLink = "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap";
+      bodyFont = "'Open Sans', Roboto, sans-serif";
+      headingFont = "'Roboto', sans-serif";
+    } else if (typography === 'georgia-serif') {
+      fontLink = "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700;800&family=Merriweather:wght@400;700&display=swap";
+      bodyFont = "'Merriweather', Georgia, serif";
+      headingFont = "'EB Garamond', Georgia, serif";
+    }
+
+    return { pageSizeCss, fontLink, bodyFont, headingFont };
+  }
+
+  function applyTypographyToLivePreview() {
+    const styles = getPdfExportStyles();
+    const docs = document.querySelectorAll('.resume-preview-document');
+    docs.forEach(doc => {
+      doc.style.fontFamily = styles.bodyFont;
+      const headers = doc.querySelectorAll('.doc-name, .section-title');
+      headers.forEach(h => h.style.fontFamily = styles.headingFont);
+    });
+  }
+
+  // Print PDF Trigger — opens isolated print window with dynamic paper size & typography
   if (btnPrintPdf) {
     btnPrintPdf.addEventListener('click', () => {
       const resumeDoc = document.getElementById('printableResumeDoc');
@@ -619,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const printWindow = window.open('', '_blank', 'width=900,height=700');
       if (!printWindow) { window.print(); return; }
 
+      const styles = getPdfExportStyles();
       const resumeHTML = resumeDoc.outerHTML;
 
       printWindow.document.write(`
@@ -628,13 +676,14 @@ document.addEventListener('DOMContentLoaded', () => {
   <meta charset="UTF-8" />
   <title>Resume — ${document.getElementById('previewName')?.textContent || 'Resume'}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="${styles.fontLink}" rel="stylesheet" />
   <style>
+    ${styles.pageSizeCss}
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       background: #ffffff;
       color: #111111;
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: ${styles.bodyFont};
       font-size: 11pt;
       line-height: 1.5;
       padding: 24pt 28pt;
@@ -642,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .resume-preview-document {
       max-width: 700px;
       margin: 0 auto;
+      font-family: ${styles.bodyFont};
     }
     .preview-doc-header {
       border-bottom: 2px solid #111;
@@ -649,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
       margin-bottom: 14pt;
     }
     .doc-name {
-      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      font-family: ${styles.headingFont};
       font-size: 20pt;
       font-weight: 800;
       letter-spacing: 2px;
@@ -671,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
       margin-top: 14pt;
     }
     .section-title {
-      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      font-family: ${styles.headingFont};
       font-size: 8.5pt;
       font-weight: 700;
       letter-spacing: 2px;
@@ -1556,21 +1606,26 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!tailoredResumeDoc) return;
       const printWindow = window.open('', '_blank', 'width=900,height=700');
       if (!printWindow) return;
+
+      const styles = getPdfExportStyles();
+
       printWindow.document.write(`
 <!DOCTYPE html><html lang="en"><head>
   <meta charset="UTF-8" />
   <title>Tailored Resume</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="${styles.fontLink}" rel="stylesheet" />
   <style>
+    ${styles.pageSizeCss}
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{background:#fff;color:#111;font-family:'Inter',Arial,sans-serif;font-size:11pt;line-height:1.5;padding:24pt 28pt}
-    .resume-preview-document{max-width:700px;margin:0 auto}
+    html,body{background:#fff;color:#111;font-family:${styles.bodyFont};font-size:11pt;line-height:1.5;padding:24pt 28pt}
+    .resume-preview-document{max-width:700px;margin:0 auto;font-family:${styles.bodyFont}}
     .preview-doc-header{border-bottom:2px solid #111;padding-bottom:10pt;margin-bottom:14pt}
-    .doc-name{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:20pt;font-weight:800;letter-spacing:2px;color:#000}
+    .doc-name{font-family:${styles.headingFont};font-size:20pt;font-weight:800;letter-spacing:2px;color:#000}
     .doc-role{font-size:9.5pt;font-weight:600;letter-spacing:1.5px;color:#444;margin-top:2pt}
     .doc-meta{font-size:9pt;color:#555;margin-top:4pt}
     .preview-section{margin-top:14pt}
-    .section-title{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:8.5pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;border-bottom:1px solid #ccc;padding-bottom:3pt;margin-bottom:6pt}
+    .section-title{font-family:${styles.headingFont};font-size:8.5pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;border-bottom:1px solid #ccc;padding-bottom:3pt;margin-bottom:6pt}
     .section-content{font-size:10pt;color:#222}
     .experience-block{margin-bottom:10pt}
     .exp-header{display:flex;justify-content:space-between;font-size:10pt;font-weight:600;color:#111;margin-bottom:4pt}
@@ -1680,6 +1735,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (s.paperSize && settingPaperSize) settingPaperSize.value = s.paperSize;
       if (s.typography && settingTypography) settingTypography.value = s.typography;
       if (typeof s.autoSave === 'boolean' && settingAutoSaveToggle) settingAutoSaveToggle.checked = s.autoSave;
+      applyTypographyToLivePreview();
     } catch (e) {
       console.warn('Could not restore settings from LocalStorage:', e);
     }
@@ -1688,6 +1744,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Visual feedback for save buttons
   function handleSettingsSaveFeedback(buttonEl, label) {
     savePlatformSettings();
+    applyTypographyToLivePreview();
     if (buttonEl) {
       const orig = buttonEl.innerHTML;
       buttonEl.innerHTML = `<i data-feather="check-circle"></i> <span>${label || 'Saved!'}</span>`;
