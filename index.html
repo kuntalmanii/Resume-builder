@@ -45,69 +45,142 @@
       </div>
     </div>
 
-    <div class="auth-card-wrapper">
-      <div class="auth-card glass-card">
-        <div class="auth-header">
-          <div class="auth-badge">
-            <i data-feather="lock"></i>
-            <span>Developer Portal // Security</span>
+    <div class="auth-split-layout">
+      <!-- Left Hero Showcase Panel -->
+      <div class="auth-hero-showcase">
+        <div class="hero-badge-tag">
+          <i data-feather="cpu"></i>
+          <span>Gemini 2.5 Flash AI Engine v2.5</span>
+        </div>
+        <h1>Architect Executive Resumes &amp; Beat Corporate ATS Parsers</h1>
+        <p class="hero-subtext">The #1 Developer Resume &amp; ATS Diagnostic Platform built for Staff Engineers, Tech Leads, and Systems Architects.</p>
+
+        <!-- Feature Points -->
+        <div class="hero-feature-list">
+          <div class="feature-item">
+            <div class="feature-icon"><i data-feather="check-circle"></i></div>
+            <div class="feature-text">
+              <strong>98%+ ATS Pass Guarantee:</strong> Tailored keyword matching for Greenhouse, Lever, Workday &amp; Taleo.
+            </div>
           </div>
-          <h2 id="authTitle">Welcome back</h2>
-          <p id="authSubtitle">Sign in to your ResuAI workspace to access your resumes & ATS metrics.</p>
+          <div class="feature-item">
+            <div class="feature-icon"><i data-feather="zap"></i></div>
+            <div class="feature-text">
+              <strong>Gemini 2.5 AI Rewrites:</strong> Automatic impact-bullet generator with quantified engineering metrics.
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><i data-feather="shield"></i></div>
+            <div class="feature-text">
+              <strong>Zero-Key Local Storage:</strong> 256-bit client-side environment isolation &amp; privacy architecture.
+            </div>
+          </div>
         </div>
 
-        <form class="auth-form" id="authForm">
-          <div class="form-group signup-only-field" id="nameField" style="display: none;">
-            <label for="authName">Full Name</label>
-            <div class="input-icon-wrapper">
-              <i data-feather="user"></i>
-              <input type="text" id="authName" class="form-input" placeholder="Manish Kuntal" />
-            </div>
+        <!-- Social Proof Stats Banner -->
+        <div class="hero-stats-banner">
+          <div class="stat-col">
+            <span class="stat-num">100k+</span>
+            <span class="stat-label">Resumes Built</span>
           </div>
-
-          <div class="form-group">
-            <label for="authEmail">Work Email Address</label>
-            <div class="input-icon-wrapper">
-              <i data-feather="mail"></i>
-              <input type="email" id="authEmail" class="form-input" placeholder="manish@company.com" required value="developer@resuai.dev" />
-            </div>
+          <div class="stat-divider"></div>
+          <div class="stat-col">
+            <span class="stat-num">98.4%</span>
+            <span class="stat-label">ATS Rank Score</span>
           </div>
-
-          <div class="form-group">
-            <div class="label-row">
-              <label for="authPassword">Password</label>
-              <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
-            </div>
-            <div class="input-icon-wrapper">
-              <i data-feather="key"></i>
-              <input type="password" id="authPassword" class="form-input" placeholder="••••••••••••" required value="password123" />
-            </div>
+          <div class="stat-divider"></div>
+          <div class="stat-col">
+            <span class="stat-num">FAANG</span>
+            <span class="stat-label">Ready Output</span>
           </div>
-
-          <button type="submit" class="btn-primary btn-full btn-auth" id="authSubmitBtn">
-            <span id="authSubmitText">Sign In to Dashboard</span>
-            <i data-feather="arrow-right"></i>
-          </button>
-        </form>
-
-        <div class="auth-divider">
-          <span>OR CONTINUE WITH</span>
         </div>
+      </div>
 
-        <div class="sso-buttons">
-          <button type="button" class="btn-sso" id="ssoGithubBtn">
-            <i data-feather="github"></i>
-            <span>GitHub</span>
-          </button>
-          <button type="button" class="btn-sso" id="ssoGoogleBtn">
-            <i data-feather="globe"></i>
-            <span>Google</span>
-          </button>
-        </div>
+      <!-- Right Form Card -->
+      <div class="auth-card-wrapper">
+        <div class="auth-card glass-card">
+          <div class="auth-header">
+            <div class="auth-badge">
+              <i data-feather="lock"></i>
+              <span>Developer Portal // Security</span>
+            </div>
+            <h2 id="authTitle">Welcome back</h2>
+            <p id="authSubtitle">Sign in to your ResuAI workspace to access your resumes &amp; ATS metrics.</p>
+          </div>
 
-        <div class="auth-footer">
-          <span id="authToggleQuestion">Don't have an account?</span>
-          <a href="#" id="authToggleBtn">Sign Up</a>
+          <form class="auth-form" id="authForm">
+            <div class="form-group signup-only-field" id="nameField" style="display: none;">
+              <label for="authName">Full Name</label>
+              <div class="input-icon-wrapper">
+                <i data-feather="user"></i>
+                <input type="text" id="authName" class="form-input" placeholder="Manish Kuntal" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="authEmail">Work Email Address</label>
+              <div class="input-icon-wrapper">
+                <i data-feather="mail"></i>
+                <input type="email" id="authEmail" class="form-input" placeholder="manish@company.com" required value="developer@resuai.dev" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="authPassword">Password</label>
+                <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
+              </div>
+              <div class="input-icon-wrapper">
+                <i data-feather="key"></i>
+                <input type="password" id="authPassword" class="form-input" placeholder="••••••••••••" required value="password123" />
+                <button type="button" class="btn-toggle-eye" id="btnAuthPasswordEye" title="Show/Hide Password">
+                  <i data-feather="eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="auth-options-row">
+              <label class="remember-label">
+                <input type="checkbox" id="authRememberMe" checked />
+                <span>Remember me on this device</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn-primary btn-full btn-auth" id="authSubmitBtn">
+              <span id="authSubmitText">Sign In to Dashboard</span>
+              <i data-feather="arrow-right"></i>
+            </button>
+
+            <button type="button" class="btn-quick-demo" id="btnQuickDemoLogin" title="1-Click Instant Demo Login">
+              <i data-feather="zap"></i>
+              <span>⚡ 1-Click Quick Demo Sign In</span>
+            </button>
+          </form>
+
+          <div class="auth-divider">
+            <span>OR CONTINUE WITH</span>
+          </div>
+
+          <div class="sso-buttons">
+            <button type="button" class="btn-sso" id="ssoGithubBtn">
+              <i data-feather="github"></i>
+              <span>GitHub</span>
+            </button>
+            <button type="button" class="btn-sso" id="ssoGoogleBtn">
+              <i data-feather="globe"></i>
+              <span>Google</span>
+            </button>
+          </div>
+
+          <div class="auth-security-badge">
+            <i data-feather="shield"></i>
+            <span>🔒 256-Bit SSL Encrypted Workspace</span>
+          </div>
+
+          <div class="auth-footer">
+            <span id="authToggleQuestion">Don't have an account?</span>
+            <a href="#" id="authToggleBtn">Sign Up</a>
+          </div>
         </div>
       </div>
     </div>

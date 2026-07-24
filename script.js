@@ -126,12 +126,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const btnAuthPasswordEye = document.getElementById('btnAuthPasswordEye');
+  const btnQuickDemoLogin = document.getElementById('btnQuickDemoLogin');
+  const authPasswordInput = document.getElementById('authPassword');
+  const authEmailInput = document.getElementById('authEmail');
+
+  // Password visibility eye toggle
+  if (btnAuthPasswordEye && authPasswordInput) {
+    btnAuthPasswordEye.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isPass = authPasswordInput.type === 'password';
+      authPasswordInput.type = isPass ? 'text' : 'password';
+      btnAuthPasswordEye.innerHTML = `<i data-feather="${isPass ? 'eye-off' : 'eye'}"></i>`;
+      if (window.feather) feather.replace();
+    });
+  }
+
+  // 1-Click Quick Demo Sign In
+  if (btnQuickDemoLogin) {
+    btnQuickDemoLogin.addEventListener('click', () => {
+      if (authEmailInput) authEmailInput.value = 'developer@resuai.dev';
+      if (authPasswordInput) authPasswordInput.value = 'password123';
+      
+      const origText = btnQuickDemoLogin.innerHTML;
+      btnQuickDemoLogin.innerHTML = `<i data-feather="loader"></i> <span>Authenticating Workspace...</span>`;
+      if (window.feather) feather.replace();
+
+      setTimeout(() => {
+        try {
+          localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+        } catch (err) {}
+        updateAuthStateView();
+        btnQuickDemoLogin.innerHTML = origText;
+        if (window.feather) feather.replace();
+      }, 600);
+    });
+  }
+
   // Form Submission handler
   if (authForm) {
     authForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const email = document.getElementById('authEmail').value;
-      const password = document.getElementById('authPassword').value;
+      const email = authEmailInput ? authEmailInput.value : '';
+      const password = authPasswordInput ? authPasswordInput.value : '';
 
       if (!email || !password) {
         alert('Please enter your email address and password.');
