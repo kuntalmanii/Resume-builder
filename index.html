@@ -924,15 +924,149 @@ Key Requirements:
 
 
           <div class="tab-pane" id="tab-analytics">
-            <div class="dashboard-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <i data-feather="bar-chart-2"></i>
-                  <h3>Performance & Match Analytics</h3>
+            <!-- Analytics Overview Cards -->
+            <div class="analytics-metrics-grid">
+              <div class="analytics-metric-card">
+                <div class="metric-icon green"><i data-feather="trending-up"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Highest Match Score</span>
+                  <h3 class="metric-value" id="analyticsHighestScore">94%</h3>
+                  <span class="metric-subtext">Google Staff Target Ready</span>
                 </div>
               </div>
-              <div class="card-body">
-                <p>Historical match rate analytics and profile scoring over time.</p>
+              <div class="analytics-metric-card">
+                <div class="metric-icon blue"><i data-feather="activity"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Total ATS Scans</span>
+                  <h3 class="metric-value" id="analyticsTotalScans">12 Scans</h3>
+                  <span class="metric-subtext">Active session scans</span>
+                </div>
+              </div>
+              <div class="analytics-metric-card">
+                <div class="metric-icon purple"><i data-feather="check-square"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Gaps Resolved</span>
+                  <h3 class="metric-value" id="analyticsGapsResolved">88%</h3>
+                  <span class="metric-subtext">Keyword alignment index</span>
+                </div>
+              </div>
+              <div class="analytics-metric-card">
+                <div class="metric-icon orange"><i data-feather="shield"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Profile Trust Rating</span>
+                  <h3 class="metric-value" id="analyticsTrustRating">95/100</h3>
+                  <span class="metric-subtext">High-trust verification links</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Two-Column Visual Grid -->
+            <div class="dashboard-split-grid margin-top-lg">
+              <!-- Left Column: Match Score Progression SVG Line Chart -->
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="trending-up"></i>
+                    <h3>Match Score Progression</h3>
+                  </div>
+                  <span class="card-status-pill">Scans History</span>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container-wrapper">
+                    <!-- Premium responsive SVG line chart -->
+                    <svg viewBox="0 0 500 220" class="svg-line-chart" id="analyticsSvgChart">
+                      <!-- Grid lines -->
+                      <line x1="40" y1="20" x2="480" y2="20" class="chart-grid-line"></line>
+                      <line x1="40" y1="60" x2="480" y2="60" class="chart-grid-line"></line>
+                      <line x1="40" y1="100" x2="480" y2="100" class="chart-grid-line"></line>
+                      <line x1="40" y1="140" x2="480" y2="140" class="chart-grid-line"></line>
+                      <line x1="40" y1="180" x2="480" y2="180" class="chart-grid-line"></line>
+
+                      <!-- X axis labels -->
+                      <text x="40" y="200" class="chart-axis-text">Scan 1</text>
+                      <text x="128" y="200" class="chart-axis-text">Scan 2</text>
+                      <text x="216" y="200" class="chart-axis-text">Scan 3</text>
+                      <text x="304" y="200" class="chart-axis-text">Scan 4</text>
+                      <text x="392" y="200" class="chart-axis-text">Scan 5</text>
+                      <text x="480" y="200" class="chart-axis-text">Scan 6 (Latest)</text>
+
+                      <!-- Y axis labels -->
+                      <text x="15" y="24" class="chart-axis-text">100%</text>
+                      <text x="20" y="104" class="chart-axis-text">50%</text>
+                      <text x="25" y="184" class="chart-axis-text">0%</text>
+
+                      <!-- Line Path -->
+                      <path d="M 40 136 L 128 116 L 216 100 L 304 80 L 392 68 L 480 30" class="chart-line-path"></path>
+
+                      <!-- Chart Dots & Hover Tooltips -->
+                      <g class="chart-dot-group">
+                        <circle cx="40" cy="136" r="5" class="chart-dot" data-val="65%"></circle>
+                        <circle cx="128" cy="116" r="5" class="chart-dot" data-val="72%"></circle>
+                        <circle cx="216" cy="100" r="5" class="chart-dot" data-val="80%"></circle>
+                        <circle cx="304" cy="80" r="5" class="chart-dot" data-val="85%"></circle>
+                        <circle cx="392" cy="68" r="5" class="chart-dot" data-val="88%"></circle>
+                        <circle cx="480" cy="30" r="5" class="chart-dot active" data-val="94%"></circle>
+                      </g>
+                    </svg>
+                    <!-- Floating Tooltip Box -->
+                    <div class="chart-tooltip" id="chartTooltip" style="display:none;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Role Compatibility Breakdown -->
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="award"></i>
+                    <h3>Role Domain Compatibility</h3>
+                  </div>
+                  <span class="card-status-pill green">Active Match</span>
+                </div>
+                <div class="card-body">
+                  <div class="domain-compatibility-list">
+                    <!-- Progress Bar 1 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">Frontend Engineering &amp; Design Systems</span>
+                        <span class="comp-val">95% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill green-gradient" style="width: 95%;"></div>
+                      </div>
+                    </div>
+                    <!-- Progress Bar 2 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">Backend Architecture &amp; Microservices</span>
+                        <span class="comp-val">88% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill blue-gradient" style="width: 88%;"></div>
+                      </div>
+                    </div>
+                    <!-- Progress Bar 3 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">System Architecture &amp; Scale</span>
+                        <span class="comp-val">82% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill purple-gradient" style="width: 82%;"></div>
+                      </div>
+                    </div>
+                    <!-- Progress Bar 4 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">Cloud &amp; DevOps Infrastructure</span>
+                        <span class="comp-val">65% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill orange-gradient" style="width: 65%;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

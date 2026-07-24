@@ -3144,5 +3144,226 @@ input:checked + .toggle-slider:before {
   line-height: 1.4;
 }
 
+/* ==========================================================================
+   Score Analytics & Metrics Dashboard Styling
+   ========================================================================== */
+
+.analytics-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.analytics-metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.analytics-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-primary);
+}
+
+.metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-icon.green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.metric-icon.blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.metric-icon.purple {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.metric-icon.orange {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.metric-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.metric-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.metric-value {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.metric-subtext {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* SVG Line Chart */
+.chart-container-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.svg-line-chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart-grid-line {
+  stroke: var(--border-color);
+  stroke-width: 1px;
+  stroke-dasharray: 4 4;
+}
+
+.chart-axis-text {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--text-muted);
+  text-anchor: middle;
+}
+
+.chart-line-path {
+  fill: none;
+  stroke: var(--accent-primary);
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0px 4px 8px rgba(91, 95, 239, 0.25));
+}
+
+.chart-dot {
+  fill: var(--bg-card);
+  stroke: var(--accent-primary);
+  stroke-width: 2.5px;
+  cursor: pointer;
+  transition: r 0.15s ease, stroke-width 0.15s ease, fill 0.15s ease;
+}
+
+.chart-dot:hover,
+.chart-dot.active {
+  r: 7.5;
+  stroke-width: 3.5px;
+  fill: var(--accent-primary);
+}
+
+/* Floating Tooltip */
+.chart-tooltip {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+/* Role Domain Compatibility Progress Bars */
+.domain-compatibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.compatibility-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.comp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.comp-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.comp-val {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.comp-progress-bg {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.comp-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.green-gradient {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.blue-gradient {
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.purple-gradient {
+  background: linear-gradient(90deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.orange-gradient {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
 
 

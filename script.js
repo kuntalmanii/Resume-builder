@@ -2285,6 +2285,38 @@ Key Requirements:
     });
   }
 
+  // --- Interactive Score Analytics Hover Tooltips ---
+  const chartDots = document.querySelectorAll('.chart-dot');
+  const chartTooltip = document.getElementById('chartTooltip');
+
+  if (chartDots && chartTooltip) {
+    chartDots.forEach(dot => {
+      dot.addEventListener('mouseenter', () => {
+        const val = dot.getAttribute('data-val');
+        chartTooltip.textContent = `ATS Score: ${val}`;
+        chartTooltip.style.display = 'block';
+        
+        const dotRect = dot.getBoundingClientRect();
+        const wrapper = dot.closest('.chart-container-wrapper');
+        if (wrapper) {
+          const wrapperRect = wrapper.getBoundingClientRect();
+          const x = dotRect.left - wrapperRect.left + (dotRect.width / 2);
+          const y = dotRect.top - wrapperRect.top;
+          
+          chartTooltip.style.left = `${x}px`;
+          chartTooltip.style.top = `${y}px`;
+        }
+        
+        chartDots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+
+      dot.addEventListener('mouseleave', () => {
+        chartTooltip.style.display = 'none';
+      });
+    });
+  }
+
   // Load saved settings on startup
   loadPlatformSettings();
 
