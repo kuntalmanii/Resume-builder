@@ -666,8 +666,30 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                   <span class="card-status-pill"><span class="status-dot green"></span> Ready for matching</span>
                 </div>
                 <div class="card-body">
+                  <!-- ATS Parser Engine Selector Bar -->
+                  <div class="ats-parser-selector-bar">
+                    <span class="parser-label"><i data-feather="sliders"></i> Target ATS Engine:</span>
+                    <div class="parser-chips-container" id="atsEngineChipsContainer">
+                      <button type="button" class="parser-chip active" data-engine="greenhouse">Greenhouse &amp; Lever</button>
+                      <button type="button" class="parser-chip" data-engine="workday">Workday Scanner</button>
+                      <button type="button" class="parser-chip" data-engine="taleo">Taleo Exact Match</button>
+                      <button type="button" class="parser-chip" data-engine="faang">FAANG Executive</button>
+                    </div>
+                  </div>
+
                   <div class="form-group">
-                    <label for="atsJdInput">Paste Job Requirements & Key Qualifications</label>
+                    <div class="label-row-with-badge">
+                      <label for="atsJdInput">Paste Job Requirements &amp; Key Qualifications</label>
+                      <div class="sample-jd-wrapper">
+                        <select id="sampleJdSelect" class="form-select-sm">
+                          <option value="">-- Load Sample JD Template --</option>
+                          <option value="frontend">Senior Frontend Architect</option>
+                          <option value="fullstack">Senior Full Stack Engineer</option>
+                          <option value="devops">DevOps &amp; Cloud Systems Lead</option>
+                          <option value="ai">AI / Machine Learning Engineer</option>
+                        </select>
+                      </div>
+                    </div>
                     <textarea id="atsJdInput" class="form-textarea" rows="8" placeholder="Paste the job description here (e.g. Senior Frontend Engineer requirements, core tech stack, qualifications)...">We are looking for a Staff / Senior Frontend Architect to lead UI component design systems and web vitals optimization.
 
 Key Requirements:

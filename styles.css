@@ -1278,6 +1278,107 @@ button, input, select, textarea {
   font-weight: 800;
 }
 
+/* --- ATS Parser Selector & Sample JD Controls --- */
+.ats-parser-selector-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.parser-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.parser-label svg {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-primary);
+}
+
+.parser-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.parser-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.parser-chip:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.parser-chip.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+.form-select-sm {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.73rem;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+/* 1-Click Insert Missing Keyword Button in Gap Analysis */
+.missing-keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tag-add-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tag-add-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.tag-add-btn.added {
+  background: #10b981;
+  color: #ffffff;
+}
+
 /* Autocomplete Dropdown */
 .skill-autocomplete-dropdown {
   position: absolute;

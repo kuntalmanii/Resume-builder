@@ -1412,13 +1412,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Render Missing Keywords
+    // Render Missing Keywords with 1-Click +Add Action
     if (missingKeywordsTitle) missingKeywordsTitle.innerHTML = `<i data-feather="x"></i> Missing / Gap Keywords (${missing.length})`;
     if (missingKeywordsContainer) {
       if (missing.length > 0) {
-        missingKeywordsContainer.innerHTML = missing.map(kw => `<span class="badge-tag red">${kw}</span>`).join('');
+        missingKeywordsContainer.innerHTML = missing.map(kw => `
+          <span class="missing-keyword-tag">
+            <span>${kw}</span>
+            <span class="tag-add-btn" data-keyword="${kw}" title="Click to add ${kw} to Core Skills">+ Add</span>
+          </span>
+        `).join('');
       } else {
-        missingKeywordsContainer.innerHTML = `<span class="badge-tag green">No Critical Keyword Gaps</span>`;
+        missingKeywordsContainer.innerHTML = `<span class="badge-tag green">No Critical Keyword Gaps Detected!</span>`;
       }
     }
 
@@ -1438,6 +1443,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (window.feather) feather.replace();
+  }
+
+  // 1-Click Insert Missing Keywords Event Listener
+  if (missingKeywordsContainer) {
+    missingKeywordsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tag-add-btn');
+      if (!btn) return;
+      const kw = btn.dataset.keyword;
+      if (kw) {
+        addSkillTag(kw);
+        btn.textContent = 'Added ✓';
+        btn.classList.add('added');
+        btn.style.pointerEvents = 'none';
+      }
+    });
+  }
+
+  // Sample Job Description Templates Dictionary & Handlers
+  const SAMPLE_JD_TEMPLATES = {
+    frontend: `We are looking for a Staff / Senior Frontend Architect to lead UI component design systems and web vitals optimization.
+
+Key Requirements:
+- 5+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
+- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management.
+- Experience with GraphQL, REST APIs, and client-side performance optimization.
+- Familiarity with CI/CD deployment pipelines, Kubernetes, and Redis caching is a plus.`,
+
+    fullstack: `We are hiring a Senior Full Stack Engineer to build high-throughput microservices and real-time user interfaces.
+
+Key Requirements:
+- Proven experience with Node.js, Express, Python, and PostgreSQL database architecture.
+- Frontend proficiency in TypeScript, React, Next.js, and Tailwind CSS.
+- Hands-on experience with Microservices, Docker, Redis Caching, and RESTful APIs.
+- Familiarity with AWS Cloud (EC2/S3/Lambda), CI/CD pipelines, and Jest testing.`,
+
+    devops: `We are seeking a Lead DevOps & Cloud Systems Infrastructure Engineer to architect multi-region Kubernetes clusters.
+
+Key Requirements:
+- Extensive experience with Docker, Kubernetes (K8s), and Terraform Infrastructure as Code.
+- Deep knowledge of AWS Cloud services, GCP, Linux System Administration, and Nginx.
+- Strong proficiency in CI/CD Pipelines (GitHub Actions), Datadog Monitoring, and Shell scripting.
+- Expertise in zero-downtime deployments, microservices security, and cost optimization.`,
+
+    ai: `We are seeking an AI / Machine Learning Systems Engineer to build production RAG pipelines and LLM integrations.
+
+Key Requirements:
+- Hands-on experience with Python, Gemini / OpenAI APIs, PyTorch, and TensorFlow.
+- Deep expertise in RAG Systems (LangChain / LlamaIndex) and Vector Databases (Pinecone / Milvus).
+- Experience building scalable Data Engineering & ETL pipelines with Pandas & NumPy.
+- Familiarity with Docker, FastAPI, and ML model evaluation frameworks.`
+  };
+
+  const sampleJdSelect = document.getElementById('sampleJdSelect');
+  const atsEngineChipsContainer = document.getElementById('atsEngineChipsContainer');
+
+  if (sampleJdSelect && atsJdInput) {
+    sampleJdSelect.addEventListener('change', () => {
+      const selected = sampleJdSelect.value;
+      if (selected && SAMPLE_JD_TEMPLATES[selected]) {
+        atsJdInput.value = SAMPLE_JD_TEMPLATES[selected];
+        autoSaveFormFields();
+      }
+    });
+  }
+
+  if (atsEngineChipsContainer) {
+    atsEngineChipsContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.parser-chip');
+      if (!chip) return;
+      atsEngineChipsContainer.querySelectorAll('.parser-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
   }
 
   // Common technical and professional keywords list for local fallback matching
