@@ -371,68 +371,78 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
 
               <!-- Right: Real-time Live Preview & Suggestions -->
               <div class="dashboard-card preview-card" id="previewCardSection">
-                <div class="card-header">
+
+                <!-- ── Card Header: Title + Live Badge ── -->
+                <div class="card-header preview-card-header">
                   <div class="card-title">
-                    <i data-feather="eye"></i>
+                    <i data-feather="file-text"></i>
                     <h3>Live AI Resume Preview</h3>
+                    <span class="live-badge">
+                      <span class="live-dot"></span>
+                      LIVE
+                    </span>
                   </div>
-                  <div class="card-actions">
-                    <div class="export-dropdown-wrapper" id="exportDropdownWrapper">
-                      <button class="btn-secondary btn-sm" id="btnExportToggle">
-                        <i data-feather="download-cloud"></i>
-                        <span>Export JSON / PDF</span>
-                        <i data-feather="chevron-down" style="margin-left:4px;width:14px;height:14px;"></i>
-                      </button>
-                      <div class="export-dropdown-menu" id="exportDropdownMenu" style="display:none;">
-                        <button class="export-option" id="btnExportJson">
-                          <i data-feather="file-text"></i>
-                          <span>Export as JSON</span>
-                        </button>
-                        <button class="export-option" id="btnExportPdf">
-                          <i data-feather="file"></i>
-                          <span>Export / Print PDF</span>
-                        </button>
-                      </div>
-                    </div>
-                    <button class="btn-primary btn-sm btn-print" id="btnPrintPdf" title="Print or Save as PDF">
-                      <i data-feather="printer"></i>
-                      <span>Download PDF / Print</span>
-                    </button>
+                  <div class="preview-header-meta">
+                    <span class="preview-sync-label" id="previewSyncLabel">
+                      <i data-feather="refresh-cw"></i>
+                      Auto-syncing
+                    </span>
                   </div>
                 </div>
 
-                <div class="card-body">
-                  <!-- Print Target Wrapper -->
-                  <div class="resume-preview-document" id="printableResumeDoc">
-                    <div class="preview-doc-header">
-                      <div class="doc-name" id="previewName">MANISH KUNTAL</div>
-                      <div class="doc-role" id="previewRole">SENIOR UI/UX ENGINEER & SYSTEMS ARCHITECT</div>
-                      <div class="doc-meta" id="previewMeta">San Francisco, CA • manish@resuai.dev • +1 (415) 890-2341</div>
+                <!-- ── Paper Document Workspace ── -->
+                <div class="preview-paper-workspace">
+                  <div class="preview-paper-sheet" id="printableResumeDoc">
+
+                    <!-- Candidate Header -->
+                    <div class="paper-candidate-header">
+                      <div class="paper-candidate-name" id="previewName">MANISH KUNTAL</div>
+                      <div class="paper-candidate-role" id="previewRole">Senior UI/UX Engineer &amp; Systems Architect</div>
+                      <div class="paper-contact-row" id="previewMeta">
+                        <span class="contact-chip"><i data-feather="map-pin"></i>San Francisco, CA</span>
+                        <span class="contact-divider">·</span>
+                        <span class="contact-chip"><i data-feather="mail"></i>manish@resuai.dev</span>
+                        <span class="contact-divider">·</span>
+                        <span class="contact-chip"><i data-feather="phone"></i>+1 (415) 890-2341</span>
+                      </div>
+                      <div class="paper-header-rule"></div>
                     </div>
 
-                    <div class="preview-section">
-                      <div class="section-title">EDUCATION & CREDENTIALS</div>
+                    <!-- Education Section -->
+                    <div class="paper-section">
+                      <div class="paper-section-title">
+                        <span class="section-accent-bar"></span>
+                        EDUCATION &amp; CREDENTIALS
+                      </div>
                       <div class="section-content" id="previewEducation">
-                        <div class="edu-item" style="margin-bottom: 6px;">
+                        <div class="edu-item">
                           <div class="exp-header">
-                            <strong>B.S. Computer Science & Design &mdash; Stanford University</strong>
+                            <strong>B.S. Computer Science &amp; Design &mdash; Stanford University</strong>
                             <span>2022</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div class="preview-section">
-                      <div class="section-title">TECHNICAL EXPERTISE</div>
-                      <p class="section-content" id="previewSkills">TypeScript, React / Next.js, Design Systems, Tailwind & Vanilla CSS, GraphQL</p>
+                    <!-- Skills Section -->
+                    <div class="paper-section">
+                      <div class="paper-section-title">
+                        <span class="section-accent-bar"></span>
+                        TECHNICAL EXPERTISE
+                      </div>
+                      <p class="section-content" id="previewSkills">TypeScript, React / Next.js, Design Systems, Tailwind &amp; Vanilla CSS, GraphQL</p>
                     </div>
 
-                    <div class="preview-section">
-                      <div class="section-title">PROFESSIONAL EXPERIENCE & ACHIEVEMENTS</div>
+                    <!-- Experience Section -->
+                    <div class="paper-section">
+                      <div class="paper-section-title">
+                        <span class="section-accent-bar"></span>
+                        PROFESSIONAL EXPERIENCE
+                      </div>
                       <div class="experience-block">
                         <div class="exp-header">
                           <strong>Staff Frontend Engineer // ResuAI Platform</strong>
-                          <span>2023 - Present</span>
+                          <span class="exp-date-pill">2023 – Present</span>
                         </div>
                         <ul class="exp-list" id="previewBullets">
                           <li>Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.</li>
@@ -441,27 +451,62 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <!-- AI Recommendations box -->
-                  <div class="ai-recommendations-box">
-                    <div class="ai-box-header">
-                      <i data-feather="cpu"></i>
-                      <span>AI Feedback Engine // Real-time Analysis</span>
+                <!-- ── AI Insight Panel ── -->
+                <div class="ai-insight-panel">
+                  <div class="ai-insight-header">
+                    <div class="ai-insight-title">
+                      <i data-feather="zap"></i>
+                      <span>AI Resume Insights</span>
                     </div>
-                    <div class="recommendation-item">
-                      <i data-feather="check-square" class="rec-icon"></i>
+                    <div class="ai-insight-score-pill" id="aiInsightScorePill">
+                      <i data-feather="bar-chart-2"></i>
+                      <span>ATS Ready</span>
+                    </div>
+                  </div>
+                  <div class="ai-insight-items">
+                    <div class="ai-insight-item ai-insight-pass">
+                      <i data-feather="check-circle"></i>
                       <div>
-                        <strong>ATS Optimization:</strong> High keyword density detected for UI Systems & Architecture.
+                        <strong>Keyword Density:</strong> High match detected for UI Systems &amp; Architecture roles.
                       </div>
                     </div>
-                    <div class="recommendation-item">
-                      <i data-feather="check-square" class="rec-icon"></i>
+                    <div class="ai-insight-item ai-insight-pass">
+                      <i data-feather="check-circle"></i>
                       <div>
-                        <strong>Formatting Check:</strong> Clean single-page structure verified for Lever & Greenhouse ATS engines.
+                        <strong>Formatting:</strong> Single-page structure verified for Lever &amp; Greenhouse parsers.
+                      </div>
+                    </div>
+                    <div class="ai-insight-item ai-insight-warn">
+                      <i data-feather="alert-triangle"></i>
+                      <div>
+                        <strong>Suggestion:</strong> Add quantifiable metrics to your experience bullets for stronger impact.
                       </div>
                     </div>
                   </div>
                 </div>
+
+                <!-- ── Floating Action Bar ── -->
+                <div class="preview-action-bar">
+                  <div class="preview-action-left">
+                    <button class="btn-outline-action" id="btnExportJson" title="Export resume data as JSON">
+                      <i data-feather="file-text"></i>
+                      <span>Export JSON</span>
+                    </button>
+                  </div>
+                  <div class="preview-action-right">
+                    <button class="btn-outline-action" id="btnExportPdf" title="Export or Print PDF">
+                      <i data-feather="download"></i>
+                      <span>Export PDF</span>
+                    </button>
+                    <button class="btn-primary-action" id="btnPrintPdf" title="Download or Print polished PDF">
+                      <i data-feather="printer"></i>
+                      <span>Download PDF</span>
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

@@ -824,33 +824,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     7.5 Export JSON / PDF Dropdown
+     7.5 Export JSON / PDF — Flat Action Buttons (no dropdown)
      ========================================================================== */
-  const btnExportToggle   = document.getElementById('btnExportToggle');
-  const exportDropdownMenu = document.getElementById('exportDropdownMenu');
   const btnExportJson     = document.getElementById('btnExportJson');
   const btnExportPdf      = document.getElementById('btnExportPdf');
-
-  // Toggle dropdown open/close
-  if (btnExportToggle && exportDropdownMenu) {
-    btnExportToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = exportDropdownMenu.style.display !== 'none';
-      exportDropdownMenu.style.display = isOpen ? 'none' : 'block';
-      if (window.feather) feather.replace();
-    });
-
-    // Close when clicking outside
-    document.addEventListener('click', () => {
-      exportDropdownMenu.style.display = 'none';
-    });
-  }
 
   // Export as JSON
   if (btnExportJson) {
     btnExportJson.addEventListener('click', () => {
-      exportDropdownMenu.style.display = 'none';
-
       const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
         .map(t => t.textContent.replace('x', '').trim()).filter(Boolean);
 
@@ -889,14 +870,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Export / Print as PDF (reuse same isolated print window)
+  // Export / Print as PDF — reuse same isolated print window as Download PDF button
   if (btnExportPdf) {
     btnExportPdf.addEventListener('click', () => {
-      exportDropdownMenu.style.display = 'none';
-      // Trigger the same isolated print window as the Download PDF button
       if (btnPrintPdf) btnPrintPdf.click();
     });
   }
+
 
   /* ==========================================================================
      7. ATS Analyzer Diagnostics Engine & Gemini Backend API Integration
