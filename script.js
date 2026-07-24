@@ -272,6 +272,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
   if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
 
+  // Always clear auth session on page start/refresh so site starts on Login screen
+  try {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  } catch (e) {}
+
   // Initialize view state
   updateAuthStateView();
 
