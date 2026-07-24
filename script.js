@@ -251,12 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btnNewResume.style.display = (tabId === 'resume-builder') ? 'inline-flex' : 'none';
     }
 
-    // Hide KPI metrics cards grid on ATS Analyzer & non-builder tabs
-    const metricsGrid = document.querySelector('.metrics-grid');
-    if (metricsGrid) {
-      metricsGrid.style.display = (tabId === 'resume-builder') ? 'grid' : 'none';
-    }
-
     // Close mobile drawer if active
     closeMobileSidebar();
   }
