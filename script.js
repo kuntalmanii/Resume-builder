@@ -905,20 +905,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleFileSelected(file) {
     if (!file) return;
+
+    // Update UI badge
     if (selectedFileName && selectedFileBadge) {
       selectedFileName.textContent = file.name;
       selectedFileBadge.style.display = 'inline-flex';
     }
 
-    if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+    uploadedFileText = ''; // Reset before extraction
+
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      // PDF — use PDF.js
       uploadedFileText = await extractPdfText(file);
-    } else if (file.type === "text/plain" || file.name.endsWith('.txt')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        uploadedFileText = e.target.result || "";
-      };
-      reader.readAsText(file);
+
+    } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+      // TXT — wrap FileReader in a Promise so it's properly awaited
+      uploadedFileText = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload  = (e) => resolve(e.target.result || '');
+        reader.onerror = ()  => resolve('');
+        reader.readAsText(file);
+      });
+
+    } else if (file.name.endsWith('.docx')) {
+      // DOCX — it's a ZIP of XML files; extract raw text by stripping XML tags
+      // This gives good-enough plain text for Gemini to parse
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        // Convert buffer to string and strip all XML/markup tags
+        const bytes = new Uint8Array(arrayBuffer);
+        let raw = '';
+        for (let i = 0; i < bytes.length; i++) {
+          if (bytes[i] >= 32 && bytes[i] < 127) raw += String.fromCharCode(bytes[i]);
+        }
+        // Pull readable text between XML word tags
+        const matches = raw.match(/[A-Za-z0-9@._\-+,()&%$#!?:;\/' "\n]{4,}/g);
+        uploadedFileText = matches ? matches.join(' ') : '';
+      } catch (e) {
+        console.warn('DOCX extraction error:', e);
+        uploadedFileText = '';
+      }
     }
+
+    // Show extraction status in the badge
+    if (selectedFileName && uploadedFileText) {
+      const charCount = uploadedFileText.trim().length;
+      selectedFileName.textContent = `${file.name} (${charCount} chars extracted)`;
+    } else if (selectedFileName && !uploadedFileText) {
+      selectedFileName.textContent = `${file.name} — could not extract text. Try PDF or TXT.`;
+    }
+
+    console.log(`[ResuAI] Extracted ${uploadedFileText.length} characters from ${file.name}`);
   }
 
   if (pdfFileInput) {
@@ -1178,6 +1215,21 @@ document.addEventListener('DOMContentLoaded', () => {
             atsResults.style.display = 'block';
             atsResults.scrollIntoView({ behavior: 'smooth' });
           }
+
+          // Only show tailored CTA if resume was actually uploaded & parsed
+          const tailoredCta = document.getElementById('tailoredResumeCta');
+          const tailoredCtaDesc = tailoredCta ? tailoredCta.querySelector('.cta-text p') : null;
+          if (tailoredCta) {
+            if (uploadedFileText && uploadedFileText.trim().length > 50) {
+              tailoredCtaDesc && (tailoredCtaDesc.textContent = 'Let Gemini 2.5 Flash rewrite your resume, optimised specifically for this job description — with matched keywords, a custom summary, and impact-driven bullets.');
+              document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = false);
+            } else {
+              tailoredCtaDesc && (tailoredCtaDesc.textContent = '⚠️ No resume file detected. Please upload your resume PDF in the drop zone above and re-run analysis to enable tailored generation.');
+              document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = true);
+            }
+            tailoredCta.style.display = 'block';
+            tailoredCta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         }, 300);
       } catch (error) {
         console.warn("Backend API call failed, using client-side fallback:", error);
@@ -1194,6 +1246,17 @@ document.addEventListener('DOMContentLoaded', () => {
           atsResults.style.display = 'block';
           atsResults.scrollIntoView({ behavior: 'smooth' });
         }
+
+        // Show CTA but disable generate button if no resume was uploaded
+        const tailoredCtaFallback = document.getElementById('tailoredResumeCta');
+        const tailoredCtaDescFb  = tailoredCtaFallback ? tailoredCtaFallback.querySelector('.cta-text p') : null;
+        if (tailoredCtaFallback) {
+          if (!uploadedFileText || uploadedFileText.trim().length < 50) {
+            tailoredCtaDescFb && (tailoredCtaDescFb.textContent = '⚠️ No resume file detected. Please upload your resume PDF in the drop zone above and re-run analysis to enable tailored generation.');
+            document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = true);
+          }
+          tailoredCtaFallback.style.display = 'block';
+        }
       }
     });
   }
@@ -1202,5 +1265,259 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSavedFormFields();
   syncLivePreview();
   syncLiveSkills();
+
+  /* ==========================================================================
+     8. AI Tailored Resume Generator
+     ========================================================================== */
+  const btnGenerateTailored  = document.getElementById('btnGenerateTailored');
+  const tailoredLoadingState = document.getElementById('tailoredLoadingState');
+  const tailoredResumeResult = document.getElementById('tailoredResumeResult');
+  const tailoredResumeDoc    = document.getElementById('tailoredResumeDoc');
+  const tailoredProgressFill = document.getElementById('tailoredProgressFill');
+  const tailoredProgressPct  = document.getElementById('tailoredProgressPercent');
+  const btnPrintTailored     = document.getElementById('btnPrintTailored');
+
+  function fillMissingCandidateDetails(data, rawResumeText) {
+    const text = (rawResumeText || '').trim();
+
+    // 1. Email
+    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    const extractedEmail = emailMatch ? emailMatch[0] : (inputEmail ? inputEmail.value.trim() : '');
+
+    // 2. Phone
+    const phoneMatch = text.match(/(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
+    const extractedPhone = phoneMatch ? phoneMatch[0] : (inputPhone ? inputPhone.value.trim() : '');
+
+    // 3. Name
+    let extractedName = inputFullName ? inputFullName.value.trim() : '';
+    if ((!extractedName || extractedName === 'Manish Kuntal') && text) {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone'];
+      for (const line of lines.slice(0, 5)) {
+        const lower = line.toLowerCase();
+        if (!lower.includes('@') && !/\d{4,}/.test(lower) && !ignoreWords.some(w => lower.includes(w))) {
+          if (line.length >= 2 && line.length <= 40 && !/[;{}]/.test(line)) {
+            extractedName = line;
+            break;
+          }
+        }
+      }
+    }
+
+    // 4. Education
+    let extractedEdu = inputEducation ? inputEducation.value.trim() : '';
+    if (!extractedEdu && text) {
+      const eduKeywords = ['university', 'college', 'bachelor', 'b.s.', 'b.tech', 'master', 'm.s.', 'ph.d', 'degree', 'stanford', 'mit', 'harvard'];
+      const lines = text.split(/\r?\n/).map(l => l.trim());
+      for (const line of lines) {
+        if (eduKeywords.some(kw => line.toLowerCase().includes(kw))) {
+          extractedEdu = line;
+          break;
+        }
+      }
+    }
+
+    // Fill missing / placeholder fields in response data
+    const nameStr = (data.name || '').toLowerCase().trim();
+    if ((!data.name || ['not provided', 'your name', 'candidate name', 'undefined', 'null'].includes(nameStr)) && extractedName) {
+      data.name = extractedName;
+    }
+
+    const emailStr = (data.email || '').toLowerCase().trim();
+    if ((!data.email || ['not provided', 'your@email.com', 'candidate@email.com', 'email@example.com', 'undefined', 'null'].includes(emailStr)) && extractedEmail) {
+      data.email = extractedEmail;
+    }
+
+    const phoneStr = (data.phone || '').toLowerCase().trim();
+    if ((!data.phone || ['not provided', '+1 000 000 0000', 'undefined', 'null'].includes(phoneStr)) && extractedPhone) {
+      data.phone = extractedPhone;
+    }
+
+    const eduStr = (data.education || '').toLowerCase().trim();
+    if ((!data.education || ['not provided', 'education details (from resume)', 'b.s. computer science — university (year)', 'undefined', 'null'].includes(eduStr)) && extractedEdu) {
+      data.education = extractedEdu;
+    }
+
+    if (!data.location || data.location.toLowerCase().includes('not provided')) {
+      data.location = '';
+    }
+
+    return data;
+  }
+
+  function renderTailoredResume(data) {
+    if (!tailoredResumeDoc) return;
+
+    // Post-process data to ensure contact info and name are never empty
+    data = fillMissingCandidateDetails(data, uploadedFileText);
+
+    const skills = (data.skills || []).join(', ');
+    const expBlocks = (data.experience || []).map(job => `
+      <div class="experience-block">
+        <div class="exp-header">
+          <strong>${job.title || ''} // ${job.company || ''}</strong>
+          <span>${job.period || ''}</span>
+        </div>
+        <ul class="exp-list">
+          ${(job.bullets || []).map(b => `<li>${b}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
+
+    // Format header meta string dynamically
+    const metaParts = [];
+    if (data.location) metaParts.push(data.location);
+    if (data.email) metaParts.push(data.email);
+    if (data.phone) metaParts.push(data.phone);
+
+    tailoredResumeDoc.innerHTML = `
+      <div class="preview-doc-header">
+        <div class="doc-name">${(data.name || 'CANDIDATE RESUME').toUpperCase()}</div>
+        <div class="doc-role">${(data.jobTitle || 'TARGET ROLE').toUpperCase()}</div>
+        <div class="doc-meta">${metaParts.join(' &bull; ')}</div>
+      </div>
+
+      ${data.summary ? `
+      <div class="preview-section">
+        <div class="section-title">PROFESSIONAL SUMMARY</div>
+        <p class="section-content">${data.summary}</p>
+      </div>` : ''}
+
+      ${skills ? `
+      <div class="preview-section">
+        <div class="section-title">TECHNICAL EXPERTISE</div>
+        <p class="section-content">${skills}</p>
+      </div>` : ''}
+
+      <div class="preview-section">
+        <div class="section-title">PROFESSIONAL EXPERIENCE & ACHIEVEMENTS</div>
+        ${expBlocks}
+      </div>
+
+      ${data.education ? `
+      <div class="preview-section">
+        <div class="section-title">EDUCATION & CREDENTIALS</div>
+        <p class="section-content">${data.education}</p>
+      </div>` : ''}
+    `;
+  }
+
+  if (btnGenerateTailored) {
+    btnGenerateTailored.addEventListener('click', async () => {
+      const jdText = atsJdInput ? atsJdInput.value.trim() : '';
+
+      // STRICT: only use the uploaded resume — no form-field fallback
+      const resumeText = (uploadedFileText || '').trim();
+
+      if (!resumeText) {
+        // Show an inline error nudging the user to upload their resume
+        const cta = document.getElementById('tailoredResumeCta');
+        const existingErr = document.getElementById('tailoredUploadError');
+        if (!existingErr && cta) {
+          const err = document.createElement('p');
+          err.id = 'tailoredUploadError';
+          err.style.cssText = 'color:#ef4444;font-size:0.82rem;margin-top:0.6rem;display:flex;align-items:center;gap:0.4rem;';
+          err.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Please upload your resume PDF above before generating a tailored version.`;
+          cta.appendChild(err);
+          setTimeout(() => err.remove(), 5000);
+        }
+        return;
+      }
+
+      if (!jdText) {
+        alert('Please paste a job description in the ATS Analyzer before generating a tailored resume.');
+        return;
+      }
+
+      // Show loading, hide previous result
+      const tailoredCta = document.getElementById('tailoredResumeCta');
+      if (tailoredCta) tailoredCta.style.display = 'none';
+      if (tailoredResumeResult) tailoredResumeResult.style.display = 'none';
+      if (tailoredLoadingState) {
+        tailoredLoadingState.style.display = 'flex';
+        tailoredLoadingState.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      // Animate progress bar
+      let prog = 0;
+      if (tailoredProgressFill) tailoredProgressFill.style.width = '0%';
+      if (tailoredProgressPct)  tailoredProgressPct.textContent  = '0%';
+      const progInterval = setInterval(() => {
+        prog = Math.min(prog + 8, 90);
+        if (tailoredProgressFill) tailoredProgressFill.style.width = `${prog}%`;
+        if (tailoredProgressPct)  tailoredProgressPct.textContent  = `${prog}%`;
+        if (prog >= 90) clearInterval(progInterval);
+      }, 80);
+
+      try {
+        const res = await fetch('/api/generate-tailored-resume', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jdText, resumeText })
+        });
+        const data = await res.json();
+
+        clearInterval(progInterval);
+        if (tailoredProgressFill) tailoredProgressFill.style.width = '100%';
+        if (tailoredProgressPct)  tailoredProgressPct.textContent  = '100%';
+
+        setTimeout(() => {
+          if (tailoredLoadingState) tailoredLoadingState.style.display = 'none';
+          renderTailoredResume(data);
+          if (tailoredResumeResult) {
+            tailoredResumeResult.style.display = 'block';
+            tailoredResumeResult.scrollIntoView({ behavior: 'smooth' });
+          }
+          if (window.feather) feather.replace();
+        }, 300);
+
+      } catch (err) {
+        console.warn('Tailored resume generation error:', err);
+        clearInterval(progInterval);
+        if (tailoredLoadingState) tailoredLoadingState.style.display = 'none';
+        if (tailoredCta) tailoredCta.style.display = 'block';
+        alert('Could not generate tailored resume. Please check your API key or try again.');
+      }
+    });
+  }
+
+
+  // Print Tailored Resume
+  if (btnPrintTailored) {
+    btnPrintTailored.addEventListener('click', () => {
+      if (!tailoredResumeDoc) return;
+      const printWindow = window.open('', '_blank', 'width=900,height=700');
+      if (!printWindow) return;
+      printWindow.document.write(`
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8" />
+  <title>Tailored Resume</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:#fff;color:#111;font-family:'Inter',Arial,sans-serif;font-size:11pt;line-height:1.5;padding:24pt 28pt}
+    .resume-preview-document{max-width:700px;margin:0 auto}
+    .preview-doc-header{border-bottom:2px solid #111;padding-bottom:10pt;margin-bottom:14pt}
+    .doc-name{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:20pt;font-weight:800;letter-spacing:2px;color:#000}
+    .doc-role{font-size:9.5pt;font-weight:600;letter-spacing:1.5px;color:#444;margin-top:2pt}
+    .doc-meta{font-size:9pt;color:#555;margin-top:4pt}
+    .preview-section{margin-top:14pt}
+    .section-title{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:8.5pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;border-bottom:1px solid #ccc;padding-bottom:3pt;margin-bottom:6pt}
+    .section-content{font-size:10pt;color:#222}
+    .experience-block{margin-bottom:10pt}
+    .exp-header{display:flex;justify-content:space-between;font-size:10pt;font-weight:600;color:#111;margin-bottom:4pt}
+    .exp-list{padding-left:14pt;font-size:10pt;color:#222}
+    .exp-list li{margin-bottom:3pt}
+    @media print{html,body{padding:0}}
+  </style>
+</head><body>
+  ${tailoredResumeDoc.outerHTML}
+  <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};}<\/script>
+</body></html>`);
+      printWindow.document.close();
+    });
+  }
+
 });
 

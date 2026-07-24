@@ -237,7 +237,191 @@ function runServerFallbackOptimization(jobTitle, experienceText) {
   };
 }
 
+/**
+ * Server-side HTTPS call to Gemini 2.5 Flash for Tailored Resume Generation
+ * @param {string} jdText - Target job description
+ * @param {string} resumeText - User's existing resume/profile text
+ */
+function callGeminiTailoredResume(jdText, resumeText) {
+  return new Promise((resolve, reject) => {
+    if (!GEMINI_API_KEY) {
+      return reject(new Error('GEMINI_API_KEY is not set on server.'));
+    }
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = new URL(endpoint);
+
+    const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.
+
+IMPORTANT RULES — READ CAREFULLY:
+- You MUST extract ALL personal details (name, email, phone, location, education, job history, skills) EXCLUSIVELY from the CANDIDATE'S UPLOADED RESUME TEXT provided below.
+- Do NOT invent, hallucinate, or assume any detail that is not explicitly present in the resume text.
+- If a field (e.g. phone, location) is genuinely absent from the resume, use a neutral placeholder like "Not provided".
+- The candidate's experience bullets must be based on their ACTUAL job history from the resume — do not fabricate roles, companies, or achievements.
+
+Your task: Rewrite and tailor the candidate's resume so it maximises ATS keyword match for the target job description. Keep all real facts; only enhance language, structure, and keyword alignment.
+
+TARGET JOB DESCRIPTION:
+${jdText}
+
+CANDIDATE'S UPLOADED RESUME TEXT (source of truth — use only this):
+${resumeText}
+
+Instructions:
+1. Extract the candidate's full name, email, phone, and location EXACTLY as they appear in the resume text above.
+2. Extract ALL work experience entries (company names, job titles, dates, responsibilities) from the resume. Do not invent new roles.
+3. Extract education details exactly as stated in the resume.
+4. Extract the candidate's real skills from the resume, then reorder/filter to prioritise those matching the job description.
+5. Rewrite experience bullets using strong action verbs and add quantified metrics where the resume already implies scale — do not fabricate numbers that have no basis in the resume.
+6. Write a 2-3 sentence professional summary tailored to the job description, using only information grounded in the resume.
+7. Respond STRICTLY with valid JSON following this exact schema:
+{
+  "name": "<full name extracted from resume, or 'Not provided'>",
+  "jobTitle": "<target job title from JD>",
+  "email": "<email extracted from resume, or 'Not provided'>",
+  "phone": "<phone extracted from resume, or 'Not provided'>",
+  "location": "<location extracted from resume, or 'Not provided'>",
+  "summary": "<2-3 sentence tailored professional summary based on resume content>",
+  "skills": ["<real skill from resume, prioritised by JD relevance>"],
+  "experience": [
+    {
+      "title": "<real job title from resume>",
+      "company": "<real company name from resume>",
+      "period": "<dates from resume, e.g. 2022 - Present>",
+      "bullets": ["<rewritten bullet based on real resume content>"]
+    }
+  ],
+  "education": "<degree and institution exactly as in resume, or 'Not provided'>"
+}`;
+
+    const payload = JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json' }
+    });
+
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            return reject(new Error(`Gemini API returned status ${res.statusCode}: ${data}`));
+          }
+          const parsedRes = JSON.parse(data);
+          const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) return reject(new Error('Empty response from Gemini API'));
+          resolve(JSON.parse(rawText));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', err => reject(err));
+    req.write(payload);
+    req.end();
+  });
+}
+
+function extractResumeDetails(resumeText) {
+  const text = (resumeText || '').trim();
+
+  // 1. Email extraction
+  const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const email = emailMatch ? emailMatch[0] : '';
+
+  // 2. Phone extraction
+  const phoneMatch = text.match(/(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
+  const phone = phoneMatch ? phoneMatch[0] : '';
+
+  // 3. Name extraction: look at top 5 non-empty lines
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  let name = '';
+  const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone'];
+
+  for (const line of lines.slice(0, 5)) {
+    const lower = line.toLowerCase();
+    if (!lower.includes('@') && !/\d{4,}/.test(lower) && !ignoreWords.some(w => lower.includes(w))) {
+      if (line.length >= 2 && line.length <= 40 && !/[;{}]/.test(line)) {
+        name = line;
+        break;
+      }
+    }
+  }
+
+  // 4. Location extraction
+  const locationMatch = text.match(/([A-Z][a-zA-Z\s]+,\s*(?:[A-Z]{2}|[A-Z][a-zA-Z\s]+))/);
+  const location = locationMatch ? locationMatch[1] : '';
+
+  // 5. Education extraction
+  let education = '';
+  const eduKeywords = ['university', 'college', 'bachelor', 'b.s.', 'b.tech', 'master', 'm.s.', 'ph.d', 'degree', 'stanford', 'mit', 'harvard'];
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (eduKeywords.some(kw => lower.includes(kw))) {
+      education = line;
+      break;
+    }
+  }
+
+  // 6. Skills extraction
+  const KNOWN_KEYWORDS = [
+    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
+    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
+    'Node', 'Node.js', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Python', 'Git', 'Agile', 'SQL', 'AWS'
+  ];
+  const textLower = text.toLowerCase();
+  const skills = KNOWN_KEYWORDS.filter(kw => textLower.includes(kw.toLowerCase()));
+
+  // 7. Experience bullets extraction
+  const bulletLines = lines.filter(l => /^[•\-\*]\s+|^\d+\.\s+/.test(l) || (l.length > 30 && !l.includes('@'))).slice(0, 5);
+
+  return { name, email, phone, location, education, skills, bulletLines };
+}
+
+function runFallbackTailoredResume(jdText, resumeText) {
+  const details = extractResumeDetails(resumeText);
+  
+  // Extract job title from JD first line or text
+  const titleMatch = jdText ? jdText.split(/\r?\n/)[0].replace(/^(we are looking for a|hiring|role:?|job title:?)\s*/i, '').trim() : '';
+  const jobTitle = (titleMatch && titleMatch.length < 50) ? titleMatch : 'Target Role';
+
+  return {
+    name: details.name || '',
+    jobTitle: jobTitle,
+    email: details.email || '',
+    phone: details.phone || '',
+    location: details.location || '',
+    summary: `Results-driven software engineer with background in ${details.skills.slice(0, 3).join(', ') || 'technical system development'}. Tailored for ${jobTitle} role with focus on performance and architectural excellence.`,
+    skills: details.skills.length > 0 ? details.skills : ['TypeScript', 'React', 'Next.js', 'Node.js', 'System Architecture'],
+    experience: [
+      {
+        title: jobTitle,
+        company: 'Key Experience (from Uploaded Resume)',
+        period: 'Recent',
+        bullets: details.bulletLines.length > 0 ? details.bulletLines.map(b => b.replace(/^[•\-\*]\s*/, '')) : [
+          'Engineered scalable software modules aligned with modern software engineering practices.',
+          'Optimized core application features improving stability, scalability, and user engagement.'
+        ]
+      }
+    ],
+    education: details.education || ''
+  };
+}
+
 // Create HTTP server
+
 const server = http.createServer((req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -311,7 +495,38 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Handle Backend API Endpoint: POST /api/generate-tailored-resume
+  if (req.method === 'POST' && req.url === '/api/generate-tailored-resume') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const { jdText, resumeText } = JSON.parse(body || '{}');
+
+        if (GEMINI_API_KEY) {
+          try {
+            const result = await callGeminiTailoredResume(jdText, resumeText);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result));
+            return;
+          } catch (err) {
+            console.warn('Gemini tailored resume error, using fallback:', err.message);
+          }
+        }
+
+        const fallback = runFallbackTailoredResume(jdText, resumeText);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(fallback));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      }
+    });
+    return;
+  }
+
   // Serve Static Files
+
   let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
   const extname = path.extname(filePath);
   const contentType = MIME_TYPES[extname] || 'text/html';

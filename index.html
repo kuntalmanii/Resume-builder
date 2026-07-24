@@ -652,8 +652,56 @@ Key Requirements:
                 </div>
               </div>
             </div>
-          </div>
 
+            <!-- AI Tailored Resume Generator — shown after ATS analysis -->
+            <div class="tailored-resume-cta margin-top-lg" id="tailoredResumeCta" style="display:none;">
+              <div class="cta-inner">
+                <div class="cta-icon"><i data-feather="cpu"></i></div>
+                <div class="cta-text">
+                  <h4>Generate Your Tailored Resume for This Role</h4>
+                  <p>Let Gemini 2.5 Flash rewrite your resume, optimised specifically for this job description — with matched keywords, a custom summary, and impact-driven bullets.</p>
+                </div>
+                <button class="btn-primary" id="btnGenerateTailored">
+                  <i data-feather="zap"></i>
+                  <span id="btnGenerateTailoredText">Generate Tailored Resume</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tailored Resume Loading State -->
+            <div class="ats-loading-card margin-top-lg" id="tailoredLoadingState" style="display:none;">
+              <div class="spinner-ring"></div>
+              <div class="loading-text">
+                <h4>Gemini 2.5 Flash is crafting your tailored resume...</h4>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" id="tailoredProgressFill"></div>
+                </div>
+                <span class="progress-percent" id="tailoredProgressPercent">0%</span>
+              </div>
+            </div>
+
+            <!-- Tailored Resume Result Preview -->
+            <div class="dashboard-card margin-top-lg" id="tailoredResumeResult" style="display:none;">
+              <div class="card-header">
+                <div class="card-title">
+                  <i data-feather="file-text"></i>
+                  <h3>AI Tailored Resume // Ready to Download</h3>
+                </div>
+                <div class="card-actions">
+                  <button class="btn-primary btn-sm" id="btnPrintTailored">
+                    <i data-feather="printer"></i>
+                    <span>Download PDF / Print</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="resume-preview-document" id="tailoredResumeDoc">
+                  <!-- Dynamically populated by JS -->
+                </div>
+              </div>
+            </div>
+
+          </div>
 
 
           <div class="tab-pane" id="tab-analytics">
