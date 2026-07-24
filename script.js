@@ -295,7 +295,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputJobTitle = document.getElementById('inputJobTitle');
   const inputEmail = document.getElementById('inputEmail');
   const inputPhone = document.getElementById('inputPhone');
+  const inputLocation = document.getElementById('inputLocation');
+  const inputGithub = document.getElementById('inputGithub');
+  const inputLinkedin = document.getElementById('inputLinkedin');
+  const inputPortfolio = document.getElementById('inputPortfolio');
+  const inputSummary = document.getElementById('inputSummary');
   const inputEducation = document.getElementById('inputEducation');
+  const inputCertifications = document.getElementById('inputCertifications');
   const bulletPoints = document.getElementById('bulletPoints');
   const charCounter = document.getElementById('charCounter');
   const atsJdInput = document.getElementById('atsJdInput');
@@ -303,9 +309,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewName = document.getElementById('previewName');
   const previewRole = document.getElementById('previewRole');
   const previewMeta = document.getElementById('previewMeta');
+  const previewSummary = document.getElementById('previewSummary');
+  const previewSummarySection = document.getElementById('previewSummarySection');
   const previewEducation = document.getElementById('previewEducation');
   const previewSkills = document.getElementById('previewSkills');
   const previewBullets = document.getElementById('previewBullets');
+  const previewCertifications = document.getElementById('previewCertifications');
+  const previewCertificationsSection = document.getElementById('previewCertificationsSection');
+
+  const strengthPercentVal = document.getElementById('strengthPercentVal');
+  const strengthProgressFill = document.getElementById('strengthProgressFill');
+  const strengthTip = document.getElementById('strengthTip');
+  const verbChipsContainer = document.getElementById('verbChipsContainer');
 
   const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
   const btnNextStep = document.getElementById('btnNextStep');
@@ -366,7 +381,13 @@ document.addEventListener('DOMContentLoaded', () => {
       jobTitle: inputJobTitle ? inputJobTitle.value : '',
       email: inputEmail ? inputEmail.value : '',
       phone: inputPhone ? inputPhone.value : '',
+      location: inputLocation ? inputLocation.value : '',
+      github: inputGithub ? inputGithub.value : '',
+      linkedin: inputLinkedin ? inputLinkedin.value : '',
+      portfolio: inputPortfolio ? inputPortfolio.value : '',
+      summary: inputSummary ? inputSummary.value : '',
       education: inputEducation ? inputEducation.value : '',
+      certifications: inputCertifications ? inputCertifications.value : '',
       bulletPoints: bulletPoints ? bulletPoints.value : '',
       atsJdText: atsJdInput ? atsJdInput.value : '',
       skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => t.textContent.replace('x', '').trim())
@@ -391,7 +412,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
         if (draft.email && inputEmail) inputEmail.value = draft.email;
         if (draft.phone && inputPhone) inputPhone.value = draft.phone;
+        if (draft.location && inputLocation) inputLocation.value = draft.location;
+        if (draft.github && inputGithub) inputGithub.value = draft.github;
+        if (draft.linkedin && inputLinkedin) inputLinkedin.value = draft.linkedin;
+        if (draft.portfolio && inputPortfolio) inputPortfolio.value = draft.portfolio;
+        if (draft.summary && inputSummary) inputSummary.value = draft.summary;
         if (draft.education && inputEducation) inputEducation.value = draft.education;
+        if (draft.certifications && inputCertifications) inputCertifications.value = draft.certifications;
         if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
         if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
 
@@ -421,6 +448,58 @@ document.addEventListener('DOMContentLoaded', () => {
     previewSkills.textContent = skillList.length > 0 ? skillList.join(', ') : 'TypeScript, React, Design Systems';
   }
 
+  // Live Profile Strength Calculator Engine
+  function calculateProfileStrength() {
+    let score = 0;
+    const missing = [];
+
+    if (inputFullName && inputFullName.value.trim()) score += 10; else missing.push('Full Name');
+    if (inputJobTitle && inputJobTitle.value.trim()) score += 10; else missing.push('Target Job Title');
+    if (inputEmail && inputEmail.value.trim()) score += 10; else missing.push('Email');
+    if (inputPhone && inputPhone.value.trim()) score += 5; else missing.push('Phone');
+    if (inputLocation && inputLocation.value.trim()) score += 10; else missing.push('Location');
+    if (inputGithub && inputGithub.value.trim()) score += 10; else missing.push('GitHub Link');
+    if (inputLinkedin && inputLinkedin.value.trim()) score += 10; else missing.push('LinkedIn Link');
+    if (inputPortfolio && inputPortfolio.value.trim()) score += 5; else missing.push('Portfolio Link');
+    if (inputSummary && inputSummary.value.trim()) score += 10; else missing.push('Executive Summary');
+    
+    const tagsCount = document.querySelectorAll('#skillsTagsContainer .tag').length;
+    if (tagsCount >= 3) score += 10; else missing.push('at least 3 Skills');
+
+    if (bulletPoints && bulletPoints.value.trim().length > 30) score += 10; else missing.push('Work Experience Bullets');
+
+    if (strengthPercentVal) strengthPercentVal.textContent = `${score}% Complete`;
+    if (strengthProgressFill) strengthProgressFill.style.width = `${score}%`;
+
+    if (strengthTip) {
+      if (score === 100) {
+        strengthTip.textContent = '🎉 Exceptional! Your profile has 100% recruiter trust & ATS readiness.';
+      } else if (missing.length > 0) {
+        strengthTip.textContent = `Tip: Add ${missing.slice(0, 2).join(' and ')} to reach 100%.`;
+      }
+    }
+  }
+
+  // Action-Verb Chip Click Handler
+  if (verbChipsContainer && bulletPoints) {
+    verbChipsContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.verb-chip');
+      if (!chip) return;
+      const verb = chip.dataset.verb || (chip.textContent + ' ');
+      
+      const currentVal = bulletPoints.value;
+      if (currentVal && !currentVal.endsWith('\n') && !currentVal.endsWith(' ')) {
+        bulletPoints.value += '\n• ' + verb;
+      } else {
+        bulletPoints.value += (currentVal ? '' : '• ') + verb;
+      }
+      
+      bulletPoints.focus();
+      syncLivePreview();
+      autoSaveFormFields();
+    });
+  }
+
   function syncLivePreview() {
     if (inputFullName && previewName) {
       previewName.textContent = inputFullName.value.trim().toUpperCase() || 'MANISH KUNTAL';
@@ -429,10 +508,35 @@ document.addEventListener('DOMContentLoaded', () => {
       previewRole.textContent = inputJobTitle.value.trim().toUpperCase() || 'SENIOR DEVELOPER';
     }
     if (previewMeta) {
-      const email = inputEmail ? inputEmail.value.trim() : 'manish@resuai.dev';
-      const phone = inputPhone ? inputPhone.value.trim() : '+1 (415) 890-2341';
-      previewMeta.textContent = `San Francisco, CA • ${email} • ${phone}`;
+      const chips = [];
+      const loc  = inputLocation ? inputLocation.value.trim() : 'San Francisco, CA';
+      const em   = inputEmail ? inputEmail.value.trim() : 'manish@resuai.dev';
+      const ph   = inputPhone ? inputPhone.value.trim() : '+1 (415) 890-2341';
+      const gh   = inputGithub ? inputGithub.value.trim() : '';
+      const li   = inputLinkedin ? inputLinkedin.value.trim() : '';
+      const port = inputPortfolio ? inputPortfolio.value.trim() : '';
+
+      if (loc)  chips.push(`<span class="contact-chip"><i data-feather="map-pin"></i>${loc}</span>`);
+      if (em)   chips.push(`<span class="contact-chip"><i data-feather="mail"></i>${em}</span>`);
+      if (ph)   chips.push(`<span class="contact-chip"><i data-feather="phone"></i>${ph}</span>`);
+      if (gh)   chips.push(`<span class="contact-chip"><i data-feather="github"></i>${gh}</span>`);
+      if (li)   chips.push(`<span class="contact-chip"><i data-feather="linkedin"></i>${li}</span>`);
+      if (port) chips.push(`<span class="contact-chip"><i data-feather="globe"></i>${port}</span>`);
+
+      previewMeta.innerHTML = chips.join('<span class="contact-divider">·</span>');
+      if (window.feather) feather.replace();
     }
+
+    if (inputSummary && previewSummary && previewSummarySection) {
+      const val = inputSummary.value.trim();
+      if (val) {
+        previewSummary.textContent = val;
+        previewSummarySection.style.display = 'block';
+      } else {
+        previewSummarySection.style.display = 'none';
+      }
+    }
+
     if (inputEducation && previewEducation) {
       const val = inputEducation.value.trim();
       previewEducation.innerHTML = val ? formatEducationHTML(val) : `
@@ -443,6 +547,17 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>`;
     }
+
+    if (inputCertifications && previewCertifications && previewCertificationsSection) {
+      const val = inputCertifications.value.trim();
+      if (val) {
+        previewCertifications.textContent = val;
+        previewCertificationsSection.style.display = 'block';
+      } else {
+        previewCertificationsSection.style.display = 'none';
+      }
+    }
+
     if (bulletPoints && previewBullets) {
       const lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
       if (lines.length > 0) {
@@ -452,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     updateCharCounter();
+    calculateProfileStrength();
     autoSaveFormFields();
   }
 
@@ -1052,20 +1168,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const resumeData = {
         meta: { exportedAt: new Date().toISOString(), version: '2.5', tool: 'ResuAI' },
         personalInfo: {
-          fullName:  inputFullName  ? inputFullName.value.trim()  : '',
-          jobTitle:  inputJobTitle  ? inputJobTitle.value.trim()  : '',
-          email:     inputEmail     ? inputEmail.value.trim()     : '',
-          phone:     inputPhone     ? inputPhone.value.trim()     : '',
-          education: inputEducation ? inputEducation.value.trim() : '',
+          fullName:       inputFullName       ? inputFullName.value.trim()       : '',
+          jobTitle:       inputJobTitle       ? inputJobTitle.value.trim()       : '',
+          email:          inputEmail          ? inputEmail.value.trim()          : '',
+          phone:          inputPhone          ? inputPhone.value.trim()          : '',
+          location:       inputLocation       ? inputLocation.value.trim()       : '',
+          github:         inputGithub         ? inputGithub.value.trim()         : '',
+          linkedin:       inputLinkedin       ? inputLinkedin.value.trim()       : '',
+          portfolio:      inputPortfolio      ? inputPortfolio.value.trim()      : '',
+          summary:        inputSummary        ? inputSummary.value.trim()        : '',
+          education:      inputEducation      ? inputEducation.value.trim()      : '',
+          certifications: inputCertifications ? inputCertifications.value.trim() : '',
         },
         skills,
         experience: bulletPoints ? bulletPoints.value.trim() : '',
         preview: {
-          name:      previewName      ? previewName.textContent      : '',
-          role:      previewRole      ? previewRole.textContent      : '',
-          meta:      previewMeta      ? previewMeta.textContent      : '',
-          education: previewEducation ? previewEducation.textContent : '',
-          skills:    previewSkills    ? previewSkills.textContent    : '',
+          name:           previewName           ? previewName.textContent           : '',
+          role:           previewRole           ? previewRole.textContent           : '',
+          meta:           previewMeta           ? previewMeta.innerHTML             : '',
+          summary:        previewSummary        ? previewSummary.textContent        : '',
+          education:      previewEducation      ? previewEducation.textContent      : '',
+          skills:         previewSkills         ? previewSkills.textContent         : '',
+          certifications: previewCertifications ? previewCertifications.textContent : '',
         }
       };
 

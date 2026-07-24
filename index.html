@@ -286,6 +286,23 @@
                 </div>
 
                 <div class="card-body">
+
+                  <!-- Live Profile Strength Meter -->
+                  <div class="profile-strength-box">
+                    <div class="strength-header">
+                      <div class="strength-title">
+                        <i data-feather="shield-check"></i>
+                        <span>Resume Profile Strength</span>
+                      </div>
+                      <span class="strength-percent" id="strengthPercentVal">85% Complete</span>
+                    </div>
+                    <div class="strength-progress-bg">
+                      <div class="strength-progress-fill" id="strengthProgressFill" style="width: 85%;"></div>
+                    </div>
+                    <span class="strength-tip" id="strengthTip">Tip: Add your GitHub and Portfolio links for 100% recruiter trust.</span>
+                  </div>
+
+                  <!-- Personal Info: Name & Target Title -->
                   <div class="form-row-2">
                     <div class="form-group">
                       <label for="inputFullName">Full Name</label>
@@ -298,12 +315,13 @@
                       <label for="inputJobTitle">Target Job Title</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="briefcase"></i>
-                        <input type="text" id="inputJobTitle" class="form-input live-sync" value="Senior UI/UX Engineer & Systems Architect" placeholder="Full Stack Developer" />
+                        <input type="text" id="inputJobTitle" class="form-input live-sync" value="Senior UI/UX Engineer &amp; Systems Architect" placeholder="Full Stack Developer" />
                       </div>
                     </div>
                   </div>
 
-                  <div class="form-row-2">
+                  <!-- Contact & Location -->
+                  <div class="form-row-3">
                     <div class="form-group">
                       <label for="inputEmail">Email Address</label>
                       <div class="input-icon-wrapper">
@@ -318,16 +336,50 @@
                         <input type="text" id="inputPhone" class="form-input live-sync" value="+1 (415) 890-2341" placeholder="+1 (555) 000-0000" />
                       </div>
                     </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="inputEducation">Education & Credentials</label>
-                    <div class="input-icon-wrapper">
-                      <i data-feather="award"></i>
-                      <input type="text" id="inputEducation" class="form-input live-sync" value="B.S. Computer Science & Design — Stanford University (2022)" placeholder="Degree, University, Year" />
+                    <div class="form-group">
+                      <label for="inputLocation">Location &amp; Work Auth</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="map-pin"></i>
+                        <input type="text" id="inputLocation" class="form-input live-sync" value="San Francisco, CA (US Citizen · Open to Remote)" placeholder="City, State / Remote" />
+                      </div>
                     </div>
                   </div>
 
+                  <!-- Developer Web Presence Links -->
+                  <div class="form-row-3">
+                    <div class="form-group">
+                      <label for="inputGithub">GitHub Profile</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="github"></i>
+                        <input type="text" id="inputGithub" class="form-input live-sync" value="github.com/kuntalmanii" placeholder="github.com/username" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="inputLinkedin">LinkedIn Profile</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="linkedin"></i>
+                        <input type="text" id="inputLinkedin" class="form-input live-sync" value="linkedin.com/in/manishkuntal" placeholder="linkedin.com/in/username" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="inputPortfolio">Portfolio / Website</label>
+                      <div class="input-icon-wrapper">
+                        <i data-feather="globe"></i>
+                        <input type="text" id="inputPortfolio" class="form-input live-sync" value="manishkuntal.dev" placeholder="yourportfolio.com" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Executive Professional Summary -->
+                  <div class="form-group">
+                    <div class="label-row-with-badge">
+                      <label for="inputSummary">Executive Professional Summary</label>
+                      <span class="help-text-badge">High Impact Hook</span>
+                    </div>
+                    <textarea id="inputSummary" class="form-textarea live-sync" rows="3" placeholder="2-3 sentence executive hook summarizing your years of experience, core stack, and major leadership achievements...">Senior Lead Systems Architect with 7+ years of experience engineering high-throughput web applications, scalable design systems, and distributed cloud services serving 2M+ active users.</textarea>
+                  </div>
+
+                  <!-- Core Skills & Technologies -->
                   <div class="form-group">
                     <div class="label-row-with-badge">
                       <label for="techStack">Core Skills &amp; Technologies</label>
@@ -365,19 +417,53 @@
                     </div>
                   </div>
 
+                  <!-- Work Experience & Action-Verb Assistant -->
                   <div class="form-group">
                     <div class="label-row-with-badge">
-                      <label for="bulletPoints">Work Experience & Key Impact Projects</label>
+                      <label for="bulletPoints">Work Experience &amp; Key Impact Projects</label>
                       <div class="ai-enabled-badge">
                         <i data-feather="cpu"></i>
                         <span>AI Assistant Enabled</span>
                       </div>
                     </div>
-                    <textarea id="bulletPoints" class="form-textarea live-sync" rows="6" placeholder="Describe your achievements and technical leadership impact...">Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.
+                    <textarea id="bulletPoints" class="form-textarea live-sync" rows="5" placeholder="Describe your achievements and technical leadership impact...">Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.
 Engineered 5-theme customizable SaaS dashboard shell with responsive layout algorithms and CSS custom property architecture.</textarea>
+                    
+                    <!-- Action-Verb Assistant Chips Bar -->
+                    <div class="action-verb-bar">
+                      <span class="action-verb-label"><i data-feather="zap"></i> Insert Action Verb:</span>
+                      <div class="verb-chips-container" id="verbChipsContainer">
+                        <button type="button" class="verb-chip" data-verb="Architected ">Architected</button>
+                        <button type="button" class="verb-chip" data-verb="Engineered ">Engineered</button>
+                        <button type="button" class="verb-chip" data-verb="Spearheaded ">Spearheaded</button>
+                        <button type="button" class="verb-chip" data-verb="Scaled ">Scaled</button>
+                        <button type="button" class="verb-chip" data-verb="Optimized latency by ">Optimized latency by</button>
+                        <button type="button" class="verb-chip" data-verb="Automated ">Automated</button>
+                        <button type="button" class="verb-chip" data-verb="Reduced infrastructure costs by ">Reduced costs by</button>
+                      </div>
+                    </div>
+
                     <div class="textarea-footer">
-                      <span class="help-text">Use bullet points for optimal ATS parsing</span>
+                      <span class="help-text">Use bullet points with action verbs for optimal ATS parsing</span>
                       <span class="char-counter" id="charCounter">245 / 2000 characters</span>
+                    </div>
+                  </div>
+
+                  <!-- Education & Credentials -->
+                  <div class="form-group">
+                    <label for="inputEducation">Education &amp; Credentials</label>
+                    <div class="input-icon-wrapper">
+                      <i data-feather="award"></i>
+                      <input type="text" id="inputEducation" class="form-input live-sync" value="B.S. Computer Science &amp; Design — Stanford University (2022)" placeholder="Degree, University, Year" />
+                    </div>
+                  </div>
+
+                  <!-- Certifications & Key Honors -->
+                  <div class="form-group">
+                    <label for="inputCertifications">Certifications &amp; Key Honors</label>
+                    <div class="input-icon-wrapper">
+                      <i data-feather="check-circle"></i>
+                      <input type="text" id="inputCertifications" class="form-input live-sync" value="AWS Certified Solutions Architect (2023) · Meta Certified Frontend Lead (2024)" placeholder="e.g. AWS Solutions Architect (2023), CKA Kubernetes (2024)" />
                     </div>
                   </div>
 
@@ -433,6 +519,15 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                       <div class="paper-header-rule"></div>
                     </div>
 
+                    <!-- Executive Summary Section -->
+                    <div class="paper-section" id="previewSummarySection">
+                      <div class="paper-section-title">
+                        <span class="section-accent-bar"></span>
+                        EXECUTIVE SUMMARY
+                      </div>
+                      <p class="section-content" id="previewSummary">Senior Lead Systems Architect with 7+ years of experience engineering high-throughput web applications, scalable design systems, and distributed cloud services serving 2M+ active users.</p>
+                    </div>
+
                     <!-- Skills Section -->
                     <div class="paper-section">
                       <div class="paper-section-title">
@@ -474,6 +569,15 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Certifications Section -->
+                    <div class="paper-section" id="previewCertificationsSection">
+                      <div class="paper-section-title">
+                        <span class="section-accent-bar"></span>
+                        CERTIFICATIONS &amp; HONORS
+                      </div>
+                      <p class="section-content" id="previewCertifications">AWS Certified Solutions Architect (2023) · Meta Certified Frontend Lead (2024)</p>
                     </div>
                   </div>
                 </div>
