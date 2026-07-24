@@ -1795,29 +1795,7 @@ button, input, select, textarea {
   border-top: 1px solid var(--border-color);
 }
 
-.btn-toggle-eye {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-}
 
-.btn-toggle-eye:hover {
-  color: var(--text-primary);
-}
-
-.btn-toggle-eye svg {
-  width: 16px;
-  height: 16px;
-}
 
 .form-range {
   width: 100%;

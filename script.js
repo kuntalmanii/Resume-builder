@@ -1647,8 +1647,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const SETTINGS_STORAGE_KEY = 'resuai-platform-settings';
 
   const settingGeminiModel              = document.getElementById('settingGeminiModel');
-  const settingApiKey                   = document.getElementById('settingApiKey');
-  const btnToggleApiKeyEye              = document.getElementById('btnToggleApiKeyEye');
   const settingOptimizationSensitivity  = document.getElementById('settingOptimizationSensitivity');
   const sensitivityVal                  = document.getElementById('sensitivityVal');
   const btnSaveAiSettings               = document.getElementById('btnSaveAiSettings');
@@ -1677,22 +1675,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Toggle API key mask eye icon
-  if (btnToggleApiKeyEye && settingApiKey) {
-    btnToggleApiKeyEye.addEventListener('click', (e) => {
-      e.preventDefault();
-      const isPassword = settingApiKey.type === 'password';
-      settingApiKey.type = isPassword ? 'text' : 'password';
-      btnToggleApiKeyEye.innerHTML = `<i data-feather="${isPassword ? 'eye-off' : 'eye'}"></i>`;
-      if (window.feather) feather.replace();
-    });
-  }
-
   // Save Settings state to LocalStorage
   function savePlatformSettings() {
     const settings = {
       geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.5-flash',
-      apiKey: settingApiKey ? settingApiKey.value.trim() : '',
       sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever',
       seniority: settingSeniority ? settingSeniority.value : 'senior',
@@ -1718,7 +1704,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const s = JSON.parse(saved);
 
       if (s.geminiModel && settingGeminiModel) settingGeminiModel.value = s.geminiModel;
-      if (s.apiKey && settingApiKey) settingApiKey.value = s.apiKey;
       if (s.sensitivity && settingOptimizationSensitivity) {
         settingOptimizationSensitivity.value = s.sensitivity;
         if (sensitivityVal) {
