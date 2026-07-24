@@ -1378,56 +1378,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // New Resume Version Button — clears all fields and resets to Step 1
+  // New Resume Version Handler — clears all fields and resets to Step 1
+  function triggerNewResumeFlow() {
+    const confirmed = window.confirm('Start a new resume? This will clear all current fields.');
+    if (!confirmed) return;
+
+    // Clear all text inputs and textarea
+    if (inputFullName)   inputFullName.value   = '';
+    if (inputJobTitle)   inputJobTitle.value   = '';
+    if (inputEmail)      inputEmail.value      = '';
+    if (inputPhone)      inputPhone.value      = '';
+    if (inputEducation)  inputEducation.value  = '';
+    if (bulletPoints)    bulletPoints.value    = '';
+
+    // Reset skill tags to a single default placeholder
+    const tagsContainer = document.getElementById('skillsTagsContainer');
+    const skillInput    = document.getElementById('skillInputField');
+    if (tagsContainer) {
+      tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
+      if (skillInput && !tagsContainer.contains(skillInput)) {
+        tagsContainer.appendChild(skillInput);
+      }
+    }
+
+    // Reset live preview to blank defaults
+    if (previewName)      previewName.textContent      = 'YOUR NAME';
+    if (previewRole)      previewRole.textContent      = 'TARGET JOB TITLE';
+    if (previewMeta)      previewMeta.textContent      = 'City, Country • email@domain.com • +1 000 000 0000';
+    if (previewEducation) previewEducation.textContent = 'Degree, University (Year)';
+    if (previewSkills)    previewSkills.textContent    = '';
+    if (previewBullets)   previewBullets.innerHTML     = '<li>Your experience bullet points will appear here...</li>';
+
+    // Clear saved draft from localStorage
+    try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch(e) {}
+
+    // Reset step progress back to Step 1
+    setStep(1);
+
+    // Update character counter
+    updateCharCounter();
+
+    // Scroll to the top of the form
+    const editorCard = document.querySelector('.editor-card');
+    if (editorCard) editorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    if (window.feather) feather.replace();
+  }
+
   const btnNewResume = document.getElementById('btnNewResume');
   if (btnNewResume) {
-    btnNewResume.addEventListener('click', () => {
-      const confirmed = window.confirm('Start a new resume? This will clear all current fields.');
-      if (!confirmed) return;
-
-      // Clear all text inputs and textarea
-      if (inputFullName)   inputFullName.value   = '';
-      if (inputJobTitle)   inputJobTitle.value   = '';
-      if (inputEmail)      inputEmail.value      = '';
-      if (inputPhone)      inputPhone.value      = '';
-      if (inputEducation)  inputEducation.value  = '';
-      if (bulletPoints)    bulletPoints.value    = '';
-
-      // Reset skill tags to a single default placeholder
-      const tagsContainer = document.getElementById('skillsTagsContainer');
-      const skillInput    = document.getElementById('skillInputField');
-      if (tagsContainer) {
-        // Remove all existing tags
-        tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
-        // Re-insert the input field if it was removed
-        if (skillInput && !tagsContainer.contains(skillInput)) {
-          tagsContainer.appendChild(skillInput);
-        }
-      }
-
-      // Reset live preview to blank defaults
-      if (previewName)      previewName.textContent      = 'YOUR NAME';
-      if (previewRole)      previewRole.textContent      = 'TARGET JOB TITLE';
-      if (previewMeta)      previewMeta.textContent      = 'City, Country • email@domain.com • +1 000 000 0000';
-      if (previewEducation) previewEducation.textContent = 'Degree, University (Year)';
-      if (previewSkills)    previewSkills.textContent    = '';
-      if (previewBullets)   previewBullets.innerHTML     = '<li>Your experience bullet points will appear here...</li>';
-
-      // Clear saved draft from localStorage
-      try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch(e) {}
-
-      // Reset step progress back to Step 1
-      setStep(1);
-
-      // Update character counter
-      updateCharCounter();
-
-      // Scroll to the top of the form
-      const editorCard = document.querySelector('.editor-card');
-      if (editorCard) editorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      if (window.feather) feather.replace();
-    });
+    btnNewResume.addEventListener('click', triggerNewResumeFlow);
   }
 
   const sidebarNewResumeBtn = document.getElementById('sidebarNewResumeBtn');
@@ -1436,7 +1436,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const rbNavItem = document.querySelector('.nav-item[data-tab="resume-builder"]');
       if (rbNavItem) rbNavItem.click();
-      if (btnNewResume) btnNewResume.click();
+      triggerNewResumeFlow();
     });
   }
 
