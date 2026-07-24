@@ -189,15 +189,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // SSO Action handlers
   if (ssoGithubBtn) {
     ssoGithubBtn.addEventListener('click', () => {
+      if (inputFullName) inputFullName.value = 'GitHub Developer';
+      if (inputJobTitle) inputJobTitle.value = 'Systems Architect';
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
+      syncLivePreview();
     });
   }
 
   if (ssoGoogleBtn) {
     ssoGoogleBtn.addEventListener('click', () => {
+      if (inputFullName) inputFullName.value = 'Google Developer';
+      if (inputJobTitle) inputJobTitle.value = 'Senior Staff Engineer';
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
+      syncLivePreview();
     });
   }
 
@@ -205,7 +211,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleSignOut(e) {
     e.preventDefault();
     localStorage.setItem(AUTH_STORAGE_KEY, 'false');
+    
+    // Clear session details so they don't leak to next login
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch(err) {}
+
+    // Reset form inputs to blank so next login starts clean
+    if (inputFullName) inputFullName.value = '';
+    if (inputJobTitle) inputJobTitle.value = '';
+    if (inputEmail) inputEmail.value = '';
+    if (inputPhone) inputPhone.value = '';
+    if (inputLocation) inputLocation.value = '';
+    if (inputGithub) inputGithub.value = '';
+    if (inputLinkedin) inputLinkedin.value = '';
+    if (inputPortfolio) inputPortfolio.value = '';
+    if (inputSummary) inputSummary.value = '';
+    if (inputCertifications) inputCertifications.value = '';
+    if (bulletPoints) bulletPoints.value = '';
+
+    // Clear skill tags
+    if (tagsContainer) {
+      const tags = tagsContainer.querySelectorAll('.tag');
+      tags.forEach(t => t.remove());
+    }
+
     updateAuthStateView();
+    syncLivePreview();
   }
 
   if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
@@ -370,11 +402,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const topUserRole   = document.getElementById('topUserRole');
 
   function updateTopUserProfile() {
-    const fullName = (inputFullName && inputFullName.value.trim()) ? inputFullName.value.trim() : 'Manish Kuntal';
-    const jobTitle = (inputJobTitle && inputJobTitle.value.trim()) ? inputJobTitle.value.trim() : 'Senior Developer';
+    const fullName = (inputFullName && inputFullName.value.trim()) ? inputFullName.value.trim() : 'Guest Developer';
+    const jobTitle = (inputJobTitle && inputJobTitle.value.trim()) ? inputJobTitle.value.trim() : 'Software Engineer';
 
     const parts = fullName.split(/\s+/).filter(Boolean);
-    let initials = 'MK';
+    let initials = 'GD';
     if (parts.length >= 2) {
       initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     } else if (parts.length === 1) {
