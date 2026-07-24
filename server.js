@@ -392,7 +392,11 @@ function extractResumeDetails(resumeText) {
   const skills = KNOWN_KEYWORDS.filter(kw => textLower.includes(kw.toLowerCase()));
 
   // 7. Experience bullets extraction
-  const bulletLines = lines.filter(l => /^[•\-\*]\s+|^\d+\.\s+/.test(l) || (l.length > 30 && !l.includes('@'))).slice(0, 5);
+  const bulletLines = lines.filter(l => {
+    const low = l.toLowerCase();
+    if (low.includes('@') || low.startsWith('skills:') || low.startsWith('skills ') || eduKeywords.some(kw => low.includes(kw))) return false;
+    return /^[•\-\*]\s+|^\d+\.\s+/.test(l) || l.length > 25;
+  }).slice(0, 5);
 
   return { name, email, phone, location, education, skills, bulletLines };
 }
