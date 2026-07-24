@@ -61,7 +61,7 @@ function callGeminiApi(jdText, resumeText) {
       return reject(new Error("GEMINI_API_KEY environment variable is not set on the server."));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
@@ -191,7 +191,7 @@ function callGeminiOptimize(jobTitle, experienceText, skills) {
       return reject(new Error("GEMINI_API_KEY is not set on server."));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
@@ -272,7 +272,7 @@ function callGeminiTailoredResume(jdText, resumeText) {
       return reject(new Error('GEMINI_API_KEY is not set on server.'));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
     const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.
