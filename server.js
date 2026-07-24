@@ -50,7 +50,21 @@ const MIME_TYPES = {
 };
 
 /**
- * Server-side HTTPS call to Google Gemini 2.5 Flash REST API
+ * Safely parses raw text from Gemini API, removing markdown backticks if present
+ * @param {string} rawText 
+ * @returns {Object}
+ */
+function safeParseJson(rawText) {
+  if (!rawText) throw new Error("Empty response from Gemini API");
+  let clean = rawText.trim();
+  if (clean.startsWith('```')) {
+    clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  }
+  return JSON.parse(clean);
+}
+
+/**
+ * Server-side HTTPS call to Google Gemini REST API
  * @param {string} jdText 
  * @param {string} resumeText 
  * @returns {Promise<Object>}
@@ -78,12 +92,14 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
 {
   "score": <number between 0 and 100 representing ATS match percentage>,
   "matchedKeywords": [<array of technical skills, frameworks, and requirements matched in both>],
-  "missingKeywords": [<array of required skills, frameworks, or qualifications missing in resume>],
-  "recommendations": [
-    "<actionable recommendation 1 for 95%+ match>",
-    "<actionable recommendation 2>",
-    "<actionable recommendation 3>"
-  ]
+  "missingKeywords": [<array of critical technical skills & qualifications present in JD but missing in Resume>],
+  "formattingSuggestions": [<array of formatting or ATS parsing recommendations>],
+  "sectionScores": {
+    "keywordMatch": <0-100>,
+    "skillsAlignment": <0-100>,
+    "formattingATS": <0-100>,
+    "experienceImpact": <0-100>
+  }
 }`;
 
     const payload = JSON.stringify({
@@ -119,7 +135,7 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
           const parsedRes = JSON.parse(data);
           const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
           if (!rawText) return reject(new Error("Empty content in Gemini API response"));
-          resolve(JSON.parse(rawText));
+          resolve(safeParseJson(rawText));
         } catch (err) {
           reject(err);
         }
@@ -238,7 +254,7 @@ Instructions:
           const parsedRes = JSON.parse(data);
           const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
           if (!rawText) return reject(new Error("Empty response from Gemini API"));
-          resolve(JSON.parse(rawText));
+          resolve(safeParseJson(rawText));
         } catch (err) {
           reject(err);
         }
@@ -351,7 +367,7 @@ Instructions:
           const parsedRes = JSON.parse(data);
           const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
           if (!rawText) return reject(new Error('Empty response from Gemini API'));
-          resolve(JSON.parse(rawText));
+          resolve(safeParseJson(rawText));
         } catch (err) {
           reject(err);
         }
