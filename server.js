@@ -1,5 +1,5 @@
 /**
- * ResuAI // Secure Backend Server & Gemini 2.5 Flash Proxy (Latest)
+ * ResuAI // Secure Backend Server & Gemini 1.5 Flash Proxy (Latest)
  * Pure Node.js — Zero External Dependencies Required!
  *
  * Keeps GEMINI_API_KEY completely secure on the backend server.
@@ -196,7 +196,7 @@ function runServerFallbackAnalysis(jdText, resumeText) {
 }
 
 /**
- * Server-side HTTPS call to Google Gemini 2.5 Flash for Resume Optimization
+ * Server-side HTTPS call to Google Gemini 1.5 Flash for Resume Optimization
  * @param {string} jobTitle 
  * @param {string} experienceText 
  * @param {Array<string>} skills 
@@ -278,7 +278,7 @@ function runServerFallbackOptimization(jobTitle, experienceText) {
 }
 
 /**
- * Server-side HTTPS call to Gemini 2.5 Flash for Tailored Resume Generation
+ * Server-side HTTPS call to Gemini 1.5 Flash for Tailored Resume Generation
  * @param {string} jdText - Target job description
  * @param {string} resumeText - User's existing resume/profile text
  */
