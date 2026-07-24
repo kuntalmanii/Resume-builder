@@ -291,7 +291,13 @@ Instructions:
       "bullets": ["<rewritten bullet based on real resume content>"]
     }
   ],
-  "education": "<degree and institution exactly as in resume, or 'Not provided'>"
+  "education": [
+    {
+      "degree": "<degree or credential title extracted from resume>",
+      "institution": "<university or issuing organization>",
+      "year": "<year or date range>"
+    }
+  ]
 }`;
 
     const payload = JSON.stringify({
@@ -365,15 +371,16 @@ function extractResumeDetails(resumeText) {
   const location = locationMatch ? locationMatch[1] : '';
 
   // 5. Education extraction
-  let education = '';
-  const eduKeywords = ['university', 'college', 'bachelor', 'b.s.', 'b.tech', 'master', 'm.s.', 'ph.d', 'degree', 'stanford', 'mit', 'harvard'];
+  const eduList = [];
+  const eduKeywords = ['university', 'college', 'institute', 'bachelor', 'b.s.', 'b.tech', 'b.e.', 'master', 'm.s.', 'm.tech', 'ph.d', 'degree', 'diploma', 'stanford', 'mit', 'harvard', 'iit', 'certif'];
   for (const line of lines) {
     const lower = line.toLowerCase();
     if (eduKeywords.some(kw => lower.includes(kw))) {
-      education = line;
-      break;
+      const cleanLine = line.replace(/^[•\-\*\s]+/, '').trim();
+      if (!eduList.includes(cleanLine)) eduList.push(cleanLine);
     }
   }
+  const education = eduList.length > 0 ? eduList : '';
 
   // 6. Skills extraction
   const KNOWN_KEYWORDS = [

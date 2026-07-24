@@ -428,7 +428,14 @@ document.addEventListener('DOMContentLoaded', () => {
       previewMeta.textContent = `San Francisco, CA • ${email} • ${phone}`;
     }
     if (inputEducation && previewEducation) {
-      previewEducation.textContent = inputEducation.value.trim() || 'B.S. Computer Science — Stanford University (2022)';
+      const val = inputEducation.value.trim();
+      previewEducation.innerHTML = val ? formatEducationHTML(val) : `
+        <div class="edu-item" style="margin-bottom: 6px;">
+          <div class="exp-header">
+            <strong>B.S. Computer Science & Design &mdash; Stanford University</strong>
+            <span>2022</span>
+          </div>
+        </div>`;
     }
     if (bulletPoints && previewBullets) {
       const lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
@@ -1307,14 +1314,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Education
     let extractedEdu = inputEducation ? inputEducation.value.trim() : '';
     if (!extractedEdu && text) {
-      const eduKeywords = ['university', 'college', 'bachelor', 'b.s.', 'b.tech', 'master', 'm.s.', 'ph.d', 'degree', 'stanford', 'mit', 'harvard'];
-      const lines = text.split(/\r?\n/).map(l => l.trim());
+      const eduKeywords = ['university', 'college', 'institute', 'bachelor', 'b.s.', 'b.tech', 'b.e.', 'master', 'm.s.', 'm.tech', 'ph.d', 'degree', 'diploma', 'stanford', 'mit', 'harvard', 'iit', 'certif'];
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const eduLines = [];
       for (const line of lines) {
         if (eduKeywords.some(kw => line.toLowerCase().includes(kw))) {
-          extractedEdu = line;
-          break;
+          const clean = line.replace(/^[•\-\*\s]+/, '').trim();
+          if (!eduLines.includes(clean)) eduLines.push(clean);
         }
       }
+      if (eduLines.length > 0) extractedEdu = eduLines;
     }
 
     // Fill missing / placeholder fields in response data
@@ -1333,8 +1342,8 @@ document.addEventListener('DOMContentLoaded', () => {
       data.phone = extractedPhone;
     }
 
-    const eduStr = (data.education || '').toLowerCase().trim();
-    if ((!data.education || ['not provided', 'education details (from resume)', 'b.s. computer science — university (year)', 'undefined', 'null'].includes(eduStr)) && extractedEdu) {
+    const eduStr = typeof data.education === 'string' ? data.education.toLowerCase().trim() : '';
+    if ((!data.education || (Array.isArray(data.education) && data.education.length === 0) || ['not provided', 'education details (from resume)', 'b.s. computer science — university (year)', 'undefined', 'null'].includes(eduStr)) && extractedEdu) {
       data.education = extractedEdu;
     }
 
@@ -1343,6 +1352,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     return data;
+  }
+
+  function formatEducationHTML(eduData) {
+    if (!eduData) return '';
+
+    let items = [];
+    if (Array.isArray(eduData)) {
+      items = eduData;
+    } else if (typeof eduData === 'object' && eduData !== null) {
+      items = [eduData];
+    } else {
+      items = String(eduData).split(/\n|;|•|\|/).map(s => s.trim()).filter(Boolean);
+    }
+
+    if (items.length === 0) return '';
+
+    return items.map(item => {
+      if (typeof item === 'object' && item !== null) {
+        const degree = item.degree || item.title || item.name || '';
+        const school = item.institution || item.school || item.university || '';
+        const year   = item.year || item.period || item.date || '';
+        return `
+          <div class="edu-item" style="margin-bottom: 6px;">
+            <div class="exp-header">
+              <strong>${degree}${school ? ' &mdash; ' + school : ''}</strong>
+              <span>${year}</span>
+            </div>
+          </div>`;
+      }
+
+      const str = String(item).trim();
+      const dateMatch = str.match(/(\((?:19|20)\d{2}(?:\s*[\-–]\s*(?:19|20)\d{2}|Present)?\)|(?:19|20)\d{2}\s*[\-–]\s*(?:19|20)\d{2}|(?:19|20)\d{2})/);
+      let mainText = str;
+      let dateText = '';
+
+      if (dateMatch) {
+        dateText = dateMatch[0].replace(/[\(\)]/g, '');
+        mainText = str.replace(dateMatch[0], '').replace(/[\s—\-\|]+$/, '').trim();
+      }
+
+      if (dateText && mainText) {
+        return `
+          <div class="edu-item" style="margin-bottom: 6px;">
+            <div class="exp-header">
+              <strong>${mainText}</strong>
+              <span>${dateText}</span>
+            </div>
+          </div>`;
+      }
+
+      return `<p class="section-content" style="margin-bottom: 4px;">&bull; ${str}</p>`;
+    }).join('');
   }
 
   function renderTailoredResume(data) {
@@ -1397,7 +1458,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${data.education ? `
       <div class="preview-section">
         <div class="section-title">EDUCATION & CREDENTIALS</div>
-        <p class="section-content">${data.education}</p>
+        ${formatEducationHTML(data.education)}
       </div>` : ''}
     `;
   }
