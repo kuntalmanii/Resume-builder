@@ -1487,7 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>` : ''}
 
       <div class="preview-section">
-        <div class="section-title">PROFESSIONAL EXPERIENCE & ACHIEVEMENTS</div>
+        <div class="section-title">WORK EXPERIENCE & KEY IMPACT PROJECTS</div>
         ${expBlocks}
       </div>
 
