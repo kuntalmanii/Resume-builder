@@ -245,6 +245,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pageTitle) pageTitle.textContent = meta.title;
     if (pageDescription) pageDescription.textContent = meta.description;
 
+    // Hide New Resume button on ATS Analyzer & non-builder tabs
+    const btnNewResume = document.getElementById('btnNewResume');
+    if (btnNewResume) {
+      btnNewResume.style.display = (tabId === 'resume-builder') ? 'inline-flex' : 'none';
+    }
+
     // Close mobile drawer if active
     closeMobileSidebar();
   }
