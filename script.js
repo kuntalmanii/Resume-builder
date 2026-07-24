@@ -215,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear session details so they don't leak to next login
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
+      localStorage.removeItem(ANALYTICS_HISTORY_KEY);
     } catch(err) {}
 
     // Reset form inputs to blank so next login starts clean
@@ -416,6 +417,157 @@ document.addEventListener('DOMContentLoaded', () => {
     if (topUserAvatar) topUserAvatar.textContent = initials;
     if (topUserName)   topUserName.textContent = fullName;
     if (topUserRole)   topUserRole.textContent = jobTitle;
+  }
+
+  const ANALYTICS_HISTORY_KEY = 'resuai-analytics-history';
+
+  // Floating Chart Tooltip Binder helper
+  function bindChartDotEvents() {
+    const dots = document.querySelectorAll('.chart-dot');
+    const tooltip = document.getElementById('chartTooltip');
+
+    if (dots && tooltip) {
+      dots.forEach(dot => {
+        // Remove existing to avoid double-binding if called multiple times
+        const newDot = dot.cloneNode(true);
+        dot.parentNode.replaceChild(newDot, dot);
+
+        newDot.addEventListener('mouseenter', () => {
+          const val = newDot.getAttribute('data-val');
+          tooltip.textContent = `ATS Score: ${val}`;
+          tooltip.style.display = 'block';
+          
+          const dotRect = newDot.getBoundingClientRect();
+          const wrapper = newDot.closest('.chart-container-wrapper');
+          if (wrapper) {
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const x = dotRect.left - wrapperRect.left + (dotRect.width / 2);
+            const y = dotRect.top - wrapperRect.top;
+            
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+          }
+          
+          document.querySelectorAll('.chart-dot').forEach(d => d.classList.remove('active'));
+          newDot.classList.add('active');
+        });
+
+        newDot.addEventListener('mouseleave', () => {
+          tooltip.style.display = 'none';
+        });
+      });
+    }
+  }
+
+  // Live Analytics Dashboard Sync
+  function updateAnalyticsDashboard() {
+    let history = [65, 72, 80, 85, 88, 94];
+    try {
+      const saved = localStorage.getItem(ANALYTICS_HISTORY_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length > 0) {
+          const scores = parsed.map(item => item.score);
+          if (scores.length < 6) {
+            history = [65, 72, 80, 85, 88, 94].slice(0, 6 - scores.length).concat(scores);
+          } else {
+            history = scores.slice(-6);
+          }
+        }
+      }
+    } catch(e) {}
+
+    const highestScore = Math.max(...history);
+    let totalScansCount = 12;
+    try {
+      const saved = localStorage.getItem(ANALYTICS_HISTORY_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        totalScansCount = Math.max(12, 12 + parsed.length);
+      }
+    } catch(e) {}
+
+    const analyticsHighestScore = document.getElementById('analyticsHighestScore');
+    const analyticsTotalScans = document.getElementById('analyticsTotalScans');
+    const analyticsGapsResolved = document.getElementById('analyticsGapsResolved');
+    const analyticsTrustRating = document.getElementById('analyticsTrustRating');
+
+    if (analyticsHighestScore) analyticsHighestScore.textContent = `${highestScore}%`;
+    if (analyticsTotalScans) analyticsTotalScans.textContent = `${totalScansCount} Scans`;
+
+    const gapsResolvedPercent = Math.min(100, Math.round(highestScore * 0.95));
+    if (analyticsGapsResolved) analyticsGapsResolved.textContent = `${gapsResolvedPercent}%`;
+
+    let trustScore = 60;
+    if (inputFullName && inputFullName.value.trim()) trustScore += 10;
+    if (inputGithub && inputGithub.value.trim()) trustScore += 10;
+    if (inputLinkedin && inputLinkedin.value.trim()) trustScore += 10;
+    if (inputPortfolio && inputPortfolio.value.trim()) trustScore += 10;
+    trustScore = Math.min(100, trustScore);
+    if (analyticsTrustRating) analyticsTrustRating.textContent = `${trustScore}/100`;
+
+    const svgChart = document.getElementById('analyticsSvgChart');
+    if (svgChart) {
+      const xCoords = [40, 128, 216, 304, 392, 480];
+      const yCoords = history.map(score => Math.round(180 - (score / 100) * 160));
+
+      let dPath = `M ${xCoords[0]} ${yCoords[0]}`;
+      for (let i = 1; i < xCoords.length; i++) {
+        dPath += ` L ${xCoords[i]} ${yCoords[i]}`;
+      }
+
+      const pathEl = svgChart.querySelector('.chart-line-path');
+      if (pathEl) pathEl.setAttribute('d', dPath);
+
+      const dotsGroup = svgChart.querySelector('.chart-dot-group');
+      if (dotsGroup) {
+        dotsGroup.innerHTML = history.map((score, index) => {
+          const isActive = index === history.length - 1;
+          return `<circle cx="${xCoords[index]}" cy="${yCoords[index]}" r="5" class="chart-dot ${isActive ? 'active' : ''}" data-val="${score}%"></circle>`;
+        }).join('');
+      }
+
+      bindChartDotEvents();
+    }
+
+    const latestScore = history[history.length - 1];
+    const fillBars = document.querySelectorAll('.comp-progress-fill');
+    const compVals = document.querySelectorAll('.comp-val');
+
+    const weights = [1.0, 0.92, 0.86, 0.70];
+    fillBars.forEach((bar, index) => {
+      const w = weights[index] || 0.8;
+      const targetVal = Math.min(100, Math.round(latestScore * w));
+      bar.style.width = `${targetVal}%`;
+      if (compVals[index]) {
+        compVals[index].textContent = `${targetVal}% Match`;
+      }
+    });
+  }
+
+  // Records new scan result & triggers update
+  function recordNewScanResult(score) {
+    const numericScore = parseInt(score) || 85;
+    let history = [];
+    try {
+      const saved = localStorage.getItem(ANALYTICS_HISTORY_KEY);
+      if (saved) {
+        history = JSON.parse(saved);
+      }
+    } catch(e) {}
+
+    history.push({
+      timestamp: new Date().toISOString(),
+      score: numericScore
+    });
+
+    if (history.length > 10) history = history.slice(-10);
+
+    try {
+      localStorage.setItem(ANALYTICS_HISTORY_KEY, JSON.stringify(history));
+    } catch(e) {}
+
+    updateAnalyticsDashboard();
   }
 
   const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
@@ -1483,6 +1635,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const missing = report.missingKeywords || [];
     const recommendations = report.recommendations || [];
 
+    // Save scan to historical logs
+    recordNewScanResult(dynamicScore);
+
     // Render score & progress circle
     if (scoreNumber) scoreNumber.textContent = `${dynamicScore}%`;
     if (scoreCircle) {
@@ -1820,6 +1975,7 @@ Key Requirements:
   loadSavedFormFields();
   syncLivePreview();
   syncLiveSkills();
+  updateAnalyticsDashboard();
 
   /* ==========================================================================
      8. AI Tailored Resume Generator
@@ -2278,6 +2434,7 @@ Key Requirements:
         localStorage.removeItem('resuai-draft-resume');
         localStorage.removeItem(SETTINGS_STORAGE_KEY);
         localStorage.removeItem('resuai-dashboard-theme');
+        localStorage.removeItem(ANALYTICS_HISTORY_KEY);
       } catch (e) {}
 
       alert('Workspace reset complete. Reloading application...');
