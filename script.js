@@ -1430,6 +1430,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const sidebarNewResumeBtn = document.getElementById('sidebarNewResumeBtn');
+  if (sidebarNewResumeBtn) {
+    sidebarNewResumeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const rbNavItem = document.querySelector('.nav-item[data-tab="resume-builder"]');
+      if (rbNavItem) rbNavItem.click();
+      if (btnNewResume) btnNewResume.click();
+    });
+  }
+
   /* ==========================================================================
      7.5 Export JSON / PDF — Flat Action Buttons (no dropdown)
      ========================================================================== */
