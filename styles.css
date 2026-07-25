@@ -232,6 +232,41 @@ body[data-theme="twilight-haze"] {
   --scrollbar-track: #eef2ff;
 }
 
+/* --- Theme 7: Eucalyptus Glow (Warm sage cream #F4EFE6 & sage green #A7C4A0 palette) --- */
+body[data-theme="eucalyptus-glow"] {
+  color-scheme: light;
+  --bg-app: #f4efe6;
+  --bg-sidebar: #ffffff;
+  --bg-topbar: rgba(255, 255, 255, 0.88);
+  --bg-card: #ffffff;
+  --bg-card-hover: #fbf8f3;
+  --bg-input: #e9e3d8;
+  --bg-hover: rgba(167, 196, 160, 0.18);
+  --bg-active: rgba(167, 196, 160, 0.32);
+  
+  --border-color: rgba(167, 196, 160, 0.38);
+  --border-color-hover: rgba(120, 155, 112, 0.6);
+  
+  --text-primary: #1e291e;
+  --text-secondary: #425242;
+  --text-muted: #7b8e7b;
+  
+  --accent-primary: #5c8254;
+  --accent-primary-hover: #496b42;
+  --accent-light: rgba(244, 239, 230, 0.8);
+  --accent-gradient: linear-gradient(135deg, #f4efe6 0%, #a7c4a0 50%, #5c8254 100%);
+  
+  --shadow-sm: 0 2px 8px rgba(167, 196, 160, 0.15);
+  --shadow-md: 0 8px 24px rgba(167, 196, 160, 0.25);
+  --shadow-lg: 0 16px 36px rgba(167, 196, 160, 0.35);
+  
+  --upgrade-card-bg: linear-gradient(135deg, #5c8254 0%, #2f452a 100%);
+  --upgrade-card-text: #ffffff;
+
+  --scrollbar-thumb: rgba(167, 196, 160, 0.5);
+  --scrollbar-track: #f4efe6;
+}
+
 /* --------------------------------------------------------------------------
    2. Base & Reset Rules
    -------------------------------------------------------------------------- */
@@ -611,6 +646,7 @@ button, input, select, textarea {
 .swatch-emerald { background: linear-gradient(135deg, #10b981, #081210); }
 .swatch-amber { background: linear-gradient(135deg, #f59e0b, #faf5ed); }
 .swatch-twilight { background: linear-gradient(135deg, #a7b7e7, #d8e2ff); }
+.swatch-eucalyptus { background: linear-gradient(135deg, #a7c4a0, #f4efe6); }
 
 .user-profile-pill {
   display: flex;
@@ -3704,6 +3740,7 @@ input:checked + .toggle-slider:before {
 .settings-theme-swatch.swatch-emerald { background: #10b981; }
 .settings-theme-swatch.swatch-amber { background: #f59e0b; }
 .settings-theme-swatch.swatch-twilight { background: linear-gradient(135deg, #d8e2ff, #a7b7e7); }
+.settings-theme-swatch.swatch-eucalyptus { background: linear-gradient(135deg, #f4efe6, #a7c4a0); }
 
 /* Custom Save Toast Notification banner */
 .toast-container {

@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Applies the chosen theme ID to the <body> data-theme attribute,
    * updates active states on theme switcher buttons, and saves to localStorage.
-   * @param {string} themeId - e.g. 'light-modern', 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber', 'twilight-haze'
+   * @param {string} themeId - e.g. 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber', 'twilight-haze', 'eucalyptus-glow'
    */
   function syncSettingsThemeSwatches() {
     const activeTheme = body.getAttribute('data-theme') || 'twilight-haze';
