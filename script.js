@@ -293,10 +293,11 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     localStorage.setItem(AUTH_STORAGE_KEY, 'false');
     
-    // Clear session details so they don't leak to next login
+    // Clear session details & saved tab so next login starts clean
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       localStorage.removeItem(ANALYTICS_HISTORY_KEY);
+      localStorage.removeItem('resuai-active-tab');
     } catch(err) {}
 
     // Reset form inputs to blank so next login starts clean
@@ -413,8 +414,22 @@ document.addEventListener('DOMContentLoaded', () => {
       btnNewResume.style.display = (tabId === 'resume-builder') ? 'inline-flex' : 'none';
     }
 
+    // Persist active tab to LocalStorage for seamless reload restoration
+    try {
+      localStorage.setItem('resuai-active-tab', tabId);
+    } catch (e) {}
+
     // Close mobile drawer if active
     closeMobileSidebar();
+  }
+
+  function restoreSavedTab() {
+    try {
+      const savedTab = localStorage.getItem('resuai-active-tab');
+      if (savedTab && TAB_METADATA[savedTab]) {
+        switchTab(savedTab);
+      }
+    } catch (e) {}
   }
 
   // Attach click event handlers to all sidebar navigation links
@@ -425,6 +440,9 @@ document.addEventListener('DOMContentLoaded', () => {
       switchTab(tabId);
     });
   });
+
+  // Restore saved active tab on page load
+  restoreSavedTab();
 
   /* ==========================================================================
      4. Mobile Sidebar Navigation Drawer
