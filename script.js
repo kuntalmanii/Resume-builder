@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     1. Theme Management (5 UI Themes via body[data-theme])
+     1. Theme Management (Custom UI Themes via body[data-theme])
      ========================================================================== */
   const THEME_STORAGE_KEY = 'resuai-dashboard-theme';
   const themeButtons = document.querySelectorAll('.theme-btn');
@@ -943,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const skillAutocompleteDropdown = document.getElementById('skillAutocompleteDropdown');
 
   /* ==========================================================================
-     Core Skills Suggestions Database & Engine
+     7. Core Skills Suggestions Database & Engine
      ========================================================================== */
   const SKILL_DATABASE = [
     // Popular / Trending
@@ -1291,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     Dynamic PDF Export & Typography Settings Engine
+     8. Dynamic PDF Export & Typography Settings Engine
      ========================================================================== */
   function getPdfExportStyles() {
     let paperSize = 'letter';
@@ -1519,7 +1519,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     7.5 Export JSON / PDF — Flat Action Buttons (no dropdown)
+     9. Export JSON / PDF Actions
      ========================================================================== */
   const btnExportJson     = document.getElementById('btnExportJson');
   const btnExportPdf      = document.getElementById('btnExportPdf');
@@ -1582,7 +1582,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ==========================================================================
-     7. ATS Analyzer Diagnostics Engine & Gemini Backend API Integration
+     10. ATS Analyzer Diagnostics Engine & Gemini Backend API Integration
      ========================================================================== */
 
 
@@ -2084,7 +2084,7 @@ Key Requirements:
   updateAnalyticsDashboard();
 
   /* ==========================================================================
-     8. AI Tailored Resume Generator
+     11. AI Tailored Resume Generator
      ========================================================================== */
   const btnGenerateTailored  = document.getElementById('btnGenerateTailored');
   const tailoredLoadingState = document.getElementById('tailoredLoadingState');
@@ -2432,7 +2432,7 @@ Key Requirements:
   }
 
   /* ==========================================================================
-     9. Platform Settings & Preferences Manager Engine
+     12. Platform Settings & Preferences Manager Engine
      ========================================================================== */
   const SETTINGS_STORAGE_KEY = 'resuai-platform-settings';
 
@@ -2632,7 +2632,7 @@ Key Requirements:
       const backupPackage = {
         exportedAt: new Date().toISOString(),
         version: '2.5',
-        theme: themeRaw || 'light-modern',
+        theme: themeRaw || 'twilight-haze',
         settings: settingsRaw ? JSON.parse(settingsRaw) : {},
         draftResume: draftRaw ? JSON.parse(draftRaw) : {}
       };
@@ -2704,7 +2704,7 @@ Key Requirements:
   }
 
   /* ==========================================================================
-     JOB APPLICATIONS PIPELINE & KANBAN TRACKER MODULE
+     13. Job Applications Pipeline & Kanban Tracker Module
      ========================================================================== */
 
   const JOB_APPS_STORAGE_KEY = 'resuai_job_applications';
