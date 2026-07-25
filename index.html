@@ -45,16 +45,25 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link id="dynamicTypographyLink" rel="stylesheet" href="" />
   <!-- Feather Icons for modern vector icons -->
   <script src="https://unpkg.com/feather-icons"></script>
   <!-- PDF.js library for in-browser PDF parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="light-modern">
+<body data-theme="twilight-haze">
   
   <!-- Auth Screen Container (Displayed when user is logged out) -->
   <div class="auth-container" id="authContainer">
+    <!-- Ambient Aurora Mesh Orbs & Tech Grid Background -->
+    <div class="auth-bg-ambient">
+      <div class="auth-grid-overlay"></div>
+      <div class="auth-orb orb-1"></div>
+      <div class="auth-orb orb-2"></div>
+      <div class="auth-orb orb-3"></div>
+    </div>
+
     <div class="auth-top-bar">
       <div class="brand-logo">
         <div class="logo-icon">
@@ -70,10 +79,6 @@
       <div class="theme-switcher-bar" title="Switch UI Theme">
         <span class="switcher-label">Theme</span>
         <div class="theme-options">
-          <button class="theme-btn active" data-theme-id="light-modern" title="Light Modern">
-            <span class="theme-swatch swatch-light"></span>
-            <span class="theme-name">Light</span>
-          </button>
           <button class="theme-btn" data-theme-id="dark-obsidian" title="Obsidian Dark">
             <span class="theme-swatch swatch-obsidian"></span>
             <span class="theme-name">Dark</span>
@@ -82,6 +87,10 @@
             <span class="theme-swatch swatch-amber"></span>
             <span class="theme-name">Amber</span>
           </button>
+          <button class="theme-btn active" data-theme-id="twilight-haze" title="Twilight Haze">
+            <span class="theme-swatch swatch-twilight"></span>
+            <span class="theme-name">Twilight</span>
+          </button>
         </div>
       </div>
     </div>
@@ -89,6 +98,16 @@
     <div class="auth-split-layout">
       <!-- Left Hero Showcase Panel -->
       <div class="auth-hero-showcase">
+        <div class="auth-floating-badges">
+          <div class="floating-badge badge-1">
+            <i data-feather="check-circle"></i>
+            <span>98.4% ATS Match</span>
+          </div>
+          <div class="floating-badge badge-2">
+            <i data-feather="cpu"></i>
+            <span>Gemini 2.5 Flash</span>
+          </div>
+        </div>
         <div class="hero-badge-tag">
           <i data-feather="cpu"></i>
           <span>Gemini 2.5 Flash AI Engine v2.5</span>
@@ -154,7 +173,7 @@
               <label for="authName">Full Name</label>
               <div class="input-icon-wrapper">
                 <i data-feather="user"></i>
-                <input type="text" id="authName" class="form-input" placeholder="Manish Kuntal" />
+                <input type="text" id="authName" class="form-input" autocomplete="name" placeholder="Manish Kuntal" />
               </div>
             </div>
 
@@ -162,7 +181,7 @@
               <label for="authEmail">Work Email Address</label>
               <div class="input-icon-wrapper">
                 <i data-feather="mail"></i>
-                <input type="email" id="authEmail" class="form-input" placeholder="manish@company.com" required value="developer@resuai.dev" />
+                <input type="email" id="authEmail" class="form-input" inputmode="email" autocomplete="username" placeholder="name@company.com" required value="" />
               </div>
             </div>
 
@@ -173,10 +192,20 @@
               </div>
               <div class="input-icon-wrapper">
                 <i data-feather="key"></i>
-                <input type="password" id="authPassword" class="form-input" placeholder="••••••••••••" required value="password123" />
+                <input type="password" id="authPassword" class="form-input" autocomplete="current-password" placeholder="••••••••••••" required value="" />
                 <button type="button" class="btn-toggle-eye" id="btnAuthPasswordEye" title="Show/Hide Password">
                   <i data-feather="eye"></i>
                 </button>
+              </div>
+              <!-- Real-time Password Security Strength Meter -->
+              <div class="password-strength-container" id="passwordStrengthWrapper">
+                <div class="strength-bar-track">
+                  <div class="strength-bar-fill" id="authStrengthFill"></div>
+                </div>
+                <div class="strength-meta">
+                  <span class="strength-text" id="authStrengthText">Security Strength</span>
+                  <span class="strength-score" id="authStrengthScore">0/4</span>
+                </div>
               </div>
             </div>
 
@@ -334,10 +363,6 @@
           <div class="theme-switcher-bar" title="Switch UI Theme">
             <span class="switcher-label">Theme</span>
             <div class="theme-options">
-              <button class="theme-btn active" data-theme-id="light-modern" title="Light Modern">
-                <span class="theme-swatch swatch-light"></span>
-                <span class="theme-name">Light</span>
-              </button>
               <button class="theme-btn" data-theme-id="dark-obsidian" title="Obsidian Dark">
                 <span class="theme-swatch swatch-obsidian"></span>
                 <span class="theme-name">Dark</span>
@@ -345,6 +370,10 @@
               <button class="theme-btn" data-theme-id="sunset-amber" title="Sunset Amber">
                 <span class="theme-swatch swatch-amber"></span>
                 <span class="theme-name">Amber</span>
+              </button>
+              <button class="theme-btn active" data-theme-id="twilight-haze" title="Twilight Haze">
+                <span class="theme-swatch swatch-twilight"></span>
+                <span class="theme-name">Twilight</span>
               </button>
             </div>
           </div>
@@ -444,7 +473,7 @@
                       <label for="inputJobTitle">Target Job Title</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="briefcase"></i>
-                        <input type="text" id="inputJobTitle" class="form-input live-sync" value="Senior UI/UX Engineer &amp; Systems Architect" placeholder="Full Stack Developer" />
+                        <input type="text" id="inputJobTitle" class="form-input live-sync" value="" placeholder="e.g. Senior Frontend Engineer, Full Stack Developer" />
                       </div>
                     </div>
                   </div>
@@ -455,21 +484,21 @@
                       <label for="inputEmail">Email Address</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="mail"></i>
-                        <input type="email" id="inputEmail" class="form-input live-sync" value="manish@resuai.dev" placeholder="name@company.com" />
+                        <input type="email" id="inputEmail" class="form-input live-sync" value="" placeholder="name@company.com" />
                       </div>
                     </div>
                     <div class="form-group">
                       <label for="inputPhone">Phone Number</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="phone"></i>
-                        <input type="text" id="inputPhone" class="form-input live-sync" value="+1 (415) 890-2341" placeholder="+1 (555) 000-0000" />
+                        <input type="text" id="inputPhone" class="form-input live-sync" value="" placeholder="+1 (555) 000-0000" />
                       </div>
                     </div>
                     <div class="form-group">
                       <label for="inputLocation">Location &amp; Work Auth</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="map-pin"></i>
-                        <input type="text" id="inputLocation" class="form-input live-sync" value="San Francisco, CA (US Citizen · Open to Remote)" placeholder="City, State / Remote" />
+                        <input type="text" id="inputLocation" class="form-input live-sync" value="" placeholder="City, State / Remote" />
                       </div>
                     </div>
                   </div>
@@ -480,21 +509,21 @@
                       <label for="inputGithub">GitHub Profile</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="github"></i>
-                        <input type="text" id="inputGithub" class="form-input live-sync" value="github.com/kuntalmanii" placeholder="github.com/username" />
+                        <input type="text" id="inputGithub" class="form-input live-sync" value="" placeholder="github.com/username" />
                       </div>
                     </div>
                     <div class="form-group">
                       <label for="inputLinkedin">LinkedIn Profile</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="linkedin"></i>
-                        <input type="text" id="inputLinkedin" class="form-input live-sync" value="linkedin.com/in/manishkuntal" placeholder="linkedin.com/in/username" />
+                        <input type="text" id="inputLinkedin" class="form-input live-sync" value="" placeholder="linkedin.com/in/username" />
                       </div>
                     </div>
                     <div class="form-group">
                       <label for="inputPortfolio">Portfolio / Website</label>
                       <div class="input-icon-wrapper">
                         <i data-feather="globe"></i>
-                        <input type="text" id="inputPortfolio" class="form-input live-sync" value="manishkuntal.dev" placeholder="yourportfolio.com" />
+                        <input type="text" id="inputPortfolio" class="form-input live-sync" value="" placeholder="yourportfolio.com" />
                       </div>
                     </div>
                   </div>
@@ -505,7 +534,7 @@
                       <label for="inputSummary">Executive Professional Summary</label>
                       <span class="help-text-badge">High Impact Hook</span>
                     </div>
-                    <textarea id="inputSummary" class="form-textarea live-sync" rows="3" placeholder="2-3 sentence executive hook summarizing your years of experience, core stack, and major leadership achievements...">Senior Lead Systems Architect with 7+ years of experience engineering high-throughput web applications, scalable design systems, and distributed cloud services serving 2M+ active users.</textarea>
+                    <textarea id="inputSummary" class="form-textarea live-sync" rows="3" placeholder="2-3 sentence executive hook summarizing your years of experience, core stack, and major leadership achievements..."></textarea>
                   </div>
 
                   <!-- Core Skills & Technologies -->
@@ -518,11 +547,6 @@
                       </button>
                     </div>
                     <div class="tags-input-container" id="skillsTagsContainer" style="position: relative;">
-                      <span class="tag">TypeScript <i data-feather="x"></i></span>
-                      <span class="tag">React / Next.js <i data-feather="x"></i></span>
-                      <span class="tag">Design Systems <i data-feather="x"></i></span>
-                      <span class="tag">Tailwind &amp; Vanilla CSS <i data-feather="x"></i></span>
-                      <span class="tag">GraphQL <i data-feather="x"></i></span>
                       <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill &amp; hit Enter..." autocomplete="off" />
                       <!-- Autocomplete Suggestions Dropdown -->
                       <div class="skill-autocomplete-dropdown" id="skillAutocompleteDropdown" style="display: none;"></div>
@@ -555,8 +579,7 @@
                         <span>AI Assistant Enabled</span>
                       </div>
                     </div>
-                    <textarea id="bulletPoints" class="form-textarea live-sync" rows="5" placeholder="Describe your achievements and technical leadership impact...">Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.
-Engineered 5-theme customizable SaaS dashboard shell with responsive layout algorithms and CSS custom property architecture.</textarea>
+                    <textarea id="bulletPoints" class="form-textarea live-sync" rows="5" placeholder="Describe your achievements and technical leadership impact..."></textarea>
                     
                     <!-- Action-Verb Assistant Chips Bar -->
                     <div class="action-verb-bar">
@@ -574,7 +597,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
 
                     <div class="textarea-footer">
                       <span class="help-text">Use bullet points with action verbs for optimal ATS parsing</span>
-                      <span class="char-counter" id="charCounter">245 / 2000 characters</span>
+                      <span class="char-counter" id="charCounter">0 / 2000 characters</span>
                     </div>
                   </div>
 
@@ -583,7 +606,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                     <label for="inputEducation">Education &amp; Credentials</label>
                     <div class="input-icon-wrapper">
                       <i data-feather="award"></i>
-                      <input type="text" id="inputEducation" class="form-input live-sync" value="B.S. Computer Science &amp; Design — Stanford University (2022)" placeholder="Degree, University, Year" />
+                      <input type="text" id="inputEducation" class="form-input live-sync" value="" placeholder="Degree, University, Year" />
                     </div>
                   </div>
 
@@ -592,7 +615,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                     <label for="inputCertifications">Certifications &amp; Key Honors</label>
                     <div class="input-icon-wrapper">
                       <i data-feather="check-circle"></i>
-                      <input type="text" id="inputCertifications" class="form-input live-sync" value="AWS Certified Solutions Architect (2023) · Meta Certified Frontend Lead (2024)" placeholder="e.g. AWS Solutions Architect (2023), CKA Kubernetes (2024)" />
+                      <input type="text" id="inputCertifications" class="form-input live-sync" value="" placeholder="e.g. AWS Solutions Architect (2023), CKA Kubernetes (2024)" />
                     </div>
                   </div>
 
@@ -637,14 +660,8 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                     <!-- Candidate Header -->
                     <div class="paper-candidate-header">
                       <div class="paper-candidate-name" id="previewName">YOUR NAME</div>
-                      <div class="paper-candidate-role" id="previewRole">Senior UI/UX Engineer &amp; Systems Architect</div>
-                      <div class="paper-contact-row" id="previewMeta">
-                        <span class="contact-chip"><i data-feather="map-pin"></i>San Francisco, CA</span>
-                        <span class="contact-divider">·</span>
-                        <span class="contact-chip"><i data-feather="mail"></i>manish@resuai.dev</span>
-                        <span class="contact-divider">·</span>
-                        <span class="contact-chip"><i data-feather="phone"></i>+1 (415) 890-2341</span>
-                      </div>
+                      <div class="paper-candidate-role" id="previewRole">TARGET ROLE</div>
+                      <div class="paper-contact-row" id="previewMeta"></div>
                       <div class="paper-header-rule"></div>
                     </div>
 
@@ -654,7 +671,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                         <span class="section-accent-bar"></span>
                         EXECUTIVE SUMMARY
                       </div>
-                      <p class="section-content" id="previewSummary">Senior Lead Systems Architect with 7+ years of experience engineering high-throughput web applications, scalable design systems, and distributed cloud services serving 2M+ active users.</p>
+                      <p class="section-content" id="previewSummary"></p>
                     </div>
 
                     <!-- Skills Section -->
@@ -663,7 +680,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                         <span class="section-accent-bar"></span>
                         TECHNICAL EXPERTISE
                       </div>
-                      <p class="section-content" id="previewSkills">TypeScript, React / Next.js, Design Systems, Tailwind &amp; Vanilla CSS, GraphQL</p>
+                      <p class="section-content" id="previewSkills"></p>
                     </div>
 
                     <!-- Experience Section -->
@@ -673,14 +690,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                         WORK EXPERIENCE &amp; KEY IMPACT PROJECTS
                       </div>
                       <div class="experience-block">
-                        <div class="exp-header">
-                          <strong>Staff Frontend Engineer // ResuAI Platform</strong>
-                          <span class="exp-date-pill">2023 – Present</span>
-                        </div>
-                        <ul class="exp-list" id="previewBullets">
-                          <li>Architected scalable UI component system serving 2M+ active users, reducing frontend load latency by 42% through web vital optimizations.</li>
-                          <li>Engineered 5-theme customizable SaaS dashboard shell with responsive layout algorithms and CSS custom property architecture.</li>
-                        </ul>
+                        <ul class="exp-list" id="previewBullets"></ul>
                       </div>
                     </div>
 
@@ -690,14 +700,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                         <span class="section-accent-bar"></span>
                         EDUCATION &amp; CREDENTIALS
                       </div>
-                      <div class="section-content" id="previewEducation">
-                        <div class="edu-item">
-                          <div class="exp-header">
-                            <strong>B.S. Computer Science &amp; Design &mdash; Stanford University</strong>
-                            <span>2022</span>
-                          </div>
-                        </div>
-                      </div>
+                      <div class="section-content" id="previewEducation"></div>
                     </div>
 
                     <!-- Certifications Section -->
@@ -706,7 +709,7 @@ Engineered 5-theme customizable SaaS dashboard shell with responsive layout algo
                         <span class="section-accent-bar"></span>
                         CERTIFICATIONS &amp; HONORS
                       </div>
-                      <p class="section-content" id="previewCertifications">AWS Certified Solutions Architect (2023) · Meta Certified Frontend Lead (2024)</p>
+                      <p class="section-content" id="previewCertifications"></p>
                     </div>
                   </div>
                 </div>
@@ -1494,11 +1497,11 @@ Key Requirements:
                       <div class="form-group">
                         <label>Workspace Visual Theme</label>
                         <div class="settings-theme-swatches">
-                          <button type="button" class="settings-theme-swatch swatch-modern" data-theme-swatch="light-modern" title="Modern Light"></button>
                           <button type="button" class="settings-theme-swatch swatch-obsidian" data-theme-swatch="dark-obsidian" title="Obsidian Dark"></button>
                           <button type="button" class="settings-theme-swatch swatch-purple" data-theme-swatch="cyber-purple" title="Cyber Purple"></button>
                           <button type="button" class="settings-theme-swatch swatch-emerald" data-theme-swatch="emerald-slate" title="Emerald Slate"></button>
                           <button type="button" class="settings-theme-swatch swatch-amber" data-theme-swatch="sunset-amber" title="Sunset Amber"></button>
+                          <button type="button" class="settings-theme-swatch swatch-twilight active" data-theme-swatch="twilight-haze" title="Twilight Haze"></button>
                         </div>
                       </div>
 

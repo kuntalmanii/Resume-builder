@@ -93,7 +93,7 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
   "score": <number between 0 and 100 representing ATS match percentage>,
   "matchedKeywords": [<array of technical skills, frameworks, and requirements matched in both>],
   "missingKeywords": [<array of critical technical skills & qualifications present in JD but missing in Resume>],
-  "formattingSuggestions": [<array of formatting or ATS parsing recommendations>],
+  "recommendations": [<array of formatting or ATS parsing recommendations>],
   "sectionScores": {
     "keywordMatch": <0-100>,
     "skillsAlignment": <0-100>,
@@ -485,8 +485,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const pathname = parsedUrl.pathname;
+
   // Handle Backend API Endpoint: POST /api/optimize-resume
-  if (req.method === 'POST' && req.url === '/api/optimize-resume') {
+  if (req.method === 'POST' && pathname === '/api/optimize-resume') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
@@ -516,7 +519,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Handle Backend API Endpoint: POST /api/analyze
-  if (req.method === 'POST' && req.url === '/api/analyze') {
+  if (req.method === 'POST' && pathname === '/api/analyze') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
@@ -547,7 +550,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Handle Backend API Endpoint: POST /api/generate-tailored-resume
-  if (req.method === 'POST' && req.url === '/api/generate-tailored-resume') {
+  if (req.method === 'POST' && pathname === '/api/generate-tailored-resume') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
@@ -576,9 +579,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve Static Files
+  // Serve Static Files Safely with Path Traversal Protection
+  const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+  const filePath = path.join(__dirname, safePath === '/' ? 'index.html' : safePath);
 
-  let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+  // Security Check: Verify resolved path stays strictly within root directory
+  if (!filePath.startsWith(__dirname)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('403 Forbidden: Access Denied');
+    return;
+  }
+
   const extname = path.extname(filePath);
   const contentType = MIME_TYPES[extname] || 'text/html';
 

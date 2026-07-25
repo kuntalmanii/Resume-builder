@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Applies the chosen theme ID to the <body> data-theme attribute,
    * updates active states on theme switcher buttons, and saves to localStorage.
-   * @param {string} themeId - e.g. 'light-modern', 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber'
+   * @param {string} themeId - e.g. 'light-modern', 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber', 'twilight-haze'
    */
   function syncSettingsThemeSwatches() {
-    const activeTheme = body.getAttribute('data-theme') || 'light-modern';
+    const activeTheme = body.getAttribute('data-theme') || 'twilight-haze';
     const swatches = document.querySelectorAll('.settings-theme-swatch');
     swatches.forEach(swatch => {
       const themeId = swatch.getAttribute('data-theme-swatch');
@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Restore saved theme on initial page load (default: 'light-modern')
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light-modern';
+  // Restore saved theme on initial page load (default: 'twilight-haze')
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'twilight-haze';
   setTheme(savedTheme);
 
   /* ==========================================================================
@@ -100,6 +100,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_STORAGE_KEY = 'resuai-logged-in';
   const authContainer = document.getElementById('authContainer');
   const appContainer = document.getElementById('appContainer');
+
+  // Parallax Mouse Motion Engine for Login Ambient Background
+  if (authContainer) {
+    let ticking = false;
+    authContainer.addEventListener('mousemove', (e) => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const { clientX, clientY } = e;
+          const { innerWidth, innerHeight } = window;
+          const mouseX = (clientX / innerWidth - 0.5) * 2;
+          const mouseY = (clientY / innerHeight - 0.5) * 2;
+          authContainer.style.setProperty('--mouse-x', mouseX.toFixed(3));
+          authContainer.style.setProperty('--mouse-y', mouseY.toFixed(3));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
   const authForm = document.getElementById('authForm');
   const authTitle = document.getElementById('authTitle');
   const authSubtitle = document.getElementById('authSubtitle');
@@ -170,6 +189,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Real-time Password Security Strength Meter
+  if (authPasswordInput) {
+    authPasswordInput.addEventListener('input', () => {
+      const val = authPasswordInput.value;
+      const fill = document.getElementById('authStrengthFill');
+      const text = document.getElementById('authStrengthText');
+      const scoreEl = document.getElementById('authStrengthScore');
+      if (!fill || !text || !scoreEl) return;
+
+      if (!val) {
+        fill.style.width = '0%';
+        fill.className = 'strength-bar-fill';
+        text.textContent = 'Security Strength';
+        scoreEl.textContent = '0/4';
+        return;
+      }
+
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      scoreEl.textContent = `${score}/4`;
+
+      if (score <= 1) {
+        fill.className = 'strength-bar-fill weak';
+        text.textContent = 'Weak Security';
+      } else if (score <= 3) {
+        fill.className = 'strength-bar-fill medium';
+        text.textContent = 'Good Security';
+      } else {
+        fill.className = 'strength-bar-fill strong';
+        text.textContent = '🔒 Excellent Strength';
+      }
+    });
+  }
+
   // 1-Click Quick Demo Sign In
   if (btnQuickDemoLogin) {
     btnQuickDemoLogin.addEventListener('click', () => {
@@ -217,8 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // SSO Action handlers
   if (ssoGithubBtn) {
     ssoGithubBtn.addEventListener('click', () => {
-      if (inputFullName) inputFullName.value = 'GitHub Developer';
-      if (inputJobTitle) inputJobTitle.value = 'Systems Architect';
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
       syncLivePreview();
@@ -227,8 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (ssoGoogleBtn) {
     ssoGoogleBtn.addEventListener('click', () => {
-      if (inputFullName) inputFullName.value = 'Google Developer';
-      if (inputJobTitle) inputJobTitle.value = 'Senior Staff Engineer';
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
       syncLivePreview();
@@ -271,11 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
   if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
-
-  // Always clear auth session on page start/refresh so site starts on Login screen
-  try {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  } catch (e) {}
 
   // Initialize view state
   updateAuthStateView();
@@ -608,6 +656,15 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAnalyticsDashboard();
   }
 
+  /**
+   * Safely extracts skill tag text content without stripping 'x' characters from skill names.
+   * Uses first child text node directly to ignore delete icon markup.
+   */
+  function getSkillTagName(tagEl) {
+    if (!tagEl) return '';
+    return (tagEl.childNodes[0]?.textContent || tagEl.textContent || '').trim();
+  }
+
   const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
   const btnNextStep = document.getElementById('btnNextStep');
   const btnPrintPdf = document.getElementById('btnPrintPdf');
@@ -625,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const jobTitle = inputJobTitle ? inputJobTitle.value : '';
       const expText = bulletPoints ? bulletPoints.value : '';
-      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => t.textContent.replace('x', '').trim());
+      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean);
 
       try {
         const response = await fetch('/api/optimize-resume', {
@@ -676,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
       certifications: inputCertifications ? inputCertifications.value : '',
       bulletPoints: bulletPoints ? bulletPoints.value : '',
       atsJdText: atsJdInput ? atsJdInput.value : '',
-      skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => t.textContent.replace('x', '').trim())
+      skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean)
     };
 
     try {
@@ -687,25 +744,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Restores form fields from localStorage on startup.
+   * Restores form fields from localStorage on startup (ignoring legacy sample defaults).
    */
   function loadSavedFormFields() {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (saved) {
         const draft = JSON.parse(saved);
-        if (draft.fullName && inputFullName) inputFullName.value = draft.fullName;
-        if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
-        if (draft.email && inputEmail) inputEmail.value = draft.email;
-        if (draft.phone && inputPhone) inputPhone.value = draft.phone;
-        if (draft.location && inputLocation) inputLocation.value = draft.location;
-        if (draft.github && inputGithub) inputGithub.value = draft.github;
-        if (draft.linkedin && inputLinkedin) inputLinkedin.value = draft.linkedin;
-        if (draft.portfolio && inputPortfolio) inputPortfolio.value = draft.portfolio;
-        if (draft.summary && inputSummary) inputSummary.value = draft.summary;
-        if (draft.education && inputEducation) inputEducation.value = draft.education;
-        if (draft.certifications && inputCertifications) inputCertifications.value = draft.certifications;
-        if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
+        const LEGACY_DEFAULTS = [
+          'github.com/kuntalmanii',
+          'linkedin.com/in/manishkuntal',
+          'manishkuntal.dev',
+          'manish@resuai.dev',
+          '+1 (415) 890-2341',
+          'San Francisco, CA (US Citizen · Open to Remote)',
+          'Senior UI/UX Engineer & Systems Architect'
+        ];
+
+        const isClean = (val) => val && !LEGACY_DEFAULTS.includes(val.trim());
+
+        if (isClean(draft.fullName) && inputFullName) inputFullName.value = draft.fullName;
+        if (isClean(draft.jobTitle) && inputJobTitle) inputJobTitle.value = draft.jobTitle;
+        if (isClean(draft.email) && inputEmail) inputEmail.value = draft.email;
+        if (isClean(draft.phone) && inputPhone) inputPhone.value = draft.phone;
+        if (isClean(draft.location) && inputLocation) inputLocation.value = draft.location;
+        if (isClean(draft.github) && inputGithub) inputGithub.value = draft.github;
+        if (isClean(draft.linkedin) && inputLinkedin) inputLinkedin.value = draft.linkedin;
+        if (isClean(draft.portfolio) && inputPortfolio) inputPortfolio.value = draft.portfolio;
+        if (isClean(draft.summary) && inputSummary) inputSummary.value = draft.summary;
+        if (isClean(draft.education) && inputEducation) inputEducation.value = draft.education;
+        if (isClean(draft.certifications) && inputCertifications) inputCertifications.value = draft.certifications;
+        if (isClean(draft.bulletPoints) && bulletPoints) bulletPoints.value = draft.bulletPoints;
         if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
 
         syncLivePreview();
@@ -730,8 +799,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function syncLiveSkills() {
     if (!previewSkills) return;
     const tagElements = document.querySelectorAll('#skillsTagsContainer .tag');
-    const skillList = Array.from(tagElements).map(tag => tag.textContent.replace('x', '').trim()).filter(Boolean);
-    previewSkills.textContent = skillList.length > 0 ? skillList.join(', ') : 'TypeScript, React, Design Systems';
+    const skillList = Array.from(tagElements).map(tag => getSkillTagName(tag)).filter(Boolean);
+    previewSkills.textContent = skillList.join(', ');
   }
 
   // Live Profile Strength Calculator Engine
@@ -748,21 +817,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputLinkedin && inputLinkedin.value.trim()) score += 10; else missing.push('LinkedIn Link');
     if (inputPortfolio && inputPortfolio.value.trim()) score += 5; else missing.push('Portfolio Link');
     if (inputSummary && inputSummary.value.trim()) score += 10; else missing.push('Executive Summary');
-    
-    const tagsCount = document.querySelectorAll('#skillsTagsContainer .tag').length;
-    if (tagsCount >= 3) score += 10; else missing.push('at least 3 Skills');
+    if (inputEducation && inputEducation.value.trim()) score += 10; else missing.push('Education');
+    if (bulletPoints && bulletPoints.value.trim()) score += 10; else missing.push('Work Experience Bullets');
 
-    if (bulletPoints && bulletPoints.value.trim().length > 30) score += 10; else missing.push('Work Experience Bullets');
+    const progressFill = document.getElementById('strengthProgressFill');
+    const scoreVal = document.getElementById('strengthScoreVal');
+    const tip = document.getElementById('strengthTip');
 
-    if (strengthPercentVal) strengthPercentVal.textContent = `${score}% Complete`;
-    if (strengthProgressFill) strengthProgressFill.style.width = `${score}%`;
-
-    if (strengthTip) {
-      if (score === 100) {
-        strengthTip.textContent = '🎉 Exceptional! Your profile has 100% recruiter trust & ATS readiness.';
-      } else if (missing.length > 0) {
-        strengthTip.textContent = `Tip: Add ${missing.slice(0, 2).join(' and ')} to reach 100%.`;
+    if (progressFill) progressFill.style.width = `${score}%`;
+    if (scoreVal) scoreVal.textContent = `${score}%`;
+    if (tip) {
+      if (missing.length === 0) {
+        tip.textContent = '🎉 Exceptional profile strength! Ready to export PDF or run ATS diagnostics.';
+      } else {
+        tip.textContent = `Tip: Complete missing fields (${missing.slice(0, 2).join(', ')}) to increase recruiter response.`;
       }
+    }
+  }
+
+  function updateTopUserProfile() {
+    const userNameDisplay = document.getElementById('topUserName');
+    const userRoleDisplay = document.getElementById('topUserRole');
+
+    const currentName = inputFullName ? inputFullName.value.trim() : '';
+    const currentTitle = inputJobTitle ? inputJobTitle.value.trim() : '';
+
+    if (userNameDisplay) {
+      userNameDisplay.textContent = currentName || 'Developer';
+    }
+    if (userRoleDisplay) {
+      userRoleDisplay.textContent = currentTitle || 'Senior Architect';
     }
   }
 
@@ -791,13 +875,13 @@ document.addEventListener('DOMContentLoaded', () => {
       previewName.textContent = inputFullName.value.trim().toUpperCase() || 'YOUR NAME';
     }
     if (inputJobTitle && previewRole) {
-      previewRole.textContent = inputJobTitle.value.trim().toUpperCase() || 'SENIOR DEVELOPER';
+      previewRole.textContent = inputJobTitle.value.trim().toUpperCase() || '';
     }
     if (previewMeta) {
       const chips = [];
-      const loc  = inputLocation ? inputLocation.value.trim() : 'San Francisco, CA';
-      const em   = inputEmail ? inputEmail.value.trim() : 'manish@resuai.dev';
-      const ph   = inputPhone ? inputPhone.value.trim() : '+1 (415) 890-2341';
+      const loc  = inputLocation ? inputLocation.value.trim() : '';
+      const em   = inputEmail ? inputEmail.value.trim() : '';
+      const ph   = inputPhone ? inputPhone.value.trim() : '';
       const gh   = inputGithub ? inputGithub.value.trim() : '';
       const li   = inputLinkedin ? inputLinkedin.value.trim() : '';
       const port = inputPortfolio ? inputPortfolio.value.trim() : '';
@@ -825,13 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (inputEducation && previewEducation) {
       const val = inputEducation.value.trim();
-      previewEducation.innerHTML = val ? formatEducationHTML(val) : `
-        <div class="edu-item" style="margin-bottom: 6px;">
-          <div class="exp-header">
-            <strong>B.S. Computer Science & Design &mdash; Stanford University</strong>
-            <span>2022</span>
-          </div>
-        </div>`;
+      previewEducation.innerHTML = val ? formatEducationHTML(val) : '';
     }
 
     if (inputCertifications && previewCertifications && previewCertificationsSection) {
@@ -849,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (lines.length > 0) {
         previewBullets.innerHTML = lines.map(line => `<li>${line.trim().replace(/^[-•*]\s*/, '')}</li>`).join('');
       } else {
-        previewBullets.innerHTML = `<li>Architected scalable UI component system serving 2M+ active users.</li>`;
+        previewBullets.innerHTML = '';
       }
     }
     updateCharCounter();
@@ -949,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cleanName) return;
 
     const existing = Array.from(tagsContainer.querySelectorAll('.tag'))
-      .map(t => t.textContent.replace('x', '').trim().toLowerCase());
+      .map(t => getSkillTagName(t).toLowerCase());
     
     if (existing.includes(cleanName.toLowerCase())) return;
 
@@ -972,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateSkillPillStates() {
     if (!tagsContainer || !skillPillsContainer) return;
     const currentSkills = Array.from(tagsContainer.querySelectorAll('.tag'))
-      .map(t => t.textContent.replace('x', '').trim().toLowerCase());
+      .map(t => getSkillTagName(t).toLowerCase());
 
     const pills = skillPillsContainer.querySelectorAll('.skill-pill');
     pills.forEach(pill => {
@@ -1170,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const jobTitle = inputJobTitle ? inputJobTitle.value.trim() : '';
       const expText = bulletPoints ? bulletPoints.value.trim() : '';
       const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
-        .map(t => t.textContent.replace('×', '').replace('x', '').trim())
+        .map(t => getSkillTagName(t))
         .filter(Boolean);
 
       try {
@@ -1266,6 +1344,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyTypographyToLivePreview() {
     const styles = getPdfExportStyles();
+    
+    // Inject or update Google Fonts stylesheet in <head> for live preview rendering
+    const fontLinkEl = document.getElementById('dynamicTypographyLink');
+    if (fontLinkEl) fontLinkEl.href = styles.fontLink;
+
     const docs = document.querySelectorAll('.resume-preview-document');
     docs.forEach(doc => {
       doc.style.fontFamily = styles.bodyFont;
@@ -1460,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnExportJson) {
     btnExportJson.addEventListener('click', () => {
       const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
-        .map(t => t.textContent.replace('x', '').trim()).filter(Boolean);
+        .map(t => getSkillTagName(t)).filter(Boolean);
 
       const resumeData = {
         meta: { exportedAt: new Date().toISOString(), version: '2.5', tool: 'ResuAI' },
@@ -1606,31 +1689,21 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
     } else if (file.name.endsWith('.docx')) {
-      // DOCX — it's a ZIP of XML files; extract raw text by stripping XML tags
-      // This gives good-enough plain text for Gemini to parse
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        // Convert buffer to string and strip all XML/markup tags
-        const bytes = new Uint8Array(arrayBuffer);
-        let raw = '';
-        for (let i = 0; i < bytes.length; i++) {
-          if (bytes[i] >= 32 && bytes[i] < 127) raw += String.fromCharCode(bytes[i]);
-        }
-        // Pull readable text between XML word tags
-        const matches = raw.match(/[A-Za-z0-9@._\-+,()&%$#!?:;\/' "\n]{4,}/g);
-        uploadedFileText = matches ? matches.join(' ') : '';
-      } catch (e) {
-        console.warn('DOCX extraction error:', e);
-        uploadedFileText = '';
+      // DOCX — notify user that PDF or TXT is recommended for full text extraction
+      uploadedFileText = '';
+      if (selectedFileName) {
+        selectedFileName.textContent = `${file.name} — DOCX file selected. For best ATS parsing, PDF or TXT is recommended.`;
       }
     }
 
-    // Show extraction status in the badge
-    if (selectedFileName && uploadedFileText) {
-      const charCount = uploadedFileText.trim().length;
-      selectedFileName.textContent = `${file.name} (${charCount} chars extracted)`;
-    } else if (selectedFileName && !uploadedFileText) {
-      selectedFileName.textContent = `${file.name} — could not extract text. Try PDF or TXT.`;
+    // Show extraction status in the badge for PDF/TXT
+    if (!file.name.endsWith('.docx')) {
+      if (selectedFileName && uploadedFileText) {
+        const charCount = uploadedFileText.trim().length;
+        selectedFileName.textContent = `${file.name} (${charCount} chars extracted)`;
+      } else if (selectedFileName && !uploadedFileText) {
+        selectedFileName.textContent = `${file.name} — could not extract text. Try PDF or TXT.`;
+      }
     }
 
     console.log(`[ResuAI] Extracted ${uploadedFileText.length} characters from ${file.name}`);
@@ -1681,7 +1754,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dynamicScore = Math.min(100, Math.max(0, parseInt(report.score) || 85));
     const matched = report.matchedKeywords || [];
     const missing = report.missingKeywords || [];
-    const recommendations = report.recommendations || [];
+    const recommendations = report.recommendations || report.formattingSuggestions || [];
 
     // Save scan to historical logs
     recordNewScanResult(dynamicScore);

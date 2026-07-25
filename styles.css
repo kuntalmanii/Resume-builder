@@ -22,8 +22,7 @@
   scrollbar-width: thin;
 }
 
-/* --- Theme 1: Light Modern (Soft violet/lavender tint, white cards, crisp text) --- */
-body[data-theme="light-modern"],
+/* --- Fallback Theme: (Applied when no data-theme attribute is present) --- */
 body:not([data-theme]) {
   color-scheme: light;
   --bg-app: #f4f3fb;
@@ -196,6 +195,41 @@ body[data-theme="sunset-amber"] {
 
   --scrollbar-thumb: rgba(245, 158, 11, 0.3);
   --scrollbar-track: #faf5ed;
+}
+
+/* --- Theme 6: Twilight Haze (Soft periwinkle #D8E2FF & slate blue #A7B7E7 twilight palette) --- */
+body[data-theme="twilight-haze"] {
+  color-scheme: light;
+  --bg-app: #eef2ff;
+  --bg-sidebar: #ffffff;
+  --bg-topbar: rgba(255, 255, 255, 0.88);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f6f8fe;
+  --bg-input: #e4ebff;
+  --bg-hover: rgba(167, 183, 231, 0.18);
+  --bg-active: rgba(167, 183, 231, 0.32);
+  
+  --border-color: rgba(167, 183, 231, 0.35);
+  --border-color-hover: rgba(120, 140, 216, 0.6);
+  
+  --text-primary: #1e2440;
+  --text-secondary: #4a5578;
+  --text-muted: #8290c0;
+  
+  --accent-primary: #7587df;
+  --accent-primary-hover: #5d70ce;
+  --accent-light: rgba(216, 226, 255, 0.7);
+  --accent-gradient: linear-gradient(135deg, #d8e2ff 0%, #a7b7e7 50%, #7587df 100%);
+  
+  --shadow-sm: 0 2px 8px rgba(167, 183, 231, 0.15);
+  --shadow-md: 0 8px 24px rgba(167, 183, 231, 0.25);
+  --shadow-lg: 0 16px 36px rgba(167, 183, 231, 0.35);
+  
+  --upgrade-card-bg: linear-gradient(135deg, #7587df 0%, #3a4885 100%);
+  --upgrade-card-text: #ffffff;
+
+  --scrollbar-thumb: rgba(167, 183, 231, 0.4);
+  --scrollbar-track: #eef2ff;
 }
 
 /* --------------------------------------------------------------------------
@@ -577,6 +611,7 @@ button, input, select, textarea {
 .swatch-cyber { background: linear-gradient(135deg, #d946ef, #0b0616); }
 .swatch-emerald { background: linear-gradient(135deg, #10b981, #081210); }
 .swatch-amber { background: linear-gradient(135deg, #f59e0b, #faf5ed); }
+.swatch-twilight { background: linear-gradient(135deg, #a7b7e7, #d8e2ff); }
 
 .user-profile-pill {
   display: flex;
@@ -2028,6 +2063,120 @@ button, input, select, textarea {
   overflow-x: hidden;
 }
 
+/* --- Ambient Aurora Mesh & Tech Grid Animation System --- */
+.auth-bg-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.auth-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.25;
+  mask-image: radial-gradient(circle at 50% 45%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, black 30%, transparent 80%);
+}
+
+.auth-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.auth-orb.orb-1 {
+  width: 450px;
+  height: 450px;
+  top: -100px;
+  left: -80px;
+  background: var(--accent-primary);
+  animation: orbFloat1 24s ease-in-out infinite alternate;
+}
+
+.auth-orb.orb-2 {
+  width: 550px;
+  height: 550px;
+  bottom: -150px;
+  right: -120px;
+  background: var(--accent-gradient);
+  animation: orbFloat2 28s ease-in-out infinite alternate;
+}
+
+.auth-orb.orb-3 {
+  width: 350px;
+  height: 350px;
+  top: 40%;
+  left: 45%;
+  background: var(--accent-light);
+  filter: blur(110px);
+  animation: orbFloat3 20s ease-in-out infinite alternate;
+}
+
+@keyframes orbFloat1 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate3d(80px, 60px, 0) scale(1.15) rotate(120deg); }
+  100% { transform: translate3d(-40px, 110px, 0) scale(0.9) rotate(240deg); }
+}
+
+@keyframes orbFloat2 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate3d(-90px, -70px, 0) scale(1.2) rotate(-140deg); }
+  100% { transform: translate3d(50px, -120px, 0) scale(0.85) rotate(-280deg); }
+}
+
+@keyframes orbFloat3 {
+  0% { transform: translate3d(-50%, -50%, 0) scale(0.8); opacity: 0.3; }
+  50% { transform: translate3d(-40%, -60%, 0) scale(1.25); opacity: 0.65; }
+  100% { transform: translate3d(-60%, -40%, 0) scale(0.9); opacity: 0.4; }
+}
+
+/* --- Floating Glassmorphic Micro Badges --- */
+.auth-floating-badges {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+  z-index: 1;
+}
+
+.floating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color-hover);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: floatBadge 6s ease-in-out infinite alternate;
+}
+
+.floating-badge.badge-1 {
+  animation-delay: 0s;
+  color: var(--accent-primary);
+}
+
+.floating-badge.badge-2 {
+  animation-delay: 3s;
+}
+
+@keyframes floatBadge {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-8px); }
+}
+
 .auth-top-bar {
   display: flex;
   align-items: center;
@@ -2195,6 +2344,54 @@ button, input, select, textarea {
 .btn-quick-demo svg {
   width: 15px;
   height: 15px;
+}
+
+/* --- Password Strength Meter & Form Feedback --- */
+.password-strength-container {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.strength-bar-track {
+  height: 4px;
+  width: 100%;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.strength-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  transition: width 0.35s ease, background-color 0.35s ease;
+  background: #ef4444;
+}
+
+.strength-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.strength-bar-fill.weak { width: 33%; background-color: #ef4444; }
+.strength-bar-fill.medium { width: 66%; background-color: #f59e0b; }
+.strength-bar-fill.strong { width: 100%; background-color: #10b981; }
+
+/* Modern Web Form Validation (:user-valid / :user-invalid) */
+.form-input:user-invalid {
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.form-input:user-valid {
+  border-color: #10b981 !important;
 }
 
 .auth-options-row {
@@ -3508,6 +3705,7 @@ input:checked + .toggle-slider:before {
 .settings-theme-swatch.swatch-purple { background: #8b5cf6; }
 .settings-theme-swatch.swatch-emerald { background: #10b981; }
 .settings-theme-swatch.swatch-amber { background: #f59e0b; }
+.settings-theme-swatch.swatch-twilight { background: linear-gradient(135deg, #d8e2ff, #a7b7e7); }
 
 /* Custom Save Toast Notification banner */
 .toast-container {
