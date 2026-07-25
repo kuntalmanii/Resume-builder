@@ -835,21 +835,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function updateTopUserProfile() {
-    const userNameDisplay = document.getElementById('topUserName');
-    const userRoleDisplay = document.getElementById('topUserRole');
-
-    const currentName = inputFullName ? inputFullName.value.trim() : '';
-    const currentTitle = inputJobTitle ? inputJobTitle.value.trim() : '';
-
-    if (userNameDisplay) {
-      userNameDisplay.textContent = currentName || 'Developer';
-    }
-    if (userRoleDisplay) {
-      userRoleDisplay.textContent = currentTitle || 'Senior Architect';
-    }
-  }
-
   // Action-Verb Chip Click Handler
   if (verbChipsContainer && bulletPoints) {
     verbChipsContainer.addEventListener('click', (e) => {

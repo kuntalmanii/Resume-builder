@@ -606,7 +606,6 @@ button, input, select, textarea {
   display: inline-block;
 }
 
-.swatch-light { background: linear-gradient(135deg, #7c3aed, #f4f3fb); }
 .swatch-obsidian { background: linear-gradient(135deg, #38bdf8, #08090d); }
 .swatch-cyber { background: linear-gradient(135deg, #d946ef, #0b0616); }
 .swatch-emerald { background: linear-gradient(135deg, #10b981, #081210); }
@@ -3700,7 +3699,6 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--accent-primary);
 }
 
-.settings-theme-swatch.swatch-modern { background: #3b82f6; }
 .settings-theme-swatch.swatch-obsidian { background: #0f172a; }
 .settings-theme-swatch.swatch-purple { background: #8b5cf6; }
 .settings-theme-swatch.swatch-emerald { background: #10b981; }
