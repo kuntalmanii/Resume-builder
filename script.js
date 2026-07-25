@@ -134,11 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let isSignUpMode = false;
 
   /**
-   * Reads authentication state from localStorage and toggles between the Login screen
+   * Reads authentication state from sessionStorage and toggles between the Login screen
    * and the Main Dashboard layout.
    */
   function updateAuthStateView() {
-    const isLoggedIn = localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
+    // Purge legacy localStorage auth key if present
+    try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch (e) {}
+
+    const isLoggedIn = sessionStorage.getItem(AUTH_STORAGE_KEY) === 'true';
     if (isLoggedIn) {
       if (authContainer) authContainer.style.display = 'none';
       if (appContainer) appContainer.style.display = 'flex';
@@ -239,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setTimeout(() => {
         try {
-          localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+          sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
         } catch (err) {}
         updateAuthStateView();
         btnQuickDemoLogin.innerHTML = origText;
@@ -265,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputFullName.value = authNameInput.value.trim();
       }
 
-      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
       syncLivePreview();
     });
@@ -274,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // SSO Action handlers
   if (ssoGithubBtn) {
     ssoGithubBtn.addEventListener('click', () => {
-      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
       syncLivePreview();
     });
@@ -282,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (ssoGoogleBtn) {
     ssoGoogleBtn.addEventListener('click', () => {
-      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
       updateAuthStateView();
       syncLivePreview();
     });
@@ -291,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sign out handlers
   function handleSignOut(e) {
     e.preventDefault();
-    localStorage.setItem(AUTH_STORAGE_KEY, 'false');
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
     
     // Clear session details & saved tab so next login starts clean
     try {
