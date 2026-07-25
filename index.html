@@ -2,8 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ResuAI // Developer Platform Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>ResuAI // Senior Developer Resume Studio & ATS Diagnostic Engine</title>
+  
+  <!-- Standard SEO Meta Tags -->
+  <meta name="description" content="Build executive developer resumes, optimize ATS match scores, and track technical job application pipelines with Google Gemini 2.5 Flash AI." />
+  <meta name="keywords" content="Developer Resume Builder, ATS Resume Scanner, Tech Job Application Tracker, Senior Engineer Resume, Gemini AI Resume Optimizer" />
+  <meta name="author" content="ResuAI Dev Team" />
+  <meta name="theme-color" content="#6366f1" />
+  <link rel="canonical" href="http://localhost:8080/" />
+
+  <!-- OpenGraph Social Meta Tags -->
+  <meta property="og:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
+  <meta property="og:description" content="Architect executive developer resumes and beat corporate ATS parsers with real-time AI keyword scoring." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://localhost:8080/" />
+  <meta property="og:site_name" content="ResuAI Studio" />
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
+  <meta name="twitter:description" content="Optimize software engineering resumes with 98%+ ATS pass guarantee powered by Gemini 2.5 AI." />
+
+  <!-- Schema.org Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ResuAI",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0.00",
+      "priceCurrency": "USD"
+    },
+    "description": "Enterprise AI developer resume builder, ATS match analyzer, and job application pipeline tracker."
+  }
+  </script>
+
   <!-- Google Fonts: Inter & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -190,7 +227,7 @@
     </div>
   </div>
 
-  <div class="app-container" id="appContainer">
+  <div class="app-container" id="appContainer" style="display: none;">
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -1117,6 +1154,187 @@ Key Requirements:
             </div>
           </div>
 
+          <!-- TAB 4: JOB APPLICATIONS PIPELINE -->
+          <div class="tab-pane" id="tab-job-tracker">
+            
+            <!-- Pipeline KPI Metric Cards -->
+            <div class="pipeline-kpi-grid">
+              <div class="kpi-card glass-card kpi-card-glow-blue">
+                <div class="kpi-icon blue-bg"><i data-feather="briefcase"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiTotalApps">0</span>
+                    <span class="kpi-trend positive"><i data-feather="trending-up"></i> Active</span>
+                  </div>
+                  <span class="kpi-label">Total Applications</span>
+                </div>
+              </div>
+              <div class="kpi-card glass-card kpi-card-glow-purple">
+                <div class="kpi-icon purple-bg"><i data-feather="calendar"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiActiveInterviews">0</span>
+                    <span class="kpi-trend purple-trend"><i data-feather="activity"></i> Scheduled</span>
+                  </div>
+                  <span class="kpi-label">Active Interviews</span>
+                </div>
+              </div>
+              <div class="kpi-card glass-card kpi-card-glow-green">
+                <div class="kpi-icon green-bg"><i data-feather="award"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiOffersCount">0</span>
+                    <span class="kpi-trend green-trend"><i data-feather="check-circle"></i> Milestone</span>
+                  </div>
+                  <span class="kpi-label">Offers Received</span>
+                </div>
+              </div>
+              <div class="kpi-card glass-card kpi-card-glow-orange">
+                <div class="kpi-icon orange-bg"><i data-feather="zap"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiAvgAtsScore">0%</span>
+                    <span class="kpi-trend orange-trend"><i data-feather="cpu"></i> AI Matched</span>
+                  </div>
+                  <span class="kpi-label">Avg ATS Match</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pipeline Filter & Action Toolbar -->
+            <div class="pipeline-toolbar-card glass-card">
+              <div class="toolbar-search-row">
+                <div class="input-with-icon search-box">
+                  <i data-feather="search" class="input-icon"></i>
+                  <input type="text" id="jobSearchInput" placeholder="Search company, role, or tech stack..." class="form-input" />
+                </div>
+                <div class="input-with-icon filter-box">
+                  <i data-feather="filter" class="input-icon"></i>
+                  <select id="jobStageFilter" class="form-input">
+                    <option value="all" selected>All Pipeline Stages</option>
+                    <option value="wishlist">Wishlist</option>
+                    <option value="applied">Applied</option>
+                    <option value="interview">Interviewing</option>
+                    <option value="offer">Offer Received</option>
+                    <option value="rejected">Closed / Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="toolbar-controls-row">
+                <!-- Google Material Quick Filter Chips Bar -->
+                <div class="quick-filter-chips" id="quickFilterChips">
+                  <button class="filter-chip active" data-chip="all">All Jobs</button>
+                  <button class="filter-chip" data-chip="faang">⚡ FAANG &amp; Big Tech</button>
+                  <button class="filter-chip" data-chip="remote">🌐 Remote Only</button>
+                  <button class="filter-chip" data-chip="high-ats">🎯 High ATS (&gt;90%)</button>
+                </div>
+
+                <div class="toolbar-actions-group">
+                  <div class="view-toggle-buttons">
+                    <button class="view-btn active" id="btnViewKanban" data-view="kanban" title="Kanban Board View">
+                      <i data-feather="columns"></i>
+                      <span>Board</span>
+                    </button>
+                    <button class="view-btn" id="btnViewTable" data-view="table" title="Table View">
+                      <i data-feather="list"></i>
+                      <span>Table</span>
+                    </button>
+                  </div>
+
+                  <button class="btn-primary btn-sm btn-glow-effect" id="btnAddNewJob">
+                    <i data-feather="plus"></i>
+                    <span>Add Application</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pipeline Container View Modes -->
+            <div class="pipeline-views-wrapper">
+              <!-- Kanban Board View -->
+              <div class="kanban-board-container" id="kanbanBoardContainer">
+                <div class="kanban-column column-wishlist" data-stage="wishlist">
+                  <div class="column-header">
+                    <div class="column-title">
+                      <span class="stage-dot wishlist-dot"></span>
+                      <span>Wishlist</span>
+                    </div>
+                    <span class="column-count" id="count-wishlist">0</span>
+                  </div>
+                  <div class="kanban-cards-list" id="column-cards-wishlist"></div>
+                </div>
+
+                <div class="kanban-column column-applied" data-stage="applied">
+                  <div class="column-header">
+                    <div class="column-title">
+                      <span class="stage-dot applied-dot"></span>
+                      <span>Applied</span>
+                    </div>
+                    <span class="column-count" id="count-applied">0</span>
+                  </div>
+                  <div class="kanban-cards-list" id="column-cards-applied"></div>
+                </div>
+
+                <div class="kanban-column column-interview" data-stage="interview">
+                  <div class="column-header">
+                    <div class="column-title">
+                      <span class="stage-dot interview-dot"></span>
+                      <span>Interviewing</span>
+                    </div>
+                    <span class="column-count" id="count-interview">0</span>
+                  </div>
+                  <div class="kanban-cards-list" id="column-cards-interview"></div>
+                </div>
+
+                <div class="kanban-column column-offer" data-stage="offer">
+                  <div class="column-header">
+                    <div class="column-title">
+                      <span class="stage-dot offer-dot"></span>
+                      <span>Offer</span>
+                    </div>
+                    <span class="column-count" id="count-offer">0</span>
+                  </div>
+                  <div class="kanban-cards-list" id="column-cards-offer"></div>
+                </div>
+
+                <div class="kanban-column column-rejected" data-stage="rejected">
+                  <div class="column-header">
+                    <div class="column-title">
+                      <span class="stage-dot rejected-dot"></span>
+                      <span>Closed</span>
+                    </div>
+                    <span class="column-count" id="count-rejected">0</span>
+                  </div>
+                  <div class="kanban-cards-list" id="column-cards-rejected"></div>
+                </div>
+              </div>
+
+              <!-- Table List View (Initially hidden) -->
+              <div class="table-view-container" id="tableViewContainer" style="display: none;">
+                <div class="dashboard-card glass-card">
+                  <div class="table-responsive">
+                    <table class="pipeline-table">
+                      <thead>
+                        <tr>
+                          <th>Company &amp; Role</th>
+                          <th>Stage</th>
+                          <th>Applied Date</th>
+                          <th>Salary Range</th>
+                          <th>ATS Match</th>
+                          <th class="text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="pipelineTableBody">
+                        <!-- Dynamic Rows -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="tab-pane" id="tab-settings">
             <div class="settings-layout-grid">
               
@@ -1346,6 +1564,115 @@ Key Requirements:
 
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Job Application -->
+  <div class="modal-overlay" id="jobModal" style="display: none;">
+    <div class="modal-card glass-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-feather="briefcase"></i>
+          <h3 id="jobModalTitle">Add Job Application</h3>
+        </div>
+        <button class="modal-close-btn" id="btnCloseJobModal" aria-label="Close modal">
+          <i data-feather="x"></i>
+        </button>
+      </div>
+
+      <form id="jobForm" class="modal-body">
+        <input type="hidden" id="jobId" value="" />
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="jobCompany">Company Name *</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="building"></i>
+              <input type="text" id="jobCompany" class="form-input" placeholder="e.g. Microsoft" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobTitle">Job Title / Role *</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="user"></i>
+              <input type="text" id="jobTitle" class="form-input" placeholder="e.g. Senior Frontend Engineer" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="jobStage">Pipeline Stage</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="git-commit"></i>
+              <select id="jobStage" class="form-input">
+                <option value="wishlist">Wishlist</option>
+                <option value="applied" selected>Applied</option>
+                <option value="interview">Interviewing</option>
+                <option value="offer">Offer Received</option>
+                <option value="rejected">Closed / Rejected</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobSalary">Salary Range</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="dollar-sign"></i>
+              <input type="text" id="jobSalary" class="form-input" placeholder="e.g. $160,000 - $195,000" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobDate">Application Date</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="calendar"></i>
+              <input type="date" id="jobDate" class="form-input" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="jobLocation">Location / Mode</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="map-pin"></i>
+              <input type="text" id="jobLocation" class="form-input" placeholder="e.g. Remote / Redmond, WA" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobAtsScore">ATS Match Score (%)</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="zap"></i>
+              <input type="number" id="jobAtsScore" class="form-input" min="0" max="100" placeholder="e.g. 92" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="jobUrl">Job Listing URL</label>
+          <div class="input-icon-wrapper">
+            <i data-feather="link"></i>
+            <input type="url" id="jobUrl" class="form-input" placeholder="https://careers.microsoft.com/job/12345" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="jobJdText">Job Description / Requirements (Optional - enables 1-click ATS scan)</label>
+          <textarea id="jobJdText" class="form-input form-textarea" rows="4" placeholder="Paste the job posting responsibilities & requirements here..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="jobNotes">Interview Notes &amp; Activity Log</label>
+          <textarea id="jobNotes" class="form-input form-textarea" rows="3" placeholder="e.g., Round 1 Recruiter Screen on Tuesday. System Design focus on Caching & Microservices."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost-sm" id="btnCancelJobModal">Cancel</button>
+          <button type="submit" class="btn-primary btn-sm" id="btnSaveJob">
+            <i data-feather="check"></i>
+            <span id="btnSaveJobText">Save Application</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

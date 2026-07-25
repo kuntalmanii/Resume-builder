@@ -354,6 +354,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pageTitle) pageTitle.textContent = meta.title;
     if (pageDescription) pageDescription.textContent = meta.description;
 
+    // SEO Dynamic Document Title & Meta Description Update
+    document.title = `${meta.title} // ResuAI Studio`;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', `${meta.description} Powered by Google Gemini 2.5 Flash AI.`);
+
     // Hide New Resume button on ATS Analyzer & non-builder tabs
     const btnNewResume = document.getElementById('btnNewResume');
     if (btnNewResume) {
@@ -2153,60 +2158,100 @@ Key Requirements:
     }).join('');
   }
 
+  function parseBulletsList(rawBullets) {
+    if (!rawBullets) return [];
+    
+    let items = [];
+    if (Array.isArray(rawBullets)) {
+      rawBullets.forEach(item => {
+        if (typeof item === 'string') {
+          const splitLines = item.split(/\r?\n|•|&bull;/).map(s => s.trim().replace(/^[•\-\*\s]+/, '')).filter(Boolean);
+          items.push(...splitLines);
+        } else if (item) {
+          items.push(String(item));
+        }
+      });
+    } else if (typeof rawBullets === 'string') {
+      items = rawBullets.split(/\r?\n|•|&bull;/).map(s => s.trim().replace(/^[•\-\*\s]+/, '')).filter(Boolean);
+    }
+
+    if (items.length === 1 && items[0].length > 120 && items[0].includes('. ')) {
+      const sentences = items[0].split(/(?<=\.)\s+/).map(s => s.trim()).filter(s => s.length > 10);
+      if (sentences.length > 1) {
+        items = sentences;
+      }
+    }
+
+    return items;
+  }
+
   function renderTailoredResume(data) {
     if (!tailoredResumeDoc) return;
 
     // Post-process data to ensure contact info and name are never empty
     data = fillMissingCandidateDetails(data, uploadedFileText);
 
-    const skills = (data.skills || []).join(', ');
-    const expBlocks = (data.experience || []).map(job => `
-      <div class="experience-block">
-        <div class="exp-header">
-          <strong>${job.title || ''} // ${job.company || ''}</strong>
-          <span>${job.period || ''}</span>
-        </div>
-        <ul class="exp-list">
-          ${(job.bullets || []).map(b => `<li>${b}</li>`).join('')}
-        </ul>
-      </div>
-    `).join('');
+    const skills = Array.isArray(data.skills) ? data.skills.join(' · ') : (data.skills || '');
 
-    // Format header meta string dynamically
-    const metaParts = [];
-    if (data.location) metaParts.push(data.location);
-    if (data.email) metaParts.push(data.email);
-    if (data.phone) metaParts.push(data.phone);
+    const expBlocks = (data.experience || []).map(job => {
+      const bulletsList = parseBulletsList(job.bullets);
+      const bulletsHTML = bulletsList.map(b => `<li class="tailored-bullet-item" style="margin-bottom: 0.35rem; line-height: 1.5; color: #374151;">${escapeHTML(b)}</li>`).join('');
+
+      return `
+        <div class="experience-block" style="margin-bottom: 1.1rem;">
+          <div class="exp-header" style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.92rem; margin-bottom: 0.3rem;">
+            <div>
+              <strong style="color: #111827; font-weight: 700;">${escapeHTML(job.title || '')}</strong>
+              ${job.company ? `<span style="color: #4f46e5; font-weight: 600;"> // ${escapeHTML(job.company)}</span>` : ''}
+            </div>
+            ${job.period ? `<span class="exp-date-pill" style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">${escapeHTML(job.period)}</span>` : ''}
+          </div>
+          ${bulletsList.length > 0 ? `<ul class="exp-list tailored-bullets-ul" style="list-style-type: disc !important; padding-left: 1.25rem; margin-top: 0.35rem; margin-bottom: 0.5rem;">${bulletsHTML}</ul>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const contactParts = [];
+    if (data.location) contactParts.push(`<span>${escapeHTML(data.location)}</span>`);
+    if (data.email) contactParts.push(`<span>${escapeHTML(data.email)}</span>`);
+    if (data.phone) contactParts.push(`<span>${escapeHTML(data.phone)}</span>`);
 
     tailoredResumeDoc.innerHTML = `
-      <div class="preview-doc-header">
-        <div class="doc-name">${(data.name || 'CANDIDATE RESUME').toUpperCase()}</div>
-        <div class="doc-role">${(data.jobTitle || 'TARGET ROLE').toUpperCase()}</div>
-        <div class="doc-meta">${metaParts.join(' &bull; ')}</div>
+      <div class="paper-document-card" style="background: #ffffff; padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif;">
+        <!-- Header -->
+        <div class="paper-candidate-header" style="text-align: center; border-bottom: 2px solid #6366f1; padding-bottom: 0.85rem; margin-bottom: 1.1rem;">
+          <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.55rem; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.02em;">${(escapeHTML(data.name) || 'CANDIDATE RESUME').toUpperCase()}</h2>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem;">${escapeHTML(data.jobTitle || 'TARGET ROLE')}</div>
+          <div style="font-size: 0.78rem; color: #4b5563; margin-top: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap;">${contactParts.join(' • ')}</div>
+        </div>
+
+        <!-- Professional Summary -->
+        ${data.summary ? `
+        <div class="paper-section" style="margin-bottom: 1.1rem;">
+          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">PROFESSIONAL SUMMARY</div>
+          <p style="font-size: 0.85rem; line-height: 1.55; color: #374151; margin: 0;">${escapeHTML(data.summary)}</p>
+        </div>` : ''}
+
+        <!-- Technical Expertise -->
+        ${skills ? `
+        <div class="paper-section" style="margin-bottom: 1.1rem;">
+          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">TECHNICAL EXPERTISE</div>
+          <p style="font-size: 0.85rem; line-height: 1.55; color: #374151; margin: 0; font-weight: 500;">${escapeHTML(skills)}</p>
+        </div>` : ''}
+
+        <!-- Work Experience -->
+        <div class="paper-section" style="margin-bottom: 1.1rem;">
+          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.65rem;">WORK EXPERIENCE & KEY IMPACT PROJECTS</div>
+          ${expBlocks}
+        </div>
+
+        <!-- Education -->
+        ${data.education ? `
+        <div class="paper-section" style="margin-bottom: 0.5rem;">
+          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">EDUCATION & CREDENTIALS</div>
+          <div>${formatEducationHTML(data.education)}</div>
+        </div>` : ''}
       </div>
-
-      ${data.summary ? `
-      <div class="preview-section">
-        <div class="section-title">PROFESSIONAL SUMMARY</div>
-        <p class="section-content">${data.summary}</p>
-      </div>` : ''}
-
-      ${skills ? `
-      <div class="preview-section">
-        <div class="section-title">TECHNICAL EXPERTISE</div>
-        <p class="section-content">${skills}</p>
-      </div>` : ''}
-
-      <div class="preview-section">
-        <div class="section-title">WORK EXPERIENCE & KEY IMPACT PROJECTS</div>
-        ${expBlocks}
-      </div>
-
-      ${data.education ? `
-      <div class="preview-section">
-        <div class="section-title">EDUCATION & CREDENTIALS</div>
-        ${formatEducationHTML(data.education)}
-      </div>` : ''}
     `;
   }
 
@@ -2310,18 +2355,14 @@ Key Requirements:
     ${styles.pageSizeCss}
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{background:#fff;color:#111;font-family:${styles.bodyFont};font-size:11pt;line-height:1.5;padding:24pt 28pt}
-    .resume-preview-document{max-width:700px;margin:0 auto;font-family:${styles.bodyFont}}
-    .preview-doc-header{border-bottom:2px solid #111;padding-bottom:10pt;margin-bottom:14pt}
-    .doc-name{font-family:${styles.headingFont};font-size:20pt;font-weight:800;letter-spacing:2px;color:#000}
-    .doc-role{font-size:9.5pt;font-weight:600;letter-spacing:1.5px;color:#444;margin-top:2pt}
-    .doc-meta{font-size:9pt;color:#555;margin-top:4pt}
-    .preview-section{margin-top:14pt}
-    .section-title{font-family:${styles.headingFont};font-size:8.5pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;border-bottom:1px solid #ccc;padding-bottom:3pt;margin-bottom:6pt}
-    .section-content{font-size:10pt;color:#222}
-    .experience-block{margin-bottom:10pt}
-    .exp-header{display:flex;justify-content:space-between;font-size:10pt;font-weight:600;color:#111;margin-bottom:4pt}
-    .exp-list{padding-left:14pt;font-size:10pt;color:#222}
-    .exp-list li{margin-bottom:3pt}
+    .paper-document-card{max-width:720px;margin:0 auto;font-family:${styles.bodyFont};box-shadow:none !important;border:none !important;padding:0 !important;}
+    .paper-candidate-header{text-align:center;border-bottom:2px solid #111;padding-bottom:10pt;margin-bottom:14pt}
+    .paper-section{margin-bottom:14pt}
+    .paper-section-title{font-family:${styles.headingFont};font-size:8.5pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;border-bottom:1px solid #ccc;padding-bottom:3pt;margin-bottom:6pt}
+    .experience-block{margin-bottom:12pt}
+    .exp-header{display:flex;justify-content:space-between;align-items:baseline;font-size:10pt;font-weight:600;color:#111;margin-bottom:4pt}
+    .tailored-bullets-ul{list-style-type:disc !important;padding-left:18pt !important;margin-top:4pt !important;margin-bottom:6pt !important}
+    .tailored-bullet-item{margin-bottom:4pt !important;line-height:1.5 !important;color:#222 !important;font-size:9.5pt !important;display:list-item !important}
     @media print{html,body{padding:0}}
   </style>
 </head><body>
@@ -2556,7 +2597,7 @@ Key Requirements:
   // Danger Zone: Reset All Local Workspace Data
   if (btnResetAllData) {
     btnResetAllData.addEventListener('click', () => {
-      const confirm1 = window.confirm('DANGER: This will delete all saved resume drafts, ATS history, custom API keys, and workspace settings. Continue?');
+      const confirm1 = window.confirm('DANGER: This will delete all saved resume drafts, ATS history, job applications, custom API keys, and workspace settings. Continue?');
       if (!confirm1) return;
 
       try {
@@ -2564,6 +2605,7 @@ Key Requirements:
         localStorage.removeItem(SETTINGS_STORAGE_KEY);
         localStorage.removeItem('resuai-dashboard-theme');
         localStorage.removeItem(ANALYTICS_HISTORY_KEY);
+        localStorage.removeItem(JOB_APPS_STORAGE_KEY);
       } catch (e) {}
 
       alert('Workspace reset complete. Reloading application...');
@@ -2603,9 +2645,558 @@ Key Requirements:
     });
   }
 
+  /* ==========================================================================
+     JOB APPLICATIONS PIPELINE & KANBAN TRACKER MODULE
+     ========================================================================== */
+
+  const JOB_APPS_STORAGE_KEY = 'resuai_job_applications';
+  let activeQuickFilterChip = 'all';
+
+  const DEFAULT_SEED_JOBS = [
+    {
+      id: 'job-101',
+      company: 'Microsoft',
+      title: 'Senior Frontend Engineer',
+      stage: 'interview',
+      salary: '$170,000 - $210,000',
+      date: '2026-07-20',
+      location: 'Redmond, WA (Hybrid)',
+      atsScore: 94,
+      tags: ['TypeScript', 'React', 'Design Systems', 'Performance'],
+      url: 'https://careers.microsoft.com/us/en/job/168923',
+      jdText: 'Seeking Senior Frontend Engineer with expert TypeScript, React, System Design, Web Performance, and Accessible Design Systems skills.',
+      notes: 'Passed Technical Screen. Next: 4-round Virtual Onsite focusing on UI Architecture and State Management.'
+    },
+    {
+      id: 'job-102',
+      company: 'Stripe',
+      title: 'Staff Systems Architect',
+      stage: 'offer',
+      salary: '$220,000 - $265,000',
+      date: '2026-07-15',
+      location: 'Remote',
+      atsScore: 91,
+      tags: ['Go', 'Microservices', 'Distributed Systems', 'API'],
+      url: 'https://stripe.com/jobs/staff-architect',
+      jdText: 'Architect resilient payment APIs, microservices, distribution protocols, latency reduction, and high availability systems.',
+      notes: 'Written offer received! Base: $235k + Equity. Reviewing offer letter details before deadline.'
+    },
+    {
+      id: 'job-103',
+      company: 'OpenAI',
+      title: 'Full Stack AI Platform Lead',
+      stage: 'applied',
+      salary: '$200,000 - $250,000',
+      date: '2026-07-22',
+      location: 'San Francisco, CA',
+      atsScore: 88,
+      tags: ['Python', 'Next.js', 'LLM Streaming', 'Tailwind'],
+      url: 'https://openai.com/careers/full-stack-lead',
+      jdText: 'Build high-performance web interfaces and streaming API clients for next-generation intelligence models.',
+      notes: 'Application submitted via employee referral link.'
+    },
+    {
+      id: 'job-104',
+      company: 'Google',
+      title: 'Senior Software Engineer (Cloud)',
+      stage: 'interview',
+      salary: '$180,000 - $225,000',
+      date: '2026-07-18',
+      location: 'Sunnyvale, CA',
+      atsScore: 95,
+      tags: ['C++', 'Kubernetes', 'GCP', 'Observability'],
+      url: 'https://careers.google.com/jobs/results/123456',
+      jdText: 'Distributed systems, Go, C++, Kubernetes, Cloud platform scalability and observability.',
+      notes: 'Coding round completed successfully. Scheduled System Design round for next Monday.'
+    },
+    {
+      id: 'job-105',
+      company: 'Meta',
+      title: 'UI Infrastructure Engineer',
+      stage: 'wishlist',
+      salary: '$175,000 - $215,000',
+      date: '2026-07-24',
+      location: 'Menlo Park, CA',
+      atsScore: 85,
+      tags: ['React Core', 'Vite', 'Bundle Optimization', 'SSR'],
+      url: 'https://metacareers.com/jobs/ui-infra',
+      jdText: 'Core React framework contributions, bundle optimization, SSR rendering pipeline, and web vitals.',
+      notes: 'Tailoring specific resume version with focus on performance optimization metrics.'
+    }
+  ];
+
+  let jobApplicationsList = [];
+
+  function loadJobApplications() {
+    try {
+      const stored = localStorage.getItem(JOB_APPS_STORAGE_KEY);
+      if (stored) {
+        jobApplicationsList = JSON.parse(stored);
+      } else {
+        jobApplicationsList = [...DEFAULT_SEED_JOBS];
+        saveJobApplications();
+      }
+    } catch (e) {
+      console.warn('Error loading job applications:', e);
+      jobApplicationsList = [...DEFAULT_SEED_JOBS];
+    }
+  }
+
+  function saveJobApplications() {
+    try {
+      localStorage.setItem(JOB_APPS_STORAGE_KEY, JSON.stringify(jobApplicationsList));
+    } catch (e) {
+      console.warn('Error saving job applications:', e);
+    }
+  }
+
+  // Render KPIs
+  function updatePipelineKPIs() {
+    const totalCount = jobApplicationsList.length;
+    const interviewCount = jobApplicationsList.filter(j => j.stage === 'interview').length;
+    const offerCount = jobApplicationsList.filter(j => j.stage === 'offer').length;
+
+    const scores = jobApplicationsList.map(j => Number(j.atsScore) || 0).filter(s => s > 0);
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+    const elTotal = document.getElementById('kpiTotalApps');
+    const elInterview = document.getElementById('kpiActiveInterviews');
+    const elOffer = document.getElementById('kpiOffersCount');
+    const elAvg = document.getElementById('kpiAvgAtsScore');
+
+    if (elTotal) elTotal.textContent = totalCount;
+    if (elInterview) elInterview.textContent = interviewCount;
+    if (elOffer) elOffer.textContent = offerCount;
+    if (elAvg) elAvg.textContent = `${avgScore}%`;
+  }
+
+  // Get Company Initial Avatar string
+  function getCompanyInitials(name) {
+    if (!name) return 'JOB';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  // Render Tech Pills Helper
+  function renderTechPills(tags) {
+    if (!tags || !Array.isArray(tags) || !tags.length) return '';
+    const colorClasses = ['pill-blue', 'pill-purple', 'pill-emerald', 'pill-orange', 'pill-slate'];
+    return `<div class="tech-pills-row">
+      ${tags.map((tag, idx) => `<span class="tech-pill ${colorClasses[idx % colorClasses.length]}">${escapeHTML(tag)}</span>`).join('')}
+    </div>`;
+  }
+
+  const NEXT_STAGE_LABEL_MAP = {
+    'wishlist': { next: 'applied', label: 'Apply ➔' },
+    'applied': { next: 'interview', label: 'Interview ➔' },
+    'interview': { next: 'offer', label: 'Got Offer! 🎉' }
+  };
+
+  // Render Kanban Board
+  function renderKanbanBoard(filteredList) {
+    const stages = ['wishlist', 'applied', 'interview', 'offer', 'rejected'];
+
+    stages.forEach(stage => {
+      const colCardsList = document.getElementById(`column-cards-${stage}`);
+      const countEl = document.getElementById(`count-${stage}`);
+
+      if (!colCardsList) return;
+
+      const stageJobs = filteredList.filter(j => j.stage === stage);
+      if (countEl) countEl.textContent = stageJobs.length;
+
+      colCardsList.innerHTML = '';
+
+      if (stageJobs.length === 0) {
+        colCardsList.innerHTML = `<div class="empty-stage-placeholder" style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:1.5rem 0.5rem; border:1px dashed var(--border-color); border-radius:8px;">No ${stage} apps</div>`;
+        return;
+      }
+
+      stageJobs.forEach(job => {
+        const card = document.createElement('div');
+        card.className = 'kanban-card';
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-id', job.id);
+
+        const atsClass = (job.atsScore >= 90) ? 'ats-high' : (job.atsScore >= 75) ? 'ats-med' : 'ats-low';
+        const nextStageInfo = NEXT_STAGE_LABEL_MAP[job.stage];
+
+        card.innerHTML = `
+          <div class="kanban-card-header">
+            <div class="company-logo-avatar">${getCompanyInitials(job.company)}</div>
+            <div class="company-info">
+              <div class="company-name">${escapeHTML(job.company)}</div>
+              <div class="job-role-title">${escapeHTML(job.title)}</div>
+            </div>
+            ${job.atsScore ? `<span class="ats-score-pill ${atsClass}"><i data-feather="zap"></i> ${job.atsScore}%</span>` : ''}
+          </div>
+          ${renderTechPills(job.tags)}
+          <div class="card-meta-details">
+            ${job.salary ? `<span class="meta-chip"><i data-feather="dollar-sign"></i> ${escapeHTML(job.salary)}</span>` : ''}
+            ${job.location ? `<span class="meta-chip"><i data-feather="map-pin"></i> ${escapeHTML(job.location)}</span>` : ''}
+            ${job.date ? `<span class="meta-chip"><i data-feather="calendar"></i> ${escapeHTML(job.date)}</span>` : ''}
+          </div>
+          <div class="card-actions-bar">
+            <div style="display:flex; gap:0.3rem;">
+              <button class="card-action-btn btn-edit-job" data-id="${job.id}" title="Edit Application">
+                <i data-feather="edit-2"></i> Edit
+              </button>
+              ${job.jdText ? `<button class="card-action-btn btn-scan-ats" data-id="${job.id}" title="Scan JD in ATS Analyzer" style="color:var(--primary); font-weight:700;"><i data-feather="sparkles"></i> ATS Scan</button>` : ''}
+            </div>
+            ${nextStageInfo ? `<button class="btn-stage-advance" data-id="${job.id}" data-next="${nextStageInfo.next}">${nextStageInfo.label}</button>` : ''}
+          </div>
+        `;
+
+        // Drag events
+        card.addEventListener('dragstart', (e) => {
+          card.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', job.id);
+        });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+        });
+
+        colCardsList.appendChild(card);
+      });
+    });
+
+    if (window.feather) window.feather.replace();
+  }
+
+  // Render Table View
+  function renderTableView(filteredList) {
+    const tableBody = document.getElementById('pipelineTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    if (filteredList.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No job applications found matching filter criteria.</td></tr>`;
+      return;
+    }
+
+    filteredList.forEach(job => {
+      const tr = document.createElement('tr');
+      const atsClass = (job.atsScore >= 90) ? 'ats-high' : (job.atsScore >= 75) ? 'ats-med' : 'ats-low';
+
+      tr.innerHTML = `
+        <td>
+          <div style="display:flex; align-items:center; gap:0.65rem;">
+            <div class="company-logo-avatar">${getCompanyInitials(job.company)}</div>
+            <div>
+              <strong style="color:var(--text-primary); font-size:0.9rem;">${escapeHTML(job.company)}</strong>
+              <div style="font-size:0.78rem; color:var(--text-muted);">${escapeHTML(job.title)}</div>
+              ${renderTechPills(job.tags)}
+            </div>
+          </div>
+        </td>
+        <td><span class="stage-pill stage-${job.stage}">${escapeHTML(job.stage)}</span></td>
+        <td>${escapeHTML(job.date || 'N/A')}</td>
+        <td>${escapeHTML(job.salary || 'Unspecified')}</td>
+        <td>${job.atsScore ? `<span class="ats-score-pill ${atsClass}">${job.atsScore}%</span>` : 'N/A'}</td>
+        <td class="text-right">
+          <div class="table-actions-cell">
+            <button class="btn-edit-job" data-id="${job.id}" title="Edit"><i data-feather="edit-2"></i> Edit</button>
+            ${job.jdText ? `<button class="btn-scan-ats" data-id="${job.id}" title="Run ATS Scan" style="color:var(--primary);"><i data-feather="sparkles"></i> Scan</button>` : ''}
+            <button class="btn-delete-job" data-id="${job.id}" title="Delete" style="color:#ef4444;"><i data-feather="trash-2"></i> Delete</button>
+          </div>
+        </td>
+      `;
+
+      tableBody.appendChild(tr);
+    });
+
+    if (window.feather) window.feather.replace();
+  }
+
+  function renderPipelineViews() {
+    const searchVal = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
+    const stageFilter = document.getElementById('jobStageFilter')?.value || 'all';
+
+    const faangCompanies = ['google', 'microsoft', 'stripe', 'openai', 'meta', 'apple', 'amazon', 'netflix'];
+
+    let filtered = jobApplicationsList.filter(job => {
+      const matchStage = (stageFilter === 'all') || (job.stage === stageFilter);
+      const matchQuery = !searchVal || 
+        job.company.toLowerCase().includes(searchVal) ||
+        job.title.toLowerCase().includes(searchVal) ||
+        (job.location && job.location.toLowerCase().includes(searchVal)) ||
+        (job.notes && job.notes.toLowerCase().includes(searchVal)) ||
+        (job.tags && job.tags.some(t => t.toLowerCase().includes(searchVal)));
+
+      let matchChip = true;
+      if (activeQuickFilterChip === 'faang') {
+        matchChip = faangCompanies.includes(job.company.toLowerCase());
+      } else if (activeQuickFilterChip === 'remote') {
+        matchChip = Boolean(job.location && job.location.toLowerCase().includes('remote'));
+      } else if (activeQuickFilterChip === 'high-ats') {
+        matchChip = Number(job.atsScore) >= 90;
+      }
+
+      return matchStage && matchQuery && matchChip;
+    });
+
+    updatePipelineKPIs();
+    renderKanbanBoard(filtered);
+    renderTableView(filtered);
+    bindJobActionButtons();
+  }
+
+  // Setup Column Drag & Drop Listeners
+  function initKanbanDragAndDrop() {
+    const columns = document.querySelectorAll('.kanban-column');
+    columns.forEach(col => {
+      col.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        col.classList.add('drag-over');
+      });
+
+      col.addEventListener('dragleave', () => {
+        col.classList.remove('drag-over');
+      });
+
+      col.addEventListener('drop', (e) => {
+        e.preventDefault();
+        col.classList.remove('drag-over');
+        const jobId = e.dataTransfer.getData('text/plain');
+        const targetStage = col.getAttribute('data-stage');
+
+        if (jobId && targetStage) {
+          const job = jobApplicationsList.find(j => j.id === jobId);
+          if (job && job.stage !== targetStage) {
+            job.stage = targetStage;
+            saveJobApplications();
+            renderPipelineViews();
+            if (typeof showToast === 'function') {
+              showToast(`Moved ${job.company} application to ${targetStage}!`, 'success');
+            }
+          }
+        }
+      });
+    });
+  }
+
+  // Event Delegation for Edit, Delete, ATS Scan, Stage Advance
+  function bindJobActionButtons() {
+    document.querySelectorAll('.btn-edit-job').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        openJobModal(id);
+      };
+    });
+
+    document.querySelectorAll('.btn-delete-job').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const job = jobApplicationsList.find(j => j.id === id);
+        if (job && window.confirm(`Delete application for ${job.company} (${job.title})?`)) {
+          jobApplicationsList = jobApplicationsList.filter(j => j.id !== id);
+          saveJobApplications();
+          renderPipelineViews();
+          if (typeof showToast === 'function') {
+            showToast('Application deleted.', 'info');
+          }
+        }
+      };
+    });
+
+    document.querySelectorAll('.btn-scan-ats').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const job = jobApplicationsList.find(j => j.id === id);
+        if (job && job.jdText) {
+          const atsJdInput = document.getElementById('atsJdInput');
+          if (atsJdInput) {
+            atsJdInput.value = job.jdText;
+          }
+          switchTab('ats-analyzer');
+          if (typeof showToast === 'function') {
+            showToast(`Loaded ${job.company} JD into ATS Analyzer!`, 'success');
+          }
+        }
+      };
+    });
+
+    // 1-Click Stage Advance Button
+    document.querySelectorAll('.btn-stage-advance').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const nextStage = btn.getAttribute('data-next');
+        const job = jobApplicationsList.find(j => j.id === id);
+        if (job && nextStage) {
+          job.stage = nextStage;
+          saveJobApplications();
+          renderPipelineViews();
+          if (typeof showToast === 'function') {
+            showToast(`Advanced ${job.company} application to ${nextStage.toUpperCase()}! 🚀`, 'success');
+          }
+        }
+      };
+    });
+  }
+
+  // Quick Filter Chips listeners
+  const quickFilterChips = document.querySelectorAll('.filter-chip');
+  if (quickFilterChips) {
+    quickFilterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        quickFilterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeQuickFilterChip = chip.getAttribute('data-chip') || 'all';
+        renderPipelineViews();
+      });
+    });
+  }
+
+  // Modal Open / Close / Save Handlers
+  const jobModal = document.getElementById('jobModal');
+  const jobForm = document.getElementById('jobForm');
+  const btnAddNewJob = document.getElementById('btnAddNewJob');
+  const btnCloseJobModal = document.getElementById('btnCloseJobModal');
+  const btnCancelJobModal = document.getElementById('btnCancelJobModal');
+
+  function openJobModal(jobId = null) {
+    if (!jobModal || !jobForm) return;
+
+    jobForm.reset();
+    document.getElementById('jobId').value = '';
+
+    if (jobId) {
+      const job = jobApplicationsList.find(j => j.id === jobId);
+      if (job) {
+        document.getElementById('jobModalTitle').textContent = 'Edit Job Application';
+        document.getElementById('jobId').value = job.id;
+        document.getElementById('jobCompany').value = job.company || '';
+        document.getElementById('jobTitle').value = job.title || '';
+        document.getElementById('jobStage').value = job.stage || 'applied';
+        document.getElementById('jobSalary').value = job.salary || '';
+        document.getElementById('jobDate').value = job.date || '';
+        document.getElementById('jobLocation').value = job.location || '';
+        document.getElementById('jobAtsScore').value = job.atsScore || '';
+        document.getElementById('jobUrl').value = job.url || '';
+        document.getElementById('jobJdText').value = job.jdText || '';
+        document.getElementById('jobNotes').value = job.notes || '';
+      }
+    } else {
+      document.getElementById('jobModalTitle').textContent = 'Add Job Application';
+      document.getElementById('jobDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    jobModal.style.display = 'flex';
+  }
+
+  function closeJobModal() {
+    if (jobModal) jobModal.style.display = 'none';
+  }
+
+  if (btnAddNewJob) btnAddNewJob.addEventListener('click', () => openJobModal());
+  if (btnCloseJobModal) btnCloseJobModal.addEventListener('click', closeJobModal);
+  if (btnCancelJobModal) btnCancelJobModal.addEventListener('click', closeJobModal);
+
+  if (jobModal) {
+    jobModal.addEventListener('click', (e) => {
+      if (e.target === jobModal) closeJobModal();
+    });
+  }
+
+  if (jobForm) {
+    jobForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('jobId').value;
+      const company = document.getElementById('jobCompany').value.trim();
+      const title = document.getElementById('jobTitle').value.trim();
+
+      if (!company || !title) return;
+
+      const jobData = {
+        id: id || `job-${Date.now()}`,
+        company,
+        title,
+        stage: document.getElementById('jobStage').value,
+        salary: document.getElementById('jobSalary').value.trim(),
+        date: document.getElementById('jobDate').value,
+        location: document.getElementById('jobLocation').value.trim(),
+        atsScore: Number(document.getElementById('jobAtsScore').value) || 0,
+        url: document.getElementById('jobUrl').value.trim(),
+        jdText: document.getElementById('jobJdText').value.trim(),
+        notes: document.getElementById('jobNotes').value.trim()
+      };
+
+      if (id) {
+        const index = jobApplicationsList.findIndex(j => j.id === id);
+        if (index !== -1) jobApplicationsList[index] = jobData;
+      } else {
+        jobApplicationsList.unshift(jobData);
+      }
+
+      saveJobApplications();
+      renderPipelineViews();
+      closeJobModal();
+
+      if (typeof showToast === 'function') {
+        showToast(id ? 'Application updated successfully!' : 'New application added to pipeline!', 'success');
+      }
+    });
+  }
+
+  // View Switcher (Board vs Table)
+  const btnViewKanban = document.getElementById('btnViewKanban');
+  const btnViewTable = document.getElementById('btnViewTable');
+  const kanbanBoardContainer = document.getElementById('kanbanBoardContainer');
+  const tableViewContainer = document.getElementById('tableViewContainer');
+
+  if (btnViewKanban && btnViewTable) {
+    btnViewKanban.addEventListener('click', () => {
+      btnViewKanban.classList.add('active');
+      btnViewTable.classList.remove('active');
+      if (kanbanBoardContainer) kanbanBoardContainer.style.display = 'grid';
+      if (tableViewContainer) tableViewContainer.style.display = 'none';
+    });
+
+    btnViewTable.addEventListener('click', () => {
+      btnViewTable.classList.add('active');
+      btnViewKanban.classList.remove('active');
+      if (kanbanBoardContainer) kanbanBoardContainer.style.display = 'none';
+      if (tableViewContainer) tableViewContainer.style.display = 'block';
+    });
+  }
+
+  // Search & Filter event listeners
+  const jobSearchInput = document.getElementById('jobSearchInput');
+  const jobStageFilter = document.getElementById('jobStageFilter');
+
+  if (jobSearchInput) jobSearchInput.addEventListener('input', renderPipelineViews);
+  if (jobStageFilter) jobStageFilter.addEventListener('change', renderPipelineViews);
+
+  // Helper escape HTML string function
+  function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+      tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag)
+    );
+  }
+
+  // Initialize pipeline
+  loadJobApplications();
+  renderPipelineViews();
+  initKanbanDragAndDrop();
+
   // Load saved settings on startup
   loadPlatformSettings();
 
 });
+
 
 
