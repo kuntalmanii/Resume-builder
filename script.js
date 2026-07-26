@@ -1752,8 +1752,22 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(" ");
-        fullText += pageText + " ";
+        let lastY = null;
+        let pageText = "";
+        for (const item of textContent.items) {
+          if (!item.str) continue;
+          if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+            pageText += "\n";
+          } else if (pageText && !pageText.endsWith("\n") && !pageText.endsWith(" ")) {
+            pageText += " ";
+          }
+          pageText += item.str;
+          if (item.hasEOL) {
+            pageText += "\n";
+          }
+          lastY = item.transform[5];
+        }
+        fullText += pageText + "\n\n";
       }
       return fullText;
     } catch (err) {
@@ -2287,11 +2301,15 @@ Key Requirements:
     // 4. Education
     let extractedEdu = inputEducation ? inputEducation.value.trim() : '';
     if (!extractedEdu && text) {
-      const eduKeywords = ['university', 'college', 'institute', 'bachelor', 'b.s.', 'b.tech', 'b.e.', 'master', 'm.s.', 'm.tech', 'ph.d', 'degree', 'diploma', 'stanford', 'mit', 'harvard', 'iit', 'certif'];
+      const eduKeywords = ['university', 'college', 'institute', 'bachelor', 'b.s.', 'b.tech', 'b.e.', 'master', 'm.s.', 'm.tech', 'ph.d', 'degree', 'diploma', 'stanford', 'mit', 'harvard', 'iit'];
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       const eduLines = [];
       for (const line of lines) {
-        if (eduKeywords.some(kw => line.toLowerCase().includes(kw))) {
+        if (line.length > 130) continue;
+        const lower = line.toLowerCase();
+        if (lower.includes('experience') || lower.includes('project') || lower.includes('skills') || lower.includes('problem statement') || lower.includes('co-founder')) continue;
+
+        if (eduKeywords.some(kw => lower.includes(kw))) {
           const clean = line.replace(/^[•\-\*\s]+/, '').trim();
           if (!eduLines.includes(clean)) eduLines.push(clean);
         }
@@ -2316,7 +2334,7 @@ Key Requirements:
     }
 
     const eduStr = typeof data.education === 'string' ? data.education.toLowerCase().trim() : '';
-    if ((!data.education || (Array.isArray(data.education) && data.education.length === 0) || ['not provided', 'education details (from resume)', 'b.s. computer science — university (year)', 'undefined', 'null'].includes(eduStr)) && extractedEdu) {
+    if ((!data.education || (Array.isArray(data.education) && data.education.length === 0) || ['not provided', 'education details (from resume)', 'b.s. computer science — university (year)', 'undefined', 'null'].includes(eduStr) || eduStr.length > 200) && extractedEdu) {
       data.education = extractedEdu;
     }
 
@@ -2339,6 +2357,12 @@ Key Requirements:
       items = String(eduData).split(/\n|;|•|\|/).map(s => s.trim()).filter(Boolean);
     }
 
+    // Filter out long text blobs from education section
+    items = items.filter(item => {
+      const str = typeof item === 'string' ? item : JSON.stringify(item);
+      return str.length < 140 && !str.toLowerCase().includes('co-founder') && !str.toLowerCase().includes('problem statement');
+    });
+
     if (items.length === 0) return '';
 
     return items.map(item => {
@@ -2348,9 +2372,9 @@ Key Requirements:
         const year   = item.year || item.period || item.date || '';
         return `
           <div class="edu-item" style="margin-bottom: 6px;">
-            <div class="exp-header">
-              <strong>${degree}${school ? ' &mdash; ' + school : ''}</strong>
-              <span>${year}</span>
+            <div class="exp-header" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+              <strong style="color: #111827; font-weight: 700;">${escapeHTML(degree)}${school ? ' &mdash; ' + escapeHTML(school) : ''}</strong>
+              <span style="font-size: 0.75rem; color: #4f46e5; font-weight: 600;">${escapeHTML(year)}</span>
             </div>
           </div>`;
       }
@@ -2368,14 +2392,14 @@ Key Requirements:
       if (dateText && mainText) {
         return `
           <div class="edu-item" style="margin-bottom: 6px;">
-            <div class="exp-header">
-              <strong>${mainText}</strong>
-              <span>${dateText}</span>
+            <div class="exp-header" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+              <strong style="color: #111827; font-weight: 700;">${escapeHTML(mainText)}</strong>
+              <span style="font-size: 0.75rem; color: #4f46e5; font-weight: 600;">${escapeHTML(dateText)}</span>
             </div>
           </div>`;
       }
 
-      return `<p class="section-content" style="margin-bottom: 4px;">&bull; ${str}</p>`;
+      return `<p class="section-content" style="margin-bottom: 4px; font-size: 0.85rem; color: #374151;">&bull; ${escapeHTML(str)}</p>`;
     }).join('');
   }
 
@@ -2425,7 +2449,7 @@ Key Requirements:
               <strong style="color: #111827; font-weight: 700;">${escapeHTML(job.title || '')}</strong>
               ${job.company ? `<span style="color: #4f46e5; font-weight: 600;"> // ${escapeHTML(job.company)}</span>` : ''}
             </div>
-            ${job.period ? `<span class="exp-date-pill" style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">${escapeHTML(job.period)}</span>` : ''}
+            ${job.period ? `<span class="exp-date-pill" style="font-size: 0.75rem; color: #4f46e5; font-weight: 600; background: #e0e7ff; padding: 2px 8px; border-radius: 12px;">${escapeHTML(job.period)}</span>` : ''}
           </div>
           ${bulletsList.length > 0 ? `<ul class="exp-list tailored-bullets-ul" style="list-style-type: disc !important; padding-left: 1.25rem; margin-top: 0.35rem; margin-bottom: 0.5rem;">${bulletsHTML}</ul>` : ''}
         </div>
@@ -2438,38 +2462,51 @@ Key Requirements:
     if (data.phone) contactParts.push(`<span>${escapeHTML(data.phone)}</span>`);
 
     tailoredResumeDoc.innerHTML = `
-      <div class="paper-document-card" style="background: #ffffff; padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif;">
-        <!-- Header -->
-        <div class="paper-candidate-header" style="text-align: center; border-bottom: 2px solid #6366f1; padding-bottom: 0.85rem; margin-bottom: 1.1rem;">
-          <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.55rem; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.02em;">${(escapeHTML(data.name) || 'CANDIDATE RESUME').toUpperCase()}</h2>
-          <div style="font-size: 0.85rem; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem;">${escapeHTML(data.jobTitle || 'TARGET ROLE')}</div>
-          <div style="font-size: 0.78rem; color: #4b5563; margin-top: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap;">${contactParts.join(' • ')}</div>
+      <div class="paper-document-card" style="background: #ffffff; padding: 2.2rem 2.5rem; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; color: #111827;">
+        <!-- Category 1: Candidate Header -->
+        <div class="paper-candidate-header" style="text-align: center; margin-bottom: 1.25rem;">
+          <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.65rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: 0.04em; text-transform: uppercase;">${(escapeHTML(data.name) || 'CANDIDATE RESUME').toUpperCase()}</h2>
+          <div style="font-size: 0.88rem; font-weight: 700; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.25rem;">${escapeHTML(data.jobTitle || 'TARGET ROLE')}</div>
+          <div style="font-size: 0.8rem; color: #4b5563; margin-top: 0.45rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap;">${contactParts.join(' • ')}</div>
+          <div style="height: 2px; background: linear-gradient(90deg, transparent 0%, #6366f1 30%, #818cf8 70%, transparent 100%); margin-top: 0.85rem;"></div>
         </div>
 
-        <!-- Professional Summary -->
+        <!-- Category 2: Professional Summary -->
         ${data.summary ? `
-        <div class="paper-section" style="margin-bottom: 1.1rem;">
-          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">PROFESSIONAL SUMMARY</div>
-          <p style="font-size: 0.85rem; line-height: 1.55; color: #374151; margin: 0;">${escapeHTML(data.summary)}</p>
+        <div class="paper-section" style="margin-bottom: 1.25rem;">
+          <div class="paper-section-title" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; color: #1e293b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; margin-bottom: 0.6rem;">
+            <span style="display: inline-block; width: 3px; height: 12px; background: linear-gradient(180deg, #6366f1, #818cf8); border-radius: 2px;"></span>
+            PROFESSIONAL SUMMARY
+          </div>
+          <p style="font-size: 0.86rem; line-height: 1.6; color: #334155; margin: 0;">${escapeHTML(data.summary)}</p>
         </div>` : ''}
 
-        <!-- Technical Expertise -->
+        <!-- Category 3: Technical Expertise -->
         ${skills ? `
-        <div class="paper-section" style="margin-bottom: 1.1rem;">
-          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">TECHNICAL EXPERTISE</div>
-          <p style="font-size: 0.85rem; line-height: 1.55; color: #374151; margin: 0; font-weight: 500;">${escapeHTML(skills)}</p>
+        <div class="paper-section" style="margin-bottom: 1.25rem;">
+          <div class="paper-section-title" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; color: #1e293b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; margin-bottom: 0.6rem;">
+            <span style="display: inline-block; width: 3px; height: 12px; background: linear-gradient(180deg, #6366f1, #818cf8); border-radius: 2px;"></span>
+            TECHNICAL EXPERTISE
+          </div>
+          <p style="font-size: 0.86rem; line-height: 1.6; color: #334155; margin: 0; font-weight: 500;">${escapeHTML(skills)}</p>
         </div>` : ''}
 
-        <!-- Work Experience -->
-        <div class="paper-section" style="margin-bottom: 1.1rem;">
-          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.65rem;">WORK EXPERIENCE & KEY IMPACT PROJECTS</div>
+        <!-- Category 4: Work Experience & Key Impact Projects -->
+        <div class="paper-section" style="margin-bottom: 1.25rem;">
+          <div class="paper-section-title" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; color: #1e293b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; margin-bottom: 0.75rem;">
+            <span style="display: inline-block; width: 3px; height: 12px; background: linear-gradient(180deg, #6366f1, #818cf8); border-radius: 2px;"></span>
+            WORK EXPERIENCE & KEY IMPACT PROJECTS
+          </div>
           ${expBlocks}
         </div>
 
-        <!-- Education -->
-        ${data.education ? `
+        <!-- Category 5: Education & Credentials -->
+        ${data.education && formatEducationHTML(data.education) ? `
         <div class="paper-section" style="margin-bottom: 0.5rem;">
-          <div class="paper-section-title" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">EDUCATION & CREDENTIALS</div>
+          <div class="paper-section-title" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; color: #1e293b; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.35rem; margin-bottom: 0.6rem;">
+            <span style="display: inline-block; width: 3px; height: 12px; background: linear-gradient(180deg, #6366f1, #818cf8); border-radius: 2px;"></span>
+            EDUCATION & CREDENTIALS
+          </div>
           <div>${formatEducationHTML(data.education)}</div>
         </div>` : ''}
       </div>
