@@ -471,6 +471,48 @@ function runFallbackTailoredResume(jdText, resumeText) {
   };
 }
 
+/**
+ * Safely reads and parses POST JSON request body with a maximum byte size limit
+ * @param {http.IncomingMessage} req 
+ * @param {http.ServerResponse} res 
+ * @param {number} maxBytes 
+ * @returns {Promise<Object>}
+ */
+function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    let isOverLimit = false;
+
+    req.on('data', chunk => {
+      if (isOverLimit) return;
+      body += chunk;
+      if (Buffer.byteLength(body, 'utf8') > maxBytes) {
+        isOverLimit = true;
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large. Maximum allowed size is 5MB.' }));
+        req.destroy();
+        reject(new Error('Payload too large'));
+      }
+    });
+
+    req.on('end', () => {
+      if (isOverLimit) return;
+      try {
+        const parsed = JSON.parse(body || '{}');
+        resolve(parsed);
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        reject(err);
+      }
+    });
+
+    req.on('error', (err) => {
+      if (!isOverLimit) reject(err);
+    });
+  });
+}
+
 // Create HTTP server
 
 const server = http.createServer((req, res) => {
@@ -490,11 +532,9 @@ const server = http.createServer((req, res) => {
 
   // Handle Backend API Endpoint: POST /api/optimize-resume
   if (req.method === 'POST' && pathname === '/api/optimize-resume') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
+    (async () => {
       try {
-        const { jobTitle, experienceText, skills } = JSON.parse(body || '{}');
+        const { jobTitle, experienceText, skills } = await readJsonBody(req, res);
 
         if (GEMINI_API_KEY) {
           try {
@@ -511,20 +551,17 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
       } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: "Invalid JSON payload" }));
+        // Response already sent in readJsonBody if error occurred
       }
-    });
+    })();
     return;
   }
 
   // Handle Backend API Endpoint: POST /api/analyze
   if (req.method === 'POST' && pathname === '/api/analyze') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
+    (async () => {
       try {
-        const { jdText, resumeText } = JSON.parse(body || '{}');
+        const { jdText, resumeText } = await readJsonBody(req, res);
 
         if (GEMINI_API_KEY) {
           try {
@@ -542,20 +579,17 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallbackResult));
       } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: "Invalid JSON payload" }));
+        // Response already sent in readJsonBody if error occurred
       }
-    });
+    })();
     return;
   }
 
   // Handle Backend API Endpoint: POST /api/generate-tailored-resume
   if (req.method === 'POST' && pathname === '/api/generate-tailored-resume') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
+    (async () => {
       try {
-        const { jdText, resumeText } = JSON.parse(body || '{}');
+        const { jdText, resumeText } = await readJsonBody(req, res);
 
         if (GEMINI_API_KEY) {
           try {
@@ -572,10 +606,43 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
       } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        // Response already sent in readJsonBody if error occurred
       }
-    });
+    })();
+    return;
+  }
+
+  // Handle Backend API Endpoint: POST /api/login
+  if (req.method === 'POST' && pathname === '/api/login') {
+    (async () => {
+      try {
+        const { email, password } = await readJsonBody(req, res);
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !password || !emailRegex.test(email)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Please enter a valid email address and password.' }));
+          return;
+        }
+
+        if (password.length < 6) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Password must be at least 6 characters.' }));
+          return;
+        }
+
+        // Generate session token
+        const token = 'token_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          token: token,
+          user: { email, name: email.split('@')[0] }
+        }));
+      } catch (err) {
+        // Response handled in readJsonBody if parsing error occurred
+      }
+    })();
     return;
   }
 
@@ -584,7 +651,7 @@ const server = http.createServer((req, res) => {
   const filePath = path.join(__dirname, safePath === '/' ? 'index.html' : safePath);
 
   // Security Check: Verify resolved path stays strictly within root directory
-  if (!filePath.startsWith(__dirname)) {
+  if (!filePath.startsWith(__dirname + path.sep) && filePath !== __dirname) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden: Access Denied');
     return;
@@ -596,6 +663,13 @@ const server = http.createServer((req, res) => {
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
+        // Return 404 for missing static assets (images, CSS, JS, JSON, etc.)
+        if (extname && extname !== '.html') {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end(`404 Not Found: ${safePath}`);
+          return;
+        }
+        // SPA Fallback for navigation routes without file extensions
         fs.readFile(path.join(__dirname, 'index.html'), (err2, htmlContent) => {
           res.writeHead(200, { 'Content-Type': 'text/html' });
           res.end(htmlContent, 'utf-8');

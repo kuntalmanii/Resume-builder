@@ -253,24 +253,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Form Submission handler
   if (authForm) {
-    authForm.addEventListener('submit', (e) => {
+    authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = authEmailInput ? authEmailInput.value : '';
+      const email = authEmailInput ? authEmailInput.value.trim() : '';
       const password = authPasswordInput ? authPasswordInput.value : '';
       const authNameInput = document.getElementById('authName');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
       if (!email || !password) {
         alert('Please enter your email address and password.');
         return;
       }
 
-      if (authNameInput && authNameInput.value.trim() && inputFullName) {
-        inputFullName.value = authNameInput.value.trim();
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address format (e.g. name@company.com).');
+        if (authEmailInput) authEmailInput.focus();
+        return;
       }
 
-      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      updateAuthStateView();
-      syncLivePreview();
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          alert(data.error || 'Authentication failed. Please check your credentials.');
+          return;
+        }
+
+        if (authNameInput && authNameInput.value.trim() && inputFullName) {
+          inputFullName.value = authNameInput.value.trim();
+        }
+
+        sessionStorage.setItem(AUTH_STORAGE_KEY, data.token || 'true');
+        updateAuthStateView();
+        syncLivePreview();
+      } catch (err) {
+        // Fallback for static mode if backend is offline
+        sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
+        updateAuthStateView();
+        syncLivePreview();
+      }
     });
   }
 
@@ -317,13 +343,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bulletPoints) bulletPoints.value = '';
 
     // Clear skill tags
-    if (tagsContainer) {
-      const tags = tagsContainer.querySelectorAll('.tag');
-      tags.forEach(t => t.remove());
+    const skillsContainer = document.getElementById('skillsTagsContainer');
+    if (skillsContainer) {
+      skillsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
     }
 
     updateAuthStateView();
-    syncLivePreview();
+    if (typeof syncLivePreview === 'function') syncLivePreview();
+    if (typeof syncLiveSkills === 'function') syncLiveSkills();
   }
 
   if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
@@ -842,7 +869,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bulletPoints && bulletPoints.value.trim()) score += 10; else missing.push('Work Experience Bullets');
 
     const progressFill = document.getElementById('strengthProgressFill');
-    const scoreVal = document.getElementById('strengthScoreVal');
+    const scoreVal = document.getElementById('strengthPercentVal');
     const tip = document.getElementById('strengthTip');
 
     if (progressFill) progressFill.style.width = `${score}%`;
@@ -1659,6 +1686,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return fullText;
     } catch (err) {
       console.warn("PDF.js parsing error:", err);
+      if (err && (err.name === 'PasswordException' || (err.message && err.message.toLowerCase().includes('password')))) {
+        if (typeof showToast === 'function') {
+          showToast('PDF is password-protected. Please remove password encryption and try again.', 'error');
+        } else {
+          alert('PDF is password-protected. Please remove password encryption and try again.');
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast('Could not read PDF file. The document may be corrupted or unreadable.', 'error');
+        } else {
+          alert('Could not read PDF file. The document may be corrupted or unreadable.');
+        }
+      }
       return "";
     }
   }
@@ -2005,7 +2045,8 @@ Key Requirements:
         "Generating structured JSON ATS diagnostic report..."
       ];
 
-      const interval = setInterval(() => {
+      let atsTimerInterval = null;
+      atsTimerInterval = setInterval(() => {
         progress += 10;
         if (atsProgressFill) atsProgressFill.style.width = `${progress}%`;
         if (atsProgressPercent) atsProgressPercent.textContent = `${progress}%`;
@@ -2017,7 +2058,10 @@ Key Requirements:
           else loadingStepText.textContent = steps[3];
         }
 
-        if (progress >= 90) clearInterval(interval);
+        if (progress >= 90 && atsTimerInterval) {
+          clearInterval(atsTimerInterval);
+          atsTimerInterval = null;
+        }
       }, 60);
 
       const jdText = atsJdInput ? atsJdInput.value : "";
@@ -2036,7 +2080,10 @@ Key Requirements:
       try {
         const aiData = await fetchBackendAtsAnalysis(jdText, candidateResumeText);
         
-        clearInterval(interval);
+        if (atsTimerInterval) {
+          clearInterval(atsTimerInterval);
+          atsTimerInterval = null;
+        }
         if (atsProgressFill) atsProgressFill.style.width = '100%';
         if (atsProgressPercent) atsProgressPercent.textContent = '100%';
 
@@ -2070,7 +2117,10 @@ Key Requirements:
         }, 300);
       } catch (error) {
         console.warn("Backend API call failed, using client-side fallback:", error);
-        clearInterval(interval);
+        if (atsTimerInterval) {
+          clearInterval(atsTimerInterval);
+          atsTimerInterval = null;
+        }
 
         btnRunAtsAnalysis.innerHTML = origBtnHTML;
         btnRunAtsAnalysis.disabled = false;
