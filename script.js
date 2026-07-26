@@ -1412,80 +1412,150 @@ document.addEventListener('DOMContentLoaded', () => {
   <link href="${styles.fontLink}" rel="stylesheet" />
   <style>
     ${styles.pageSizeCss}
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     html, body {
       background: #ffffff;
-      color: #111111;
+      color: #1a1a2e;
       font-family: ${styles.bodyFont};
-      font-size: 11pt;
-      line-height: 1.5;
-      padding: 24pt 28pt;
-    }
-    .resume-preview-document {
-      max-width: 700px;
-      margin: 0 auto;
-      font-family: ${styles.bodyFont};
-    }
-    .preview-doc-header {
-      border-bottom: 2px solid #111;
-      padding-bottom: 10pt;
-      margin-bottom: 14pt;
-    }
-    .doc-name {
-      font-family: ${styles.headingFont};
-      font-size: 20pt;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #000;
-    }
-    .doc-role {
       font-size: 9.5pt;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      color: #444;
-      margin-top: 2pt;
+      line-height: 1.55;
+      padding: 20pt 24pt;
     }
-    .doc-meta {
+    .preview-paper-sheet {
+      background-color: #ffffff;
+      color: #1a1a2e;
+      width: 100%;
+      max-width: 100%;
+      font-family: ${styles.bodyFont};
+    }
+    .paper-candidate-header {
+      text-align: center;
+      margin-bottom: 12pt;
+    }
+    .paper-candidate-name {
+      font-family: ${styles.headingFont};
+      font-size: 18pt;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #111111;
+      line-height: 1.1;
+      text-align: center;
+    }
+    .paper-candidate-role {
       font-size: 9pt;
-      color: #555;
-      margin-top: 4pt;
+      font-weight: 700;
+      color: #5b5fef !important;
+      letter-spacing: 0.05em;
+      margin-top: 3pt;
+      text-transform: uppercase;
+      text-align: center;
     }
-    .preview-section {
-      margin-top: 14pt;
+    .paper-contact-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4pt;
+      margin-top: 6pt;
+      font-size: 8.5pt;
     }
-    .section-title {
+    .contact-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 8.5pt;
+      color: #555555;
+    }
+    .contact-chip svg {
+      width: 11px;
+      height: 11px;
+      color: #5b5fef !important;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+    .contact-divider {
+      color: #bbbbbb;
+      font-size: 9pt;
+      margin: 0 2pt;
+    }
+    .paper-header-rule {
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, #5b5fef 30%, #818cf8 70%, transparent 100%) !important;
+      border-radius: 2px;
+      margin-top: 10pt;
+      margin-bottom: 12pt;
+    }
+    .paper-section {
+      margin-bottom: 12pt;
+    }
+    .paper-section-title {
+      display: flex;
+      align-items: center;
+      gap: 6pt;
       font-family: ${styles.headingFont};
       font-size: 8.5pt;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #000;
-      border-bottom: 1px solid #ccc;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #222222;
       padding-bottom: 3pt;
+      border-bottom: 1px solid #e2e2e6;
       margin-bottom: 6pt;
+      text-transform: uppercase;
+    }
+    .section-accent-bar {
+      display: inline-block;
+      width: 3.5px;
+      height: 12px;
+      background: linear-gradient(180deg, #5b5fef, #818cf8) !important;
+      border-radius: 2px;
+      flex-shrink: 0;
     }
     .section-content {
-      font-size: 10pt;
-      color: #222;
+      font-size: 9.5pt;
+      color: #333333;
+      line-height: 1.55;
     }
     .exp-header {
       display: flex;
       justify-content: space-between;
-      font-size: 10pt;
+      align-items: center;
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 3pt;
+    }
+    .exp-date-pill {
+      font-size: 8pt;
       font-weight: 600;
-      color: #111;
-      margin-bottom: 4pt;
+      color: #ffffff !important;
+      background: linear-gradient(90deg, #5b5fef, #818cf8) !important;
+      padding: 2px 8px;
+      border-radius: 12px;
     }
     .exp-list {
       padding-left: 14pt;
-      font-size: 10pt;
-      color: #222;
+      font-size: 9.5pt;
+      color: #444444;
     }
     .exp-list li {
       margin-bottom: 3pt;
     }
     @media print {
-      html, body { padding: 0; }
+      html, body {
+        padding: 0;
+        margin: 0;
+      }
+      *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
     }
   </style>
 </head>
@@ -1493,8 +1563,10 @@ document.addEventListener('DOMContentLoaded', () => {
   ${resumeHTML}
   <script>
     window.onload = function() {
-      window.print();
-      window.onafterprint = function() { window.close(); };
+      setTimeout(function() {
+        window.print();
+        window.onafterprint = function() { window.close(); };
+      }, 250);
     };
   <\/script>
 </body>
@@ -1808,7 +1880,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render score & progress circle
     if (scoreNumber) scoreNumber.textContent = `${dynamicScore}%`;
     if (scoreCircle) {
-      scoreCircle.style.background = `conic-gradient(#10b981 0% ${dynamicScore}%, rgba(0, 0, 0, 0.08) ${dynamicScore}% 100%)`;
+      scoreCircle.style.background = `conic-gradient(#10b981 0% ${dynamicScore}%, rgba(128, 128, 128, 0.18) ${dynamicScore}% 100%)`;
     }
 
     if (scoreSummaryHeading && scoreSummaryDesc) {
@@ -2018,6 +2090,39 @@ Key Requirements:
     btnRunAtsAnalysis.addEventListener('click', async (e) => {
       e.preventDefault();
 
+      const jdText = atsJdInput ? atsJdInput.value.trim() : "";
+
+      // Build candidate resume text fallback
+      let candidateResumeText = uploadedFileText.trim();
+      if (!candidateResumeText) {
+        if (inputFullName) candidateResumeText += " " + inputFullName.value;
+        if (inputJobTitle) candidateResumeText += " " + inputJobTitle.value;
+        if (bulletPoints) candidateResumeText += " " + bulletPoints.value;
+        document.querySelectorAll('#skillsTagsContainer .tag').forEach(tag => {
+          candidateResumeText += " " + tag.textContent;
+        });
+      }
+
+      // Input Validation: Require Job Description and Candidate Resume Content
+      if (!jdText) {
+        if (typeof showToast === 'function') {
+          showToast('Please enter a target Job Description or select a sample role to run ATS analysis.', 'error');
+        } else {
+          alert('Please enter a target Job Description or select a sample role to run ATS analysis.');
+        }
+        if (atsJdInput) atsJdInput.focus();
+        return;
+      }
+
+      if (!candidateResumeText.trim()) {
+        if (typeof showToast === 'function') {
+          showToast('Please upload a resume PDF or fill in your developer profile details before running analysis.', 'error');
+        } else {
+          alert('Please upload a resume PDF or fill in your developer profile details before running analysis.');
+        }
+        return;
+      }
+
       // Show loading button state
       const origBtnHTML = btnRunAtsAnalysis.innerHTML;
       if (btnRunAtsText) {
@@ -2063,19 +2168,6 @@ Key Requirements:
           atsTimerInterval = null;
         }
       }, 60);
-
-      const jdText = atsJdInput ? atsJdInput.value : "";
-      
-      // Build candidate resume text fallback
-      let candidateResumeText = uploadedFileText;
-      if (!candidateResumeText) {
-        if (inputFullName) candidateResumeText += " " + inputFullName.value;
-        if (inputJobTitle) candidateResumeText += " " + inputJobTitle.value;
-        if (bulletPoints) candidateResumeText += " " + bulletPoints.value;
-        document.querySelectorAll('#skillsTagsContainer .tag').forEach(tag => {
-          candidateResumeText += " " + tag.textContent;
-        });
-      }
 
       try {
         const aiData = await fetchBackendAtsAnalysis(jdText, candidateResumeText);
@@ -2696,16 +2788,27 @@ Key Requirements:
   // Backup All Workspace Data & Settings as JSON
   if (btnExportAllData) {
     btnExportAllData.addEventListener('click', () => {
-      const draftRaw = localStorage.getItem('resuai-draft-resume');
-      const settingsRaw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      let settingsObj = {};
+      let draftObj = {};
+
+      try {
+        const settingsRaw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (settingsRaw) settingsObj = JSON.parse(settingsRaw);
+      } catch (e) {}
+
+      try {
+        const draftRaw = localStorage.getItem('resuai-draft-resume');
+        if (draftRaw) draftObj = JSON.parse(draftRaw);
+      } catch (e) {}
+
       const themeRaw = localStorage.getItem('resuai-dashboard-theme');
 
       const backupPackage = {
         exportedAt: new Date().toISOString(),
         version: '2.5',
         theme: themeRaw || 'twilight-haze',
-        settings: settingsRaw ? JSON.parse(settingsRaw) : {},
-        draftResume: draftRaw ? JSON.parse(draftRaw) : {}
+        settings: settingsObj,
+        draftResume: draftObj
       };
 
       const blob = new Blob([JSON.stringify(backupPackage, null, 2)], { type: 'application/json' });
