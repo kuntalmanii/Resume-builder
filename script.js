@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} themeId - e.g. 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber', 'twilight-haze', 'eucalyptus-glow'
    */
   function syncSettingsThemeSwatches() {
-    const activeTheme = body.getAttribute('data-theme') || 'twilight-haze';
+    const activeTheme = body.getAttribute('data-theme') || 'dark-obsidian';
     const swatches = document.querySelectorAll('.settings-theme-swatch');
     swatches.forEach(swatch => {
       const themeId = swatch.getAttribute('data-theme-swatch');
@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Restore saved theme on initial page load (default: 'twilight-haze')
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'twilight-haze';
+  // Restore saved theme on initial page load (default: 'dark-obsidian')
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'dark-obsidian';
   setTheme(savedTheme);
 
   /* ==========================================================================
@@ -3231,7 +3231,7 @@ Key Requirements:
       const backupPackage = {
         exportedAt: new Date().toISOString(),
         version: '2.5',
-        theme: themeRaw || 'twilight-haze',
+        theme: themeRaw || 'dark-obsidian',
         settings: settingsObj,
         draftResume: draftObj
       };

@@ -54,7 +54,7 @@
   <!-- Supabase Browser Client (ES Module — must load before script.js) -->
   <script type="module" src="supabase-client.js"></script>
 </head>
-<body data-theme="twilight-haze">
+<body data-theme="dark-obsidian">
   
   <!-- Auth Screen Container (Displayed when user is logged out) -->
   <div class="auth-container" id="authContainer">
@@ -81,7 +81,7 @@
       <div class="theme-switcher-bar" title="Switch UI Theme">
         <span class="switcher-label">Theme</span>
         <div class="theme-options">
-          <button class="theme-btn" data-theme-id="dark-obsidian" title="Obsidian Dark">
+          <button class="theme-btn active" data-theme-id="dark-obsidian" title="Obsidian Dark">
             <span class="theme-swatch swatch-obsidian"></span>
             <span class="theme-name">Dark</span>
           </button>
@@ -89,7 +89,7 @@
             <span class="theme-swatch swatch-amber"></span>
             <span class="theme-name">Amber</span>
           </button>
-          <button class="theme-btn active" data-theme-id="twilight-haze" title="Twilight Haze">
+          <button class="theme-btn" data-theme-id="twilight-haze" title="Twilight Haze">
             <span class="theme-swatch swatch-twilight"></span>
             <span class="theme-name">Twilight</span>
           </button>
@@ -370,7 +370,7 @@
           <div class="theme-switcher-bar" title="Switch UI Theme">
             <span class="switcher-label">Theme</span>
             <div class="theme-options">
-              <button class="theme-btn" data-theme-id="dark-obsidian" title="Obsidian Dark">
+              <button class="theme-btn active" data-theme-id="dark-obsidian" title="Obsidian Dark">
                 <span class="theme-swatch swatch-obsidian"></span>
                 <span class="theme-name">Dark</span>
               </button>
@@ -378,7 +378,7 @@
                 <span class="theme-swatch swatch-amber"></span>
                 <span class="theme-name">Amber</span>
               </button>
-              <button class="theme-btn active" data-theme-id="twilight-haze" title="Twilight Haze">
+              <button class="theme-btn" data-theme-id="twilight-haze" title="Twilight Haze">
                 <span class="theme-swatch swatch-twilight"></span>
                 <span class="theme-name">Twilight</span>
               </button>
@@ -1543,11 +1543,11 @@ Key Requirements:
                       <div class="form-group">
                         <label>Workspace Visual Theme</label>
                         <div class="settings-theme-swatches">
-                          <button type="button" class="settings-theme-swatch swatch-obsidian" data-theme-swatch="dark-obsidian" title="Obsidian Dark"></button>
+                          <button type="button" class="settings-theme-swatch swatch-obsidian active" data-theme-swatch="dark-obsidian" title="Obsidian Dark"></button>
                           <button type="button" class="settings-theme-swatch swatch-purple" data-theme-swatch="cyber-purple" title="Cyber Purple"></button>
                           <button type="button" class="settings-theme-swatch swatch-emerald" data-theme-swatch="emerald-slate" title="Emerald Slate"></button>
                           <button type="button" class="settings-theme-swatch swatch-amber" data-theme-swatch="sunset-amber" title="Sunset Amber"></button>
-                          <button type="button" class="settings-theme-swatch swatch-twilight active" data-theme-swatch="twilight-haze" title="Twilight Haze"></button>
+                          <button type="button" class="settings-theme-swatch swatch-twilight" data-theme-swatch="twilight-haze" title="Twilight Haze"></button>
                           <button type="button" class="settings-theme-swatch swatch-eucalyptus" data-theme-swatch="eucalyptus-glow" title="Eucalyptus Glow"></button>
                         </div>
                       </div>
