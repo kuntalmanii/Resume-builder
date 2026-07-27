@@ -95,11 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setTheme(savedTheme);
 
   /* ==========================================================================
-     2. Auth State & Screen View Toggle
+     2. Auth State & Screen View Toggle — Supabase Integration
      ========================================================================== */
-  const AUTH_STORAGE_KEY = 'resuai-logged-in';
+  const AUTH_STORAGE_KEY = 'resuai-logged-in'; // kept for legacy cleanup only
+
+  // Wait for supabase-client.js module to expose window.supabase
+  // The module script loads before DOMContentLoaded scripts complete so this is safe.
+  const sb = window.supabase;
+
   const authContainer = document.getElementById('authContainer');
-  const appContainer = document.getElementById('appContainer');
+  const appContainer  = document.getElementById('appContainer');
 
   // Parallax Mouse Motion Engine for Login Ambient Background
   if (authContainer) {
@@ -119,67 +124,109 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  const authForm = document.getElementById('authForm');
-  const authTitle = document.getElementById('authTitle');
-  const authSubtitle = document.getElementById('authSubtitle');
-  const authSubmitText = document.getElementById('authSubmitText');
-  const nameField = document.getElementById('nameField');
-  const authToggleQuestion = document.getElementById('authToggleQuestion');
-  const authToggleBtn = document.getElementById('authToggleBtn');
-  const ssoGithubBtn = document.getElementById('ssoGithubBtn');
-  const ssoGoogleBtn = document.getElementById('ssoGoogleBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const topSignoutBtn = document.getElementById('topSignoutBtn');
+
+  const authForm          = document.getElementById('authForm');
+  const authTitle         = document.getElementById('authTitle');
+  const authSubtitle      = document.getElementById('authSubtitle');
+  const authSubmitText    = document.getElementById('authSubmitText');
+  const authSubmitBtn     = document.getElementById('authSubmitBtn');
+  const nameField         = document.getElementById('nameField');
+  const authToggleQuestion= document.getElementById('authToggleQuestion');
+  const authToggleBtn     = document.getElementById('authToggleBtn');
+  const ssoGithubBtn      = document.getElementById('ssoGithubBtn');
+  const ssoGoogleBtn      = document.getElementById('ssoGoogleBtn');
+  const logoutBtn         = document.getElementById('logoutBtn');
+  const topSignoutBtn     = document.getElementById('topSignoutBtn');
 
   let isSignUpMode = false;
 
-  /**
-   * Reads authentication state from sessionStorage and toggles between the Login screen
-   * and the Main Dashboard layout.
-   */
-  function updateAuthStateView() {
-    // Purge legacy localStorage auth key if present
-    try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch (e) {}
-
-    const isLoggedIn = sessionStorage.getItem(AUTH_STORAGE_KEY) === 'true';
-    if (isLoggedIn) {
-      if (authContainer) authContainer.style.display = 'none';
-      if (appContainer) appContainer.style.display = 'flex';
-    } else {
-      if (authContainer) authContainer.style.display = 'flex';
-      if (appContainer) appContainer.style.display = 'none';
-    }
+  /* ------ Helper: show/hide auth vs dashboard ------ */
+  function showAuthScreen() {
+    if (authContainer) authContainer.style.display = 'flex';
+    if (appContainer)  appContainer.style.display  = 'none';
   }
 
-  // Toggle between "Sign In" and "Sign Up" form state
+  function showAppScreen(user) {
+    if (authContainer) authContainer.style.display = 'none';
+    if (appContainer)  appContainer.style.display  = 'flex';
+
+    // Update sidebar user info from Supabase user object
+    const displayName = user.user_metadata?.full_name
+                     || user.user_metadata?.name
+                     || user.email?.split('@')[0]
+                     || 'Developer';
+    const email = user.email || '';
+
+    const avatar = displayName.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0,2).join('').toUpperCase() || 'DV';
+
+    const topUserAvatar = document.getElementById('topUserAvatar');
+    const topUserName   = document.getElementById('topUserName');
+    const topUserRole   = document.getElementById('topUserRole');
+    if (topUserAvatar) topUserAvatar.textContent = avatar;
+    if (topUserName)   topUserName.textContent   = displayName;
+    if (topUserRole)   topUserRole.textContent   = email;
+
+    // Purge legacy mock auth keys
+    try { sessionStorage.removeItem(AUTH_STORAGE_KEY); localStorage.removeItem(AUTH_STORAGE_KEY); } catch(e) {}
+
+    // Load profile data from Supabase after sign-in
+    loadUserProfileFromSupabase(user.id);
+    loadJobApplicationsFromSupabase(user.id);
+  }
+
+  /* ------ onAuthStateChange — single source of truth ------ */
+  if (sb) {
+    sb.auth.onAuthStateChange((event, session) => {
+      if (session && session.user) {
+        showAppScreen(session.user);
+      } else {
+        showAuthScreen();
+      }
+    });
+
+    // Also check current session immediately (handles page refresh)
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session && session.user) {
+        showAppScreen(session.user);
+      } else {
+        showAuthScreen();
+      }
+    });
+  } else {
+    // Supabase not ready yet — show auth by default
+    showAuthScreen();
+    console.warn('ResuAI: Supabase client not yet available. Check supabase-client.js load order.');
+  }
+
+  /* ------ Toggle Sign In / Sign Up form mode ------ */
   if (authToggleBtn) {
     authToggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
       isSignUpMode = !isSignUpMode;
 
       if (isSignUpMode) {
-        authTitle.textContent = 'Create an account';
-        authSubtitle.textContent = 'Get started with ResuAI to build & analyze developer resumes.';
-        authSubmitText.textContent = 'Create Account & Launch';
-        nameField.style.display = 'flex';
+        authTitle.textContent     = 'Create an account';
+        authSubtitle.textContent  = 'Get started with ResuAI to build & analyze developer resumes.';
+        authSubmitText.textContent= 'Create Account & Launch';
+        nameField.style.display   = 'flex';
         authToggleQuestion.textContent = 'Already have an account?';
-        authToggleBtn.textContent = 'Sign In';
+        authToggleBtn.textContent      = 'Sign In';
       } else {
-        authTitle.textContent = 'Welcome back';
-        authSubtitle.textContent = 'Sign in to your ResuAI workspace to access your resumes & ATS metrics.';
-        authSubmitText.textContent = 'Sign In to Dashboard';
-        nameField.style.display = 'none';
+        authTitle.textContent     = 'Welcome back';
+        authSubtitle.textContent  = 'Sign in to your ResuAI workspace to access your resumes & ATS metrics.';
+        authSubmitText.textContent= 'Sign In to Dashboard';
+        nameField.style.display   = 'none';
         authToggleQuestion.textContent = "Don't have an account?";
-        authToggleBtn.textContent = 'Sign Up';
+        authToggleBtn.textContent      = 'Sign Up';
       }
       if (window.feather) feather.replace();
     });
   }
 
-  const btnAuthPasswordEye = document.getElementById('btnAuthPasswordEye');
-  const btnQuickDemoLogin = document.getElementById('btnQuickDemoLogin');
-  const authPasswordInput = document.getElementById('authPassword');
-  const authEmailInput = document.getElementById('authEmail');
+  const btnAuthPasswordEye  = document.getElementById('btnAuthPasswordEye');
+  const btnQuickDemoLogin   = document.getElementById('btnQuickDemoLogin');
+  const authPasswordInput   = document.getElementById('authPassword');
+  const authEmailInput      = document.getElementById('authEmail');
 
   // Password visibility eye toggle
   if (btnAuthPasswordEye && authPasswordInput) {
@@ -196,15 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (authPasswordInput) {
     authPasswordInput.addEventListener('input', () => {
       const val = authPasswordInput.value;
-      const fill = document.getElementById('authStrengthFill');
-      const text = document.getElementById('authStrengthText');
+      const fill    = document.getElementById('authStrengthFill');
+      const text    = document.getElementById('authStrengthText');
       const scoreEl = document.getElementById('authStrengthScore');
       if (!fill || !text || !scoreEl) return;
 
       if (!val) {
-        fill.style.width = '0%';
-        fill.className = 'strength-bar-fill';
-        text.textContent = 'Security Strength';
+        fill.style.width  = '0%';
+        fill.className    = 'strength-bar-fill';
+        text.textContent  = 'Security Strength';
         scoreEl.textContent = '0/4';
         return;
       }
@@ -214,150 +261,325 @@ document.addEventListener('DOMContentLoaded', () => {
       if (/[A-Z]/.test(val)) score++;
       if (/[0-9]/.test(val)) score++;
       if (/[^A-Za-z0-9]/.test(val)) score++;
-
       scoreEl.textContent = `${score}/4`;
 
-      if (score <= 1) {
-        fill.className = 'strength-bar-fill weak';
-        text.textContent = 'Weak Security';
-      } else if (score <= 3) {
-        fill.className = 'strength-bar-fill medium';
-        text.textContent = 'Good Security';
-      } else {
-        fill.className = 'strength-bar-fill strong';
-        text.textContent = '🔒 Excellent Strength';
-      }
+      if (score <= 1) { fill.className = 'strength-bar-fill weak'; text.textContent = 'Weak Security'; }
+      else if (score <= 3) { fill.className = 'strength-bar-fill medium'; text.textContent = 'Good Security'; }
+      else { fill.className = 'strength-bar-fill strong'; text.textContent = '🔒 Excellent Strength'; }
     });
   }
 
-  // 1-Click Quick Demo Sign In
+  // Helper: set loading state on auth button
+  function setAuthBtnLoading(loading, label = 'Sign In to Dashboard') {
+    if (!authSubmitBtn) return;
+    authSubmitBtn.disabled = loading;
+    if (authSubmitText) authSubmitText.textContent = loading ? 'Authenticating…' : label;
+    if (loading && window.feather) feather.replace();
+  }
+
+  // 1-Click Quick Demo Sign In — uses real Supabase demo credentials with seamless fallback
   if (btnQuickDemoLogin) {
-    btnQuickDemoLogin.addEventListener('click', () => {
-      if (authEmailInput) authEmailInput.value = 'developer@resuai.dev';
-      if (authPasswordInput) authPasswordInput.value = 'password123';
-      
-      const origText = btnQuickDemoLogin.innerHTML;
-      btnQuickDemoLogin.innerHTML = `<i data-feather="loader"></i> <span>Authenticating Workspace...</span>`;
+    btnQuickDemoLogin.addEventListener('click', async () => {
+      const origHTML = btnQuickDemoLogin.innerHTML;
+      btnQuickDemoLogin.innerHTML = `<i data-feather="loader"></i> <span>Authenticating Workspace…</span>`;
+      btnQuickDemoLogin.disabled = true;
       if (window.feather) feather.replace();
 
-      setTimeout(() => {
-        try {
-          sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-        } catch (err) {}
-        updateAuthStateView();
-        btnQuickDemoLogin.innerHTML = origText;
-        if (window.feather) feather.replace();
-      }, 600);
-    });
-  }
-
-  // Form Submission handler
-  if (authForm) {
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = authEmailInput ? authEmailInput.value.trim() : '';
-      const password = authPasswordInput ? authPasswordInput.value : '';
-      const authNameInput = document.getElementById('authName');
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!email || !password) {
-        alert('Please enter your email address and password.');
-        return;
-      }
-
-      if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address format (e.g. name@company.com).');
-        if (authEmailInput) authEmailInput.focus();
-        return;
-      }
+      const fallbackUser = {
+        id: 'demo-dev-local-001',
+        email: 'demo@resuai.dev',
+        user_metadata: { full_name: 'Demo Developer' }
+      };
 
       try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          alert(data.error || 'Authentication failed. Please check your credentials.');
+        if (!sb) {
+          showAppScreen(fallbackUser);
+          showToast('Demo workspace loaded!', 'success');
           return;
         }
 
-        if (authNameInput && authNameInput.value.trim() && inputFullName) {
-          inputFullName.value = authNameInput.value.trim();
-        }
+        const { data, error } = await sb.auth.signInWithPassword({
+          email: 'demo@resuai.dev',
+          password: 'DemoAccess2024!'
+        });
 
-        sessionStorage.setItem(AUTH_STORAGE_KEY, data.token || 'true');
-        updateAuthStateView();
-        syncLivePreview();
+        if (error) {
+          // Attempt creating demo account if it doesn't exist yet
+          const { data: suData, error: signupErr } = await sb.auth.signUp({
+            email: 'demo@resuai.dev',
+            password: 'DemoAccess2024!',
+            options: { data: { full_name: 'Demo Developer' } }
+          });
+
+          if (signupErr || (suData && !suData.session)) {
+            // Fallback for instant demo workspace launch
+            showAppScreen(fallbackUser);
+            showToast('Demo workspace loaded!', 'success');
+            return;
+          }
+          showToast('Demo account created & signed in!', 'success');
+        } else {
+          showToast('Demo workspace loaded!', 'success');
+        }
       } catch (err) {
-        // Fallback for static mode if backend is offline
-        sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-        updateAuthStateView();
-        syncLivePreview();
+        showAppScreen(fallbackUser);
+        showToast('Demo workspace loaded!', 'success');
+      } finally {
+        btnQuickDemoLogin.innerHTML = origHTML;
+        btnQuickDemoLogin.disabled = false;
+        if (window.feather) feather.replace();
       }
     });
   }
 
-  // SSO Action handlers
-  if (ssoGithubBtn) {
-    ssoGithubBtn.addEventListener('click', () => {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      updateAuthStateView();
-      syncLivePreview();
+  // Main Auth Form Submission (Sign In OR Sign Up)
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!sb) { showToast('Supabase not connected. Check credentials.', 'error'); return; }
+
+      const email    = authEmailInput?.value.trim() || '';
+      const password = authPasswordInput?.value || '';
+      const authNameInput = document.getElementById('authName');
+      const fullName = authNameInput?.value.trim() || '';
+
+      if (!email || !password) {
+        showToast('Please enter your email and password.', 'error');
+        return;
+      }
+
+      const label = isSignUpMode ? 'Create Account & Launch' : 'Sign In to Dashboard';
+      setAuthBtnLoading(true, label);
+
+      try {
+        if (isSignUpMode) {
+          // ---- SIGN UP ----
+          const { data, error } = await sb.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: fullName || email.split('@')[0] }
+            }
+          });
+          if (error) throw error;
+
+          if (data?.user && !data.session) {
+            // Email confirmation required
+            showToast('Check your email to confirm your account!', 'success');
+            setAuthBtnLoading(false, label);
+            return;
+          }
+          showToast('Account created! Welcome to ResuAI 🚀', 'success');
+        } else {
+          // ---- SIGN IN ----
+          const { error } = await sb.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          showToast('Signed in successfully!', 'success');
+        }
+      } catch (err) {
+        let msg = err.message || 'Authentication failed. Please try again.';
+        if (msg.includes('Invalid login credentials')) msg = 'Incorrect email or password.';
+        if (msg.includes('User already registered')) msg = 'Account exists — try signing in instead.';
+        if (msg.includes('Email not confirmed')) msg = 'Please verify your email before signing in.';
+        showToast(msg, 'error');
+        setAuthBtnLoading(false, label);
+      }
     });
   }
 
+  // Google OAuth SSO
   if (ssoGoogleBtn) {
-    ssoGoogleBtn.addEventListener('click', () => {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      updateAuthStateView();
-      syncLivePreview();
+    ssoGoogleBtn.addEventListener('click', async () => {
+      if (!sb) return;
+      ssoGoogleBtn.disabled = true;
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) {
+        showToast('Google sign-in failed: ' + error.message, 'error');
+        ssoGoogleBtn.disabled = false;
+      }
     });
   }
 
-  // Sign out handlers
-  function handleSignOut(e) {
-    e.preventDefault();
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    
-    // Clear session details & saved tab so next login starts clean
+  // GitHub OAuth SSO
+  if (ssoGithubBtn) {
+    ssoGithubBtn.addEventListener('click', async () => {
+      if (!sb) return;
+      ssoGithubBtn.disabled = true;
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'github',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) {
+        showToast('GitHub sign-in failed: ' + error.message, 'error');
+        ssoGithubBtn.disabled = false;
+      }
+    });
+  }
+
+  // Forgot Password link
+  const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+  const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+  const forgotModalClose    = document.getElementById('forgotModalClose');
+  const forgotSubmitBtn     = document.getElementById('forgotSubmitBtn');
+  const forgotEmail         = document.getElementById('forgotEmail');
+  const forgotFeedback      = document.getElementById('forgotFeedback');
+  const forgotSubmitText    = document.getElementById('forgotSubmitText');
+
+  if (forgotPasswordLink && forgotPasswordModal) {
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      forgotPasswordModal.style.display = 'flex';
+      if (authEmailInput?.value) forgotEmail.value = authEmailInput.value;
+      if (window.feather) feather.replace();
+    });
+  }
+  if (forgotModalClose) {
+    forgotModalClose.addEventListener('click', () => { forgotPasswordModal.style.display = 'none'; });
+  }
+  if (forgotPasswordModal) {
+    forgotPasswordModal.addEventListener('click', (e) => {
+      if (e.target === forgotPasswordModal) forgotPasswordModal.style.display = 'none';
+    });
+  }
+  if (forgotSubmitBtn && sb) {
+    forgotSubmitBtn.addEventListener('click', async () => {
+      const email = forgotEmail?.value.trim();
+      if (!email) { if (forgotFeedback) { forgotFeedback.textContent = 'Please enter your email.'; forgotFeedback.style.color = '#ef4444'; } return; }
+      forgotSubmitBtn.disabled = true;
+      if (forgotSubmitText) forgotSubmitText.textContent = 'Sending…';
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '?reset=1'
+      });
+      if (error) {
+        if (forgotFeedback) { forgotFeedback.textContent = error.message; forgotFeedback.style.color = '#ef4444'; }
+      } else {
+        if (forgotFeedback) { forgotFeedback.textContent = '✓ Reset link sent! Check your inbox.'; forgotFeedback.style.color = '#10b981'; }
+        showToast('Password reset email sent!', 'success');
+        setTimeout(() => { forgotPasswordModal.style.display = 'none'; }, 2500);
+      }
+      forgotSubmitBtn.disabled = false;
+      if (forgotSubmitText) forgotSubmitText.textContent = 'Send Reset Link';
+    });
+  }
+
+  // Sign Out
+  async function handleSignOut(e) {
+    if (e) e.preventDefault();
+    if (sb) await sb.auth.signOut();
+
+    // Clear local caches
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       localStorage.removeItem(ANALYTICS_HISTORY_KEY);
       localStorage.removeItem('resuai-active-tab');
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
     } catch(err) {}
 
-    // Reset form inputs to blank so next login starts clean
-    if (inputFullName) inputFullName.value = '';
-    if (inputJobTitle) inputJobTitle.value = '';
-    if (inputEmail) inputEmail.value = '';
-    if (inputPhone) inputPhone.value = '';
-    if (inputLocation) inputLocation.value = '';
-    if (inputGithub) inputGithub.value = '';
-    if (inputLinkedin) inputLinkedin.value = '';
-    if (inputPortfolio) inputPortfolio.value = '';
-    if (inputSummary) inputSummary.value = '';
-    if (inputCertifications) inputCertifications.value = '';
-    if (bulletPoints) bulletPoints.value = '';
-
-    // Clear skill tags
+    // Reset form fields
+    const formIds = ['inputFullName','inputJobTitle','inputEmail','inputPhone','inputLocation',
+                     'inputGithub','inputLinkedin','inputPortfolio','inputSummary','inputCertifications'];
+    formIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const bp = document.getElementById('bulletPoints');
+    if (bp) bp.value = '';
     const skillsContainer = document.getElementById('skillsTagsContainer');
-    if (skillsContainer) {
-      skillsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
-    }
+    if (skillsContainer) skillsContainer.querySelectorAll('.tag').forEach(t => t.remove());
 
-    updateAuthStateView();
+    showAuthScreen();
     if (typeof syncLivePreview === 'function') syncLivePreview();
     if (typeof syncLiveSkills === 'function') syncLiveSkills();
+    showToast('Signed out successfully.', 'success');
   }
 
-  if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
+  if (logoutBtn)     logoutBtn.addEventListener('click', handleSignOut);
   if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
 
-  // Initialize view state
-  updateAuthStateView();
+  // ---- User Profile Modal ----
+  const sidebarUserPill   = document.getElementById('sidebarUserPill');
+  const userProfileModal  = document.getElementById('userProfileModal');
+  const profileModalClose = document.getElementById('profileModalClose');
+  const profileSaveBtn    = document.getElementById('profileSaveBtn');
+  const profileSaveText   = document.getElementById('profileSaveText');
+  const profileFeedback   = document.getElementById('profileFeedback');
+  const profileDisplayName= document.getElementById('profileDisplayName');
+  const profileNewPassword= document.getElementById('profileNewPassword');
+  const profileModalAvatar= document.getElementById('profileModalAvatar');
+  const profileModalName  = document.getElementById('profileModalName');
+  const profileModalEmail = document.getElementById('profileModalEmail');
+
+  function openUserProfileModal() {
+    if (!sb || !userProfileModal) return;
+    sb.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Developer';
+      const email = user.email || '';
+      const avatar = displayName.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0,2).join('').toUpperCase() || 'DV';
+      if (profileModalAvatar) profileModalAvatar.textContent = avatar;
+      if (profileModalName)   profileModalName.textContent   = displayName;
+      if (profileModalEmail)  profileModalEmail.textContent  = email;
+      if (profileDisplayName) profileDisplayName.value = displayName;
+      if (profileNewPassword) profileNewPassword.value = '';
+      if (profileFeedback)    profileFeedback.textContent = '';
+      userProfileModal.style.display = 'flex';
+      if (window.feather) feather.replace();
+    });
+  }
+
+  if (sidebarUserPill)   sidebarUserPill.addEventListener('click', openUserProfileModal);
+  if (profileModalClose) profileModalClose.addEventListener('click', () => { if (userProfileModal) userProfileModal.style.display = 'none'; });
+  if (userProfileModal)  userProfileModal.addEventListener('click', (e) => { if (e.target === userProfileModal) userProfileModal.style.display = 'none'; });
+
+  if (profileSaveBtn && sb) {
+    profileSaveBtn.addEventListener('click', async () => {
+      profileSaveBtn.disabled = true;
+      if (profileSaveText) profileSaveText.textContent = 'Saving…';
+
+      const updates = {};
+      const newName = profileDisplayName?.value.trim();
+      if (newName) updates.data = { full_name: newName };
+
+      try {
+        const newPass = profileNewPassword?.value;
+        if (newPass && newPass.length >= 6) {
+          const { error: passErr } = await sb.auth.updateUser({ password: newPass });
+          if (passErr) throw passErr;
+        }
+        const { error: metaErr } = await sb.auth.updateUser({ data: { full_name: newName } });
+        if (metaErr) throw metaErr;
+
+        // Upsert display name in user_profiles table too
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+          await sb.from('user_profiles').upsert({ id: user.id, full_name: newName, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+          // Refresh sidebar
+          const avatar = newName.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0,2).join('').toUpperCase() || 'DV';
+          const topUserAvatar = document.getElementById('topUserAvatar');
+          const topUserName   = document.getElementById('topUserName');
+          if (topUserAvatar) topUserAvatar.textContent = avatar;
+          if (topUserName)   topUserName.textContent   = newName;
+        }
+        if (profileFeedback) { profileFeedback.textContent = '✓ Profile updated successfully!'; profileFeedback.style.color = '#10b981'; }
+        showToast('Profile updated!', 'success');
+      } catch (err) {
+        if (profileFeedback) { profileFeedback.textContent = err.message; profileFeedback.style.color = '#ef4444'; }
+        showToast('Update failed: ' + err.message, 'error');
+      } finally {
+        profileSaveBtn.disabled = false;
+        if (profileSaveText) profileSaveText.textContent = 'Save Changes';
+      }
+    });
+  }
+
+  // Initialize view state (handled by onAuthStateChange above)
+  // Legacy call kept as no-op placeholder for any downstream references
+  function updateAuthStateView() {} // legacy stub — replaced by onAuthStateChange
+
+
+
+
+
 
   /* ==========================================================================
      3. Tab & Sidebar Navigation Engine
@@ -800,6 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (saved) {
         const draft = JSON.parse(saved);
         const LEGACY_DEFAULTS = [
+          'Manish Kuntal',
           'github.com/kuntalmanii',
           'linkedin.com/in/manishkuntal',
           'manishkuntal.dev',
@@ -842,6 +1065,123 @@ document.addEventListener('DOMContentLoaded', () => {
       const len = bulletPoints.value.length;
       charCounter.textContent = `${len} / 2000 characters`;
     }
+  }
+
+  // Google XYZ Metric Formula Meter & Transformer Engine
+  function updateGoogleXyzMeter() {
+    const scoreEl = document.getElementById('xyzMeterScore');
+    if (!bulletPoints || !scoreEl) return;
+
+    const text = bulletPoints.value.trim();
+    if (!text) {
+      scoreEl.textContent = '0% Metrics Compliance (0/0 Bullets)';
+      scoreEl.style.color = '#64748b';
+      scoreEl.style.background = 'rgba(100, 116, 139, 0.12)';
+      return;
+    }
+
+    const bullets = text.split('\n').map(b => b.trim()).filter(b => b.length > 0);
+    if (bullets.length === 0) {
+      scoreEl.textContent = '0% Metrics Compliance (0/0 Bullets)';
+      return;
+    }
+
+    const metricRegex = /(\d+(?:\.\d+)?%|\d+\s*(?:ms|sec|s|min|hrs|k|M|B|QPS|req\/s|req\/sec|users|engineers|x|times)|\$\d+|₹\d+|\b\d+\b)/i;
+
+    let quantifiedCount = 0;
+    bullets.forEach(b => {
+      if (metricRegex.test(b)) {
+        quantifiedCount++;
+      }
+    });
+
+    const percent = Math.round((quantifiedCount / bullets.length) * 100);
+    scoreEl.textContent = `${percent}% Google XYZ Compliant (${quantifiedCount}/${bullets.length} Bullets with Metrics)`;
+
+    if (percent >= 80) {
+      scoreEl.style.color = '#10b981';
+      scoreEl.style.background = 'rgba(16, 185, 129, 0.15)';
+    } else if (percent >= 50) {
+      scoreEl.style.color = '#3b82f6';
+      scoreEl.style.background = 'rgba(59, 130, 246, 0.15)';
+    } else {
+      scoreEl.style.color = '#f59e0b';
+      scoreEl.style.background = 'rgba(245, 158, 11, 0.15)';
+    }
+  }
+
+  const btnXyzTransform = document.getElementById('btnXyzTransform');
+  if (btnXyzTransform && bulletPoints) {
+    btnXyzTransform.addEventListener('click', () => {
+      const rawText = bulletPoints.value.trim();
+      if (!rawText) {
+        bulletPoints.value = `• Architected high-throughput microservices using Go & gRPC, scaling system capacity by 350% to 50,000 req/sec.\n• Optimized p99 API latency by 45% (from 280ms to 95ms) by implementing Redis caching and database indexing.\n• Reduced AWS cloud infrastructure costs by $120,000/year through Kubernetes cluster auto-scaling and spot instances.\n• Spearheaded cross-functional team of 12 engineers, delivering zero-downtime CI/CD deployment pipelines with 99.99% uptime.`;
+      } else {
+        const lines = rawText.split('\n').filter(l => l.trim().length > 0);
+        const transformed = lines.map(line => {
+          let clean = line.replace(/^[-•*]\s*/, '').trim();
+          if (!/(\d+%|\d+\s*ms|\$\d+|₹\d+|\d+\s*req\/sec)/i.test(clean)) {
+            clean += `, resulting in a 40% performance improvement and 99.9% system availability.`;
+          }
+          return `• ${clean}`;
+        });
+        bulletPoints.value = transformed.join('\n');
+      }
+
+      autoSaveFormFields();
+      updateCharCounter();
+      updateGoogleXyzMeter();
+      showToast('Transformed bullets into Google XYZ Metric Formula format!', 'success');
+    });
+  }
+
+  // FAANG Engineering Level Presets (L4, L5, L6, L7)
+  const LEVEL_TEMPLATES = {
+    L4: {
+      title: 'Software Engineer II',
+      summary: 'Software Engineer with 3+ years of experience building scalable web APIs, robust microservices, and modern frontend interfaces using TypeScript, React, and Node.js.',
+      bullets: '• Developed high-coverage unit and integration test suites, increasing overall codebase test coverage from 55% to 92%.\n• Built responsive UI component modules using React and Vanilla CSS, serving 250,000+ monthly active users.\n• Optimized database query execution plans in PostgreSQL, reducing average API response times by 35ms.'
+    },
+    L5: {
+      title: 'Senior Software Engineer',
+      summary: 'Senior Software Engineer with 6+ years of experience architecting distributed cloud infrastructure, microservices design systems, and mentoring engineering teams to deliver mission-critical software.',
+      bullets: '• Architected high-throughput microservices using Go & gRPC, scaling system capacity by 350% to 50,000 req/sec.\n• Optimized p99 API latency by 45% (from 280ms to 95ms) by implementing Redis caching and database indexing.\n• Reduced AWS cloud infrastructure costs by $120,000/year through Kubernetes cluster auto-scaling and spot instances.\n• Spearheaded cross-functional team of 12 engineers, delivering zero-downtime CI/CD deployment pipelines with 99.99% uptime.'
+    },
+    L6: {
+      title: 'Staff Software Engineer & Tech Lead',
+      summary: 'Staff Software Engineer & Tech Lead with 9+ years driving org-wide technical strategy, multi-region cluster reliability, and leading high-velocity engineering groups across distributed cloud platforms.',
+      bullets: '• Led architectural overhaul of core payment streaming engine, handling $4.2B in annual transaction volume with 99.999% reliability.\n• Spearheaded 25+ engineer org-wide adoption of GraphQL federated gateway, reducing client payload sizes by 58% and accelerating sprint velocity by 40%.\n• Designed multi-region Kubernetes failover strategy, guaranteeing sub-50ms failover recovery across US-East and EU-West datacenters.'
+    },
+    L7: {
+      title: 'Principal Architect & Technical Director',
+      summary: 'Principal Systems Architect with 12+ years shaping enterprise cloud architecture, AI platform infrastructure, and driving multi-year technical roadmaps for multi-billion dollar engineering organizations.',
+      bullets: '• Defined 3-year enterprise cloud migration roadmap, transitioning legacy monolithic systems into zero-trust Kubernetes microservices.\n• Architected enterprise AI RAG platform processing 10M+ daily LLM queries with sub-100ms vector search latency across Pinecone clusters.\n• Mentored and developed 4 Staff Engineers and 15+ Senior Engineers, establishing company-wide System Design RFC review standards.'
+    }
+  };
+
+  const faangLevelChips = document.getElementById('faangLevelChips');
+  if (faangLevelChips) {
+    faangLevelChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.level-chip');
+      if (!chip) return;
+
+      faangLevelChips.querySelectorAll('.level-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const lvl = chip.dataset.level;
+      if (LEVEL_TEMPLATES[lvl]) {
+        const data = LEVEL_TEMPLATES[lvl];
+        if (inputJobTitle) inputJobTitle.value = data.title;
+        if (inputSummary) inputSummary.value = data.summary;
+        if (bulletPoints) bulletPoints.value = data.bullets;
+
+        autoSaveFormFields();
+        updateCharCounter();
+        updateGoogleXyzMeter();
+        calculateProfileStrength();
+        showToast(`Loaded ${lvl} FAANG ${data.title} template!`, 'success');
+      }
+    });
   }
 
   function syncLiveSkills() {
@@ -958,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bulletPoints && previewBullets) {
       const lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
       if (lines.length > 0) {
-        previewBullets.innerHTML = lines.map(line => `<li>${line.trim().replace(/^[-•*]\s*/, '')}</li>`).join('');
+        previewBullets.innerHTML = lines.map(line => `<li>${escapeHTML(line.trim().replace(/^[-•*]\s*/, ''))}</li>`).join('');
       } else {
         previewBullets.innerHTML = '';
       }
@@ -1923,8 +2263,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (missing.length > 0) {
         missingKeywordsContainer.innerHTML = missing.map(kw => `
           <span class="missing-keyword-tag">
-            <span>${kw}</span>
-            <span class="tag-add-btn" data-keyword="${kw}" title="Click to add ${kw} to Core Skills">+ Add</span>
+            <span>${escapeHTML(kw)}</span>
+            <span class="tag-add-btn" data-keyword="${escapeHTML(kw)}" title="Click to add ${escapeHTML(kw)} to Core Skills">+ Add</span>
           </span>
         `).join('');
       } else {
@@ -1940,7 +2280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="rec-number">${idx + 1}</div>
             <div class="rec-content">
               <strong>Recommendation #${idx + 1}:</strong>
-              <p>${recText}</p>
+              <p>${escapeHTML(recText)}</p>
             </div>
           </div>
         `).join('');
@@ -1983,6 +2323,14 @@ Key Requirements:
 - Hands-on experience with Microservices, Docker, Redis Caching, and RESTful APIs.
 - Familiarity with AWS Cloud (EC2/S3/Lambda), CI/CD pipelines, and Jest testing.`,
 
+    backend: `We are seeking a Lead Backend & Distributed Systems Engineer to build scalable microservices and payment infrastructure.
+
+Key Requirements:
+- 5+ years of experience with Go, Java, C++, or Node.js backend development.
+- Expertise in System Architecture, Microservices design, and distributed caching with Redis & Memcached.
+- Advanced SQL proficiency (PostgreSQL / MySQL) and NoSQL database optimization (MongoDB / DynamoDB).
+- Hands-on experience with Event-Driven Architecture (Kafka / RabbitMQ), gRPC, and REST APIs.`,
+
     devops: `We are seeking a Lead DevOps & Cloud Systems Infrastructure Engineer to architect multi-region Kubernetes clusters.
 
 Key Requirements:
@@ -1995,9 +2343,49 @@ Key Requirements:
 
 Key Requirements:
 - Hands-on experience with Python, Gemini / OpenAI APIs, PyTorch, and TensorFlow.
-- Deep expertise in RAG Systems (LangChain / LlamaIndex) and Vector Databases (Pinecone / Milvus).
+- Deep expertise in RAG Systems (LangChain / LlamaIndex) and Vector Databases (Pinecone / Milvus / Qdrant).
 - Experience building scalable Data Engineering & ETL pipelines with Pandas & NumPy.
-- Familiarity with Docker, FastAPI, and ML model evaluation frameworks.`
+- Familiarity with Docker, FastAPI, and ML model evaluation frameworks.`,
+
+    mobile: `We are hiring a Senior Mobile Application Engineer to build high-performance iOS and Android client applications.
+
+Key Requirements:
+- 4+ years of mobile engineering experience with Swift (iOS), Kotlin (Android), or React Native / Flutter.
+- Deep understanding of Mobile UI/UX Architecture (MVVM / Clean Architecture) and offline-first state persistence.
+- Experience integrating GraphQL, RESTful APIs, WebSockets, and OAuth2 authentication.
+- Proven track record of App Store / Play Store deployment, CI/CD with Fastlane, and mobile performance profiling.`,
+
+    data: `We are seeking a Data Engineer & Analytics Infrastructure Architect to build enterprise data platforms and real-time streaming ETL pipelines.
+
+Key Requirements:
+- Strong proficiency in Python, SQL, Apache Spark, and PySpark for big data processing.
+- Hands-on experience building Cloud Data Warehouses (Snowflake, BigQuery, Databricks, Redshift).
+- Deep expertise in Data Orchestration with Apache Airflow, dbt (data build tool), and Kafka streaming.
+- Experience with Data Modeling, Data Governance, and Data Quality Validation.`,
+
+    cybersecurity: `We are seeking a Cloud Security & Cyber Infrastructure Specialist to secure enterprise cloud services and DevSecOps pipelines.
+
+Key Requirements:
+- Proven experience in Cloud Security Posture Management (CSPM), Identity & Access Management (IAM), and Zero Trust Architecture.
+- Expertise in Vulnerability Assessment, Penetration Testing, OWASP Top 10, and Security Compliance (SOC 2, ISO 27001, GDPR).
+- Hands-on experience integrating SAST / DAST tools into CI/CD pipelines (SonarQube, Snyk, Trivy).
+- Proficiency in Python / Bash scripting for automated security auditing and incident response.`,
+
+    qa_automation: `We are hiring a Principal SDET & Test Automation Lead to design end-to-end quality assurance frameworks for web and API services.
+
+Key Requirements:
+- 5+ years in Test Automation engineering with JavaScript / TypeScript, Cypress, Playwright, or Selenium.
+- Deep expertise in API Testing (Postman, REST Assured) and Performance / Load Testing (JMeter, k6).
+- Strong experience integrating automated test suites into CI/CD pipelines (GitHub Actions, Jenkins).
+- Proficiency in BDD / TDD frameworks, Defect Tracking, and Code Coverage reporting.`,
+
+    product_manager: `We are seeking a Technical Product Manager to define the strategy, roadmap, and API architecture for developer-facing platforms.
+
+Key Requirements:
+- 4+ years of product management experience leading technical SaaS, API platforms, or Cloud Infrastructure products.
+- Strong technical background with ability to analyze API specs, System Architecture, and SQL telemetry data.
+- Proven track record of defining PRDs, User Stories, Backlog Grooming, and Agile / Scrum sprint execution.
+- Exceptional cross-functional leadership working closely with Engineering, UX Design, and Customer Success.`
   };
 
   const sampleJdSelect = document.getElementById('sampleJdSelect');
@@ -2284,7 +2672,7 @@ Key Requirements:
 
     // 3. Name
     let extractedName = inputFullName ? inputFullName.value.trim() : '';
-    if ((!extractedName || extractedName === 'Manish Kuntal') && text) {
+    if ((!extractedName || extractedName === 'Manish Kuntal' || extractedName === 'Alex Mercer') && text) {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
       const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone'];
       for (const line of lines.slice(0, 5)) {
@@ -2927,7 +3315,7 @@ Key Requirements:
       company: 'Microsoft',
       title: 'Senior Frontend Engineer',
       stage: 'interview',
-      salary: '$170,000 - $210,000',
+      salary: '₹35,00,000 - ₹45,00,000',
       date: '2026-07-20',
       location: 'Redmond, WA (Hybrid)',
       atsScore: 94,
@@ -2941,21 +3329,21 @@ Key Requirements:
       company: 'Stripe',
       title: 'Staff Systems Architect',
       stage: 'offer',
-      salary: '$220,000 - $265,000',
+      salary: '₹45,00,000 - ₹60,00,000',
       date: '2026-07-15',
       location: 'Remote',
       atsScore: 91,
       tags: ['Go', 'Microservices', 'Distributed Systems', 'API'],
       url: 'https://stripe.com/jobs/staff-architect',
       jdText: 'Architect resilient payment APIs, microservices, distribution protocols, latency reduction, and high availability systems.',
-      notes: 'Written offer received! Base: $235k + Equity. Reviewing offer letter details before deadline.'
+      notes: 'Written offer received! Base: ₹50 LPA + Equity. Reviewing offer letter details before deadline.'
     },
     {
       id: 'job-103',
       company: 'OpenAI',
       title: 'Full Stack AI Platform Lead',
       stage: 'applied',
-      salary: '$200,000 - $250,000',
+      salary: '₹40,00,000 - ₹55,00,000',
       date: '2026-07-22',
       location: 'San Francisco, CA',
       atsScore: 88,
@@ -2969,7 +3357,7 @@ Key Requirements:
       company: 'Google',
       title: 'Senior Software Engineer (Cloud)',
       stage: 'interview',
-      salary: '$180,000 - $225,000',
+      salary: '₹38,00,000 - ₹50,00,000',
       date: '2026-07-18',
       location: 'Sunnyvale, CA',
       atsScore: 95,
@@ -2983,7 +3371,7 @@ Key Requirements:
       company: 'Meta',
       title: 'UI Infrastructure Engineer',
       stage: 'wishlist',
-      salary: '$175,000 - $215,000',
+      salary: '₹36,00,000 - ₹48,00,000',
       date: '2026-07-24',
       location: 'Menlo Park, CA',
       atsScore: 85,
@@ -2996,15 +3384,38 @@ Key Requirements:
 
   let jobApplicationsList = [];
 
+  function convertSalaryToINR(str) {
+    if (!str) return str;
+    if (str.includes('$')) {
+      return str.replace(/\$(\d[\d,]*)/g, (match, p1) => {
+        const val = parseInt(p1.replace(/,/g, ''), 10);
+        if (val >= 1000) {
+          const lakhs = Math.round((val * 85) / 100000);
+          return `₹${lakhs},00,000`;
+        }
+        return `₹${val * 85}`;
+      }).replace(/\$235k/g, '₹50 LPA');
+    }
+    return str;
+  }
+
   function loadJobApplications() {
     try {
       const stored = localStorage.getItem(JOB_APPS_STORAGE_KEY);
       if (stored) {
-        jobApplicationsList = JSON.parse(stored);
+        let list = JSON.parse(stored);
+        if (Array.isArray(list)) {
+          list = list.map(job => ({
+            ...job,
+            salary: convertSalaryToINR(job.salary),
+            notes: convertSalaryToINR(job.notes)
+          }));
+        }
+        jobApplicationsList = list;
       } else {
         jobApplicationsList = [...DEFAULT_SEED_JOBS];
-        saveJobApplications();
       }
+      saveJobApplications();
     } catch (e) {
       console.warn('Error loading job applications:', e);
       jobApplicationsList = [...DEFAULT_SEED_JOBS];
@@ -3133,6 +3544,21 @@ Key Requirements:
     if (window.feather) window.feather.replace();
   }
 
+  function formatDateNice(dateStr) {
+    if (!dateStr) return 'N/A';
+    try {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthIdx = parseInt(parts[1], 10) - 1;
+        if (monthIdx >= 0 && monthIdx < 12) {
+          return `${months[monthIdx]} ${parseInt(parts[2], 10)}, ${parts[0]}`;
+        }
+      }
+    } catch (e) {}
+    return dateStr;
+  }
+
   // Render Table View
   function renderTableView(filteredList) {
     const tableBody = document.getElementById('pipelineTableBody');
@@ -3160,10 +3586,10 @@ Key Requirements:
             </div>
           </div>
         </td>
-        <td><span class="stage-pill stage-${job.stage}">${escapeHTML(job.stage)}</span></td>
-        <td>${escapeHTML(job.date || 'N/A')}</td>
-        <td>${escapeHTML(job.salary || 'Unspecified')}</td>
-        <td>${job.atsScore ? `<span class="ats-score-pill ${atsClass}">${job.atsScore}%</span>` : 'N/A'}</td>
+        <td class="text-center"><span class="stage-pill stage-${job.stage}">${escapeHTML(job.stage)}</span></td>
+        <td class="text-center"><span class="date-cell">${escapeHTML(formatDateNice(job.date))}</span></td>
+        <td class="text-center"><span class="salary-cell">${escapeHTML(job.salary || 'Unspecified')}</span></td>
+        <td class="text-center">${job.atsScore ? `<span class="ats-score-pill ${atsClass}">${job.atsScore}%</span>` : 'N/A'}</td>
         <td class="text-right">
           <div class="table-actions-cell">
             <button class="btn-edit-job" data-id="${job.id}" title="Edit"><i data-feather="edit-2"></i> Edit</button>
@@ -3207,7 +3633,6 @@ Key Requirements:
     });
 
     updatePipelineKPIs();
-    renderKanbanBoard(filtered);
     renderTableView(filtered);
     bindJobActionButtons();
   }
@@ -3248,65 +3673,55 @@ Key Requirements:
 
   // Event Delegation for Edit, Delete, ATS Scan, Stage Advance
   function bindJobActionButtons() {
-    document.querySelectorAll('.btn-edit-job').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        openJobModal(id);
-      };
-    });
+    const tableBody = document.getElementById('pipelineTableBody');
+    if (tableBody) {
+      tableBody.onclick = (e) => {
+        const btnEdit = e.target.closest('.btn-edit-job');
+        if (btnEdit) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = btnEdit.getAttribute('data-id');
+          openJobModal(id);
+          return;
+        }
 
-    document.querySelectorAll('.btn-delete-job').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        const job = jobApplicationsList.find(j => j.id === id);
-        if (job && window.confirm(`Delete application for ${job.company} (${job.title})?`)) {
-          jobApplicationsList = jobApplicationsList.filter(j => j.id !== id);
-          saveJobApplications();
-          renderPipelineViews();
-          if (typeof showToast === 'function') {
-            showToast('Application deleted.', 'info');
+        const btnDelete = e.target.closest('.btn-delete-job');
+        if (btnDelete) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = btnDelete.getAttribute('data-id');
+          const job = jobApplicationsList.find(j => j.id === id);
+          if (job && window.confirm(`Delete application for ${job.company} (${job.title})?`)) {
+            jobApplicationsList = jobApplicationsList.filter(j => j.id !== id);
+            saveJobApplications();
+            renderPipelineViews();
+            if (typeof showToast === 'function') {
+              showToast('Application deleted.', 'info');
+            }
           }
+          return;
+        }
+
+        const btnScan = e.target.closest('.btn-scan-ats');
+        if (btnScan) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = btnScan.getAttribute('data-id');
+          const job = jobApplicationsList.find(j => j.id === id);
+          if (job && job.jdText) {
+            const atsJdInput = document.getElementById('atsJdInput');
+            if (atsJdInput) {
+              atsJdInput.value = job.jdText;
+            }
+            switchTab('ats-analyzer');
+            if (typeof showToast === 'function') {
+              showToast(`Loaded ${job.company} JD into ATS Analyzer!`, 'success');
+            }
+          }
+          return;
         }
       };
-    });
-
-    document.querySelectorAll('.btn-scan-ats').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        const job = jobApplicationsList.find(j => j.id === id);
-        if (job && job.jdText) {
-          const atsJdInput = document.getElementById('atsJdInput');
-          if (atsJdInput) {
-            atsJdInput.value = job.jdText;
-          }
-          switchTab('ats-analyzer');
-          if (typeof showToast === 'function') {
-            showToast(`Loaded ${job.company} JD into ATS Analyzer!`, 'success');
-          }
-        }
-      };
-    });
-
-    // 1-Click Stage Advance Button
-    document.querySelectorAll('.btn-stage-advance').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        const nextStage = btn.getAttribute('data-next');
-        const job = jobApplicationsList.find(j => j.id === id);
-        if (job && nextStage) {
-          job.stage = nextStage;
-          saveJobApplications();
-          renderPipelineViews();
-          if (typeof showToast === 'function') {
-            showToast(`Advanced ${job.company} application to ${nextStage.toUpperCase()}! 🚀`, 'success');
-          }
-        }
-      };
-    });
+    }
   }
 
   // Quick Filter Chips listeners
@@ -3460,7 +3875,6 @@ Key Requirements:
   // Initialize pipeline
   loadJobApplications();
   renderPipelineViews();
-  initKanbanDragAndDrop();
 
   // Load saved settings on startup
   loadPlatformSettings();

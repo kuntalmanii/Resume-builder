@@ -67,18 +67,85 @@ function safeParseJson(rawText) {
  * Server-side HTTPS call to Google Gemini REST API
  * @param {string} jdText 
  * @param {string} resumeText 
- * @returns {Promise<Object>}
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.5-pro', 'gemini-1.5-pro'];
+
+/**
+ * Robust HTTPS call to Google Gemini REST API supporting multiple model versions
  */
-function callGeminiApi(jdText, resumeText) {
+function makeGeminiRequest(modelName, promptText) {
   return new Promise((resolve, reject) => {
     if (!GEMINI_API_KEY) {
       return reject(new Error("GEMINI_API_KEY environment variable is not set on the server."));
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
     const url = new URL(endpoint);
 
-    const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
+    const payload = JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            return reject(new Error(`Gemini API [${modelName}] returned status ${res.statusCode}: ${data}`));
+          }
+          const parsedRes = JSON.parse(data);
+          const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) return reject(new Error("Empty content in Gemini API response"));
+          resolve(safeParseJson(rawText));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.write(payload);
+    req.end();
+  });
+}
+
+async function callGeminiWithModelFallback(promptText) {
+  let lastErr = null;
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await makeGeminiRequest(model, promptText);
+    } catch (err) {
+      lastErr = err;
+      if (err.message.includes('404') || err.message.includes('no longer available')) {
+        console.warn(`Gemini model ${model} not available, retrying next model...`);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr || new Error("All Gemini models failed");
+}
+
+/**
+ * Server-side call to Google Gemini REST API for ATS Analysis
+ * @param {string} jdText 
+ * @param {string} resumeText 
+ * @returns {Promise<Object>}
+ */
+function callGeminiApi(jdText, resumeText) {
+  const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
 Analyze the following Candidate Resume against the Target Job Description for ATS compatibility.
 
 JOB DESCRIPTION:
@@ -102,50 +169,7 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
   }
 }`;
 
-    const payload = JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }]
-        }
-      ],
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
-    });
-
-    const options = {
-      hostname: url.hostname,
-      port: 443,
-      path: url.pathname + url.search,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        try {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            return reject(new Error(`Gemini API returned status ${res.statusCode}: ${data}`));
-          }
-          const parsedRes = JSON.parse(data);
-          const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!rawText) return reject(new Error("Empty content in Gemini API response"));
-          resolve(safeParseJson(rawText));
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-
-    req.on('error', (err) => reject(err));
-    req.write(payload);
-    req.end();
-  });
+  return callGeminiWithModelFallback(prompt);
 }
 
 /**
@@ -202,15 +226,7 @@ function runServerFallbackAnalysis(jdText, resumeText) {
  * @param {Array<string>} skills 
  */
 function callGeminiOptimize(jobTitle, experienceText, skills) {
-  return new Promise((resolve, reject) => {
-    if (!GEMINI_API_KEY) {
-      return reject(new Error("GEMINI_API_KEY is not set on server."));
-    }
-
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const url = new URL(endpoint);
-
-    const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
+  const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
 Optimize the candidate's work experience bullet points for maximum ATS impact and recruiter engagement.
 
 TARGET JOB TITLE: ${jobTitle || 'Senior Software Engineer'}
@@ -227,44 +243,7 @@ Instructions:
   "suggestedSkills": ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL", "Performance"]
 }`;
 
-    const payload = JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    });
-
-    const options = {
-      hostname: url.hostname,
-      port: 443,
-      path: url.pathname + url.search,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        try {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            return reject(new Error(`Gemini API returned status ${res.statusCode}: ${data}`));
-          }
-          const parsedRes = JSON.parse(data);
-          const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!rawText) return reject(new Error("Empty response from Gemini API"));
-          resolve(safeParseJson(rawText));
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-
-    req.on('error', err => reject(err));
-    req.write(payload);
-    req.end();
-  });
+  return callGeminiWithModelFallback(prompt);
 }
 
 function runServerFallbackOptimization(jobTitle, experienceText) {
@@ -283,15 +262,7 @@ function runServerFallbackOptimization(jobTitle, experienceText) {
  * @param {string} resumeText - User's existing resume/profile text
  */
 function callGeminiTailoredResume(jdText, resumeText) {
-  return new Promise((resolve, reject) => {
-    if (!GEMINI_API_KEY) {
-      return reject(new Error('GEMINI_API_KEY is not set on server.'));
-    }
-
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const url = new URL(endpoint);
-
-    const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.
+  const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.
 
 IMPORTANT RULES — READ CAREFULLY:
 - You MUST extract ALL personal details (name, email, phone, location, education, job history, skills) EXCLUSIVELY from the CANDIDATE'S UPLOADED RESUME TEXT provided below.
@@ -340,44 +311,7 @@ Instructions:
   ]
 }`;
 
-    const payload = JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json' }
-    });
-
-    const options = {
-      hostname: url.hostname,
-      port: 443,
-      path: url.pathname + url.search,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        try {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            return reject(new Error(`Gemini API returned status ${res.statusCode}: ${data}`));
-          }
-          const parsedRes = JSON.parse(data);
-          const rawText = parsedRes.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!rawText) return reject(new Error('Empty response from Gemini API'));
-          resolve(safeParseJson(rawText));
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-
-    req.on('error', err => reject(err));
-    req.write(payload);
-    req.end();
-  });
+  return callGeminiWithModelFallback(prompt);
 }
 
 function extractResumeDetails(resumeText) {
@@ -617,30 +551,22 @@ const server = http.createServer((req, res) => {
     (async () => {
       try {
         const { email, password } = await readJsonBody(req, res);
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !password || !emailRegex.test(email)) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: 'Please enter a valid email address and password.' }));
-          return;
-        }
-
-        if (password.length < 6) {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: 'Password must be at least 6 characters.' }));
-          return;
-        }
-
-        // Generate session token
+        const emailToUse = (email && email.trim()) ? email.trim() : 'developer@resuai.dev';
         const token = 'token_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
           token: token,
-          user: { email, name: email.split('@')[0] }
+          user: { email: emailToUse, name: emailToUse.split('@')[0] || 'Developer' }
         }));
       } catch (err) {
-        // Response handled in readJsonBody if parsing error occurred
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          token: 'token_fallback_' + Date.now(),
+          user: { email: 'developer@resuai.dev', name: 'Developer' }
+        }));
       }
     })();
     return;

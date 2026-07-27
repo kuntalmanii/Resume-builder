@@ -51,6 +51,8 @@
   <!-- PDF.js library for in-browser PDF parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="styles.css" />
+  <!-- Supabase Browser Client (ES Module — must load before script.js) -->
+  <script type="module" src="supabase-client.js"></script>
 </head>
 <body data-theme="twilight-haze">
   
@@ -172,12 +174,12 @@
             <p id="authSubtitle">Sign in to your ResuAI workspace to access your resumes &amp; ATS metrics.</p>
           </div>
 
-          <form class="auth-form" id="authForm">
+          <form class="auth-form" id="authForm" novalidate>
             <div class="form-group signup-only-field" id="nameField" style="display: none;">
               <label for="authName">Full Name</label>
               <div class="input-icon-wrapper">
                 <i data-feather="user"></i>
-                <input type="text" id="authName" class="form-input" autocomplete="name" placeholder="Manish Kuntal" />
+                <input type="text" id="authName" class="form-input" autocomplete="name" placeholder="Alex Mercer" />
               </div>
             </div>
 
@@ -327,12 +329,13 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="user-profile-pill sidebar-profile-pill">
+        <div class="user-profile-pill sidebar-profile-pill" id="sidebarUserPill" style="cursor:pointer;" title="My Account">
           <div class="user-avatar" id="topUserAvatar">DV</div>
           <div class="user-info">
             <span class="user-name" id="topUserName">Developer</span>
             <span class="user-role" id="topUserRole">Software Engineer</span>
           </div>
+          <i data-feather="settings" style="margin-left:auto; opacity:0.5; width:14px;"></i>
         </div>
         <button class="btn-signout sidebar-signout-btn" id="topSignoutBtn" title="Sign Out">
           <i data-feather="log-out"></i>
@@ -453,180 +456,317 @@
 
                 <div class="card-body">
 
-                  <!-- Live Profile Strength Meter -->
+                  <!-- Live Profile Strength Meter — Redesigned -->
                   <div class="profile-strength-box">
                     <div class="strength-header">
                       <div class="strength-title">
-                        <i data-feather="shield"></i>
-                        <span>Resume Profile Strength</span>
+                        <div class="strength-icon-wrap">
+                          <i data-feather="shield"></i>
+                        </div>
+                        <div>
+                          <span class="strength-label-main">Resume Profile Strength</span>
+                          <span class="strength-label-sub">Fields completed &amp; ATS-ready</span>
+                        </div>
                       </div>
                       <span class="strength-percent" id="strengthPercentVal">85% Complete</span>
                     </div>
                     <div class="strength-progress-bg">
                       <div class="strength-progress-fill" id="strengthProgressFill" style="width: 85%;"></div>
                     </div>
-                    <span class="strength-tip" id="strengthTip">Tip: Add your GitHub and Portfolio links for 100% recruiter trust.</span>
-                  </div>
-
-                  <!-- Personal Info: Name & Target Title -->
-                  <div class="form-row-2">
-                    <div class="form-group">
-                      <label for="inputFullName">Full Name</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="user"></i>
-                        <input type="text" id="inputFullName" class="form-input live-sync" value="" placeholder="e.g. John Doe, Manish Kuntal" />
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label for="inputJobTitle">Target Job Title</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="briefcase"></i>
-                        <input type="text" id="inputJobTitle" class="form-input live-sync" value="" placeholder="e.g. Senior Frontend Engineer, Full Stack Developer" />
+                    <div class="strength-footer-row">
+                      <span class="strength-tip" id="strengthTip">💡 Tip: Add your GitHub and Portfolio links for 100% recruiter trust.</span>
+                      <div class="strength-segment-pills">
+                        <span class="seg-pill seg-done">Identity</span>
+                        <span class="seg-pill seg-done">Contact</span>
+                        <span class="seg-pill seg-active">Links</span>
+                        <span class="seg-pill">Experience</span>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Contact & Location -->
-                  <div class="form-row-3">
-                    <div class="form-group">
-                      <label for="inputEmail">Email Address</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="mail"></i>
-                        <input type="email" id="inputEmail" class="form-input live-sync" value="" placeholder="name@company.com" />
+                  <!-- FAANG Level Switcher — Redesigned -->
+                  <div class="level-switcher-bar margin-top-md">
+                    <div class="level-switcher-header">
+                      <div class="level-switcher-title">
+                        <i data-feather="layers"></i>
+                        <span>FAANG Engineering Level Focus</span>
                       </div>
+                      <span class="level-switcher-hint">Click to pre-fill targeted summaries &amp; metrics</span>
                     </div>
-                    <div class="form-group">
-                      <label for="inputPhone">Phone Number</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="phone"></i>
-                        <input type="text" id="inputPhone" class="form-input live-sync" value="" placeholder="+1 (555) 000-0000" />
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label for="inputLocation">Location &amp; Work Auth</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="map-pin"></i>
-                        <input type="text" id="inputLocation" class="form-input live-sync" value="" placeholder="City, State / Remote" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Developer Web Presence Links -->
-                  <div class="form-row-3">
-                    <div class="form-group">
-                      <label for="inputGithub">GitHub Profile</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="github"></i>
-                        <input type="text" id="inputGithub" class="form-input live-sync" value="" placeholder="github.com/username" />
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label for="inputLinkedin">LinkedIn Profile</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="linkedin"></i>
-                        <input type="text" id="inputLinkedin" class="form-input live-sync" value="" placeholder="linkedin.com/in/username" />
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label for="inputPortfolio">Portfolio / Website</label>
-                      <div class="input-icon-wrapper">
-                        <i data-feather="globe"></i>
-                        <input type="text" id="inputPortfolio" class="form-input live-sync" value="" placeholder="yourportfolio.com" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Executive Professional Summary -->
-                  <div class="form-group">
-                    <div class="label-row-with-badge">
-                      <label for="inputSummary">Executive Professional Summary</label>
-                      <span class="help-text-badge">High Impact Hook</span>
-                    </div>
-                    <textarea id="inputSummary" class="form-textarea live-sync" rows="3" placeholder="2-3 sentence executive hook summarizing your years of experience, core stack, and major leadership achievements..."></textarea>
-                  </div>
-
-                  <!-- Core Skills & Technologies -->
-                  <div class="form-group">
-                    <div class="label-row-with-badge">
-                      <label for="techStack">Core Skills &amp; Technologies</label>
-                      <button type="button" class="btn-ghost-sm btn-ai-suggest-skills" id="btnSuggestAiSkills" title="Auto-suggest skills based on your Target Job Title">
-                        <i data-feather="zap"></i>
-                        <span>Suggest AI Skills</span>
+                    <div class="level-chips-grid" id="faangLevelChips">
+                      <button type="button" class="level-chip" data-level="L4">
+                        <span class="level-code">L4</span>
+                        <span class="level-name">SWE II</span>
+                        <span class="level-yoe">2-4 yrs</span>
+                      </button>
+                      <button type="button" class="level-chip active" data-level="L5">
+                        <span class="level-code">L5</span>
+                        <span class="level-name">Senior Eng</span>
+                        <span class="level-yoe">5-8 yrs</span>
+                      </button>
+                      <button type="button" class="level-chip" data-level="L6">
+                        <span class="level-code">L6</span>
+                        <span class="level-name">Staff / TL</span>
+                        <span class="level-yoe">8-12 yrs</span>
+                      </button>
+                      <button type="button" class="level-chip" data-level="L7">
+                        <span class="level-code">L7</span>
+                        <span class="level-name">Principal</span>
+                        <span class="level-yoe">12+ yrs</span>
                       </button>
                     </div>
-                    <div class="tags-input-container" id="skillsTagsContainer" style="position: relative;">
-                      <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill &amp; hit Enter..." autocomplete="off" />
-                      <!-- Autocomplete Suggestions Dropdown -->
-                      <div class="skill-autocomplete-dropdown" id="skillAutocompleteDropdown" style="display: none;"></div>
-                    </div>
+                  </div>
 
-                    <!-- Category Pills Quick Suggestions -->
-                    <div class="skill-suggestions-wrapper">
-                      <div class="skill-suggestions-header">
-                        <span class="suggestion-label"><i data-feather="zap"></i> Suggested Skills (Click to add):</span>
-                        <div class="skill-category-filters" id="skillCategoryFilters">
-                          <button type="button" class="category-chip active" data-category="popular">Popular</button>
-                          <button type="button" class="category-chip" data-category="frontend">Frontend</button>
-                          <button type="button" class="category-chip" data-category="backend">Backend</button>
-                          <button type="button" class="category-chip" data-category="devops">DevOps &amp; Cloud</button>
-                          <button type="button" class="category-chip" data-category="ai">AI &amp; Data</button>
+                  <!-- ═══ SECTION 1: IDENTITY ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(99,102,241,0.15); color:#6366f1;">
+                        <i data-feather="user"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Identity &amp; Target Role</span>
+                        <span class="form-section-sub">Your name and the job title you're targeting</span>
+                      </div>
+                    </div>
+                    <div class="form-row-2">
+                      <div class="form-group">
+                        <label for="inputFullName">Full Name</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="user"></i>
+                          <input type="text" id="inputFullName" class="form-input live-sync" value="" placeholder="e.g. Alex Mercer" autocomplete="name" />
                         </div>
                       </div>
-                      <div class="skill-pills-container" id="skillPillsContainer">
-                        <!-- Dynamically populated by JS -->
+                      <div class="form-group">
+                        <label for="inputJobTitle">
+                          Target Job Title
+                          <span class="field-badge field-badge--ai">Key for ATS</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="briefcase"></i>
+                          <input type="text" id="inputJobTitle" class="form-input live-sync" value="" placeholder="e.g. Senior Frontend Engineer" autocomplete="organization-title" />
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Work Experience & Action-Verb Assistant -->
-                  <div class="form-group">
-                    <div class="label-row-with-badge">
-                      <label for="bulletPoints">Work Experience &amp; Key Impact Projects</label>
-                      <div class="ai-enabled-badge">
+                  <!-- ═══ SECTION 2: CONTACT ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(16,185,129,0.15); color:#10b981;">
+                        <i data-feather="phone"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Contact &amp; Location</span>
+                        <span class="form-section-sub">How recruiters can reach you</span>
+                      </div>
+                    </div>
+                    <div class="form-row-3">
+                      <div class="form-group">
+                        <label for="inputEmail">Email Address</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="mail"></i>
+                          <input type="email" id="inputEmail" class="form-input live-sync" value="" placeholder="name@company.com" autocomplete="email" />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="inputPhone">Phone Number</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="phone"></i>
+                          <input type="text" id="inputPhone" class="form-input live-sync" value="" placeholder="+91 98765 43210" autocomplete="tel" />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="inputLocation">Location &amp; Work Auth</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="map-pin"></i>
+                          <input type="text" id="inputLocation" class="form-input live-sync" value="" placeholder="Bengaluru / Remote" autocomplete="address-level2" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ═══ SECTION 3: WEB PRESENCE ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(245,158,11,0.15); color:#f59e0b;">
+                        <i data-feather="link-2"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Developer Web Presence</span>
+                        <span class="form-section-sub">Links increase recruiter trust by 40%</span>
+                      </div>
+                    </div>
+                    <div class="form-row-3">
+                      <div class="form-group">
+                        <label for="inputGithub">
+                          GitHub Profile
+                          <span class="field-badge field-badge--trust">+Trust</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="github"></i>
+                          <input type="text" id="inputGithub" class="form-input live-sync" value="" placeholder="github.com/username" />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="inputLinkedin">
+                          LinkedIn Profile
+                          <span class="field-badge field-badge--trust">+Trust</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="linkedin"></i>
+                          <input type="text" id="inputLinkedin" class="form-input live-sync" value="" placeholder="linkedin.com/in/username" />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="inputPortfolio">
+                          Portfolio / Website
+                          <span class="field-badge field-badge--trust">+Trust</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="globe"></i>
+                          <input type="text" id="inputPortfolio" class="form-input live-sync" value="" placeholder="yourportfolio.dev" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ═══ SECTION 4: SUMMARY ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(139,92,246,0.15); color:#8b5cf6;">
+                        <i data-feather="align-left"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Executive Professional Summary</span>
+                        <span class="form-section-sub">The 3-sentence hook that gets past ATS and impresses recruiters</span>
+                      </div>
+                      <span class="help-text-badge" style="margin-left:auto;">High Impact Hook</span>
+                    </div>
+                    <div class="form-group">
+                      <textarea id="inputSummary" class="form-textarea live-sync" rows="4" placeholder="2-3 sentence executive hook summarizing your years of experience, core tech stack, and major leadership achievements. E.g. 'Staff Engineer with 8+ years architecting distributed systems at scale...'"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- ═══ SECTION 5: SKILLS ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(59,130,246,0.15); color:#3b82f6;">
+                        <i data-feather="code"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Core Skills &amp; Technologies</span>
+                        <span class="form-section-sub">Type and hit Enter — or click suggested pills below</span>
+                      </div>
+                      <button type="button" class="btn-ghost-sm btn-ai-suggest-skills" id="btnSuggestAiSkills" title="Auto-suggest skills based on your Target Job Title" style="margin-left:auto;">
+                        <i data-feather="zap"></i>
+                        <span>AI Suggest</span>
+                      </button>
+                    </div>
+                    <div class="form-group">
+                      <div class="tags-input-container" id="skillsTagsContainer" style="position: relative;">
+                        <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill &amp; hit Enter..." autocomplete="off" />
+                        <div class="skill-autocomplete-dropdown" id="skillAutocompleteDropdown" style="display: none;"></div>
+                      </div>
+
+                      <div class="skill-suggestions-wrapper">
+                        <div class="skill-suggestions-header">
+                          <span class="suggestion-label"><i data-feather="zap"></i> Quick Add:</span>
+                          <div class="skill-category-filters" id="skillCategoryFilters">
+                            <button type="button" class="category-chip active" data-category="popular">Popular</button>
+                            <button type="button" class="category-chip" data-category="frontend">Frontend</button>
+                            <button type="button" class="category-chip" data-category="backend">Backend</button>
+                            <button type="button" class="category-chip" data-category="devops">DevOps &amp; Cloud</button>
+                            <button type="button" class="category-chip" data-category="ai">AI &amp; Data</button>
+                          </div>
+                        </div>
+                        <div class="skill-pills-container" id="skillPillsContainer"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ═══ SECTION 6: WORK EXPERIENCE ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(236,72,153,0.15); color:#ec4899;">
+                        <i data-feather="award"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Work Experience &amp; Key Impact Projects</span>
+                        <span class="form-section-sub">Use Google XYZ Formula: "Accomplished X, by doing Y, measured by Z"</span>
+                      </div>
+                      <div class="ai-enabled-badge" style="margin-left:auto;">
                         <i data-feather="cpu"></i>
-                        <span>AI Assistant Enabled</span>
-                      </div>
-                    </div>
-                    <textarea id="bulletPoints" class="form-textarea live-sync" rows="5" placeholder="Describe your achievements and technical leadership impact..."></textarea>
-                    
-                    <!-- Action-Verb Assistant Chips Bar -->
-                    <div class="action-verb-bar">
-                      <span class="action-verb-label"><i data-feather="zap"></i> Insert Action Verb:</span>
-                      <div class="verb-chips-container" id="verbChipsContainer">
-                        <button type="button" class="verb-chip" data-verb="Architected ">Architected</button>
-                        <button type="button" class="verb-chip" data-verb="Engineered ">Engineered</button>
-                        <button type="button" class="verb-chip" data-verb="Spearheaded ">Spearheaded</button>
-                        <button type="button" class="verb-chip" data-verb="Scaled ">Scaled</button>
-                        <button type="button" class="verb-chip" data-verb="Optimized latency by ">Optimized latency by</button>
-                        <button type="button" class="verb-chip" data-verb="Automated ">Automated</button>
-                        <button type="button" class="verb-chip" data-verb="Reduced infrastructure costs by ">Reduced costs by</button>
+                        <span>AI XYZ Assistant</span>
                       </div>
                     </div>
 
-                    <div class="textarea-footer">
-                      <span class="help-text">Use bullet points with action verbs for optimal ATS parsing</span>
-                      <span class="char-counter" id="charCounter">0 / 2000 characters</span>
+                    <!-- Google XYZ Meter — Redesigned as a compact bar INSIDE section header area -->
+                    <div class="xyz-metric-card" id="xyzMetricMeterBar">
+                      <div class="xyz-metric-left">
+                        <i data-feather="award"></i>
+                        <div>
+                          <span class="xyz-metric-title">Google XYZ Impact Meter</span>
+                          <span class="xyz-meter-score" id="xyzMeterScore">0% Metrics Compliance (0/0 Bullets)</span>
+                        </div>
+                      </div>
+                      <button type="button" class="btn-xyz-transform" id="btnXyzTransform">
+                        <i data-feather="sparkles"></i>
+                        <span>Transform to XYZ Format</span>
+                      </button>
+                    </div>
+
+                    <div class="form-group" style="margin-top:0.75rem;">
+                      <textarea id="bulletPoints" class="form-textarea live-sync" rows="6" placeholder="• Architected high-throughput microservices using Go &amp; gRPC, scaling system capacity by 350% to 50,000 req/sec.&#10;• Optimized p99 API latency by 45% by implementing Redis caching and database indexing.&#10;• Led cross-functional team of 12 engineers, achieving zero-downtime CI/CD with 99.99% uptime."></textarea>
+
+                      <!-- XYZ Preset Chips -->
+                      <div class="action-verb-bar">
+                        <span class="action-verb-label"><i data-feather="zap"></i> XYZ Presets:</span>
+                        <div class="verb-chips-container" id="verbChipsContainer">
+                          <button type="button" class="verb-chip" data-verb="Architected high-throughput microservices using Go &amp; gRPC, scaling system capacity by 350% to 50,000 req/sec.">Scaled 50k req/sec</button>
+                          <button type="button" class="verb-chip" data-verb="Optimized p99 API latency by 45% (from 280ms to 95ms) by implementing Redis caching and database indexing.">Latency -45%</button>
+                          <button type="button" class="verb-chip" data-verb="Reduced AWS cloud infrastructure costs by $120,000/year through Kubernetes cluster auto-scaling and spot instances.">Cost -$120k/yr</button>
+                          <button type="button" class="verb-chip" data-verb="Spearheaded cross-functional team of 12 engineers, delivering zero-downtime CI/CD deployment pipelines.">Led 12 Engineers</button>
+                          <button type="button" class="verb-chip" data-verb="Automated test suite coverage from 40% to 92%, decreasing production release bugs by 68%.">Tests 40→92%</button>
+                        </div>
+                      </div>
+
+                      <div class="textarea-footer">
+                        <span class="help-text">Use bullet points (•) with strong action verbs for optimal ATS parsing</span>
+                        <span class="char-counter" id="charCounter">0 / 2000 characters</span>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Education & Credentials -->
-                  <div class="form-group">
-                    <label for="inputEducation">Education &amp; Credentials</label>
-                    <div class="input-icon-wrapper">
-                      <i data-feather="award"></i>
-                      <input type="text" id="inputEducation" class="form-input live-sync" value="" placeholder="Degree, University, Year" />
+                  <!-- ═══ SECTION 7: EDUCATION & CERTIFICATIONS ═══ -->
+                  <div class="form-section">
+                    <div class="form-section-header">
+                      <div class="form-section-icon" style="background: rgba(20,184,166,0.15); color:#14b8a6;">
+                        <i data-feather="book-open"></i>
+                      </div>
+                      <div>
+                        <span class="form-section-title">Education &amp; Certifications</span>
+                        <span class="form-section-sub">Degree, institution, certifications &amp; key honors</span>
+                      </div>
+                    </div>
+                    <div class="form-row-2">
+                      <div class="form-group">
+                        <label for="inputEducation">Education &amp; Credentials</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="book-open"></i>
+                          <input type="text" id="inputEducation" class="form-input live-sync" value="" placeholder="B.Tech CS, IIT Delhi — 2019" autocomplete="off" />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="inputCertifications">Certifications &amp; Key Honors</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="check-circle"></i>
+                          <input type="text" id="inputCertifications" class="form-input live-sync" value="" placeholder="AWS SA (2023), CKA Kubernetes (2024)" autocomplete="off" />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Certifications & Key Honors -->
-                  <div class="form-group">
-                    <label for="inputCertifications">Certifications &amp; Key Honors</label>
-                    <div class="input-icon-wrapper">
-                      <i data-feather="check-circle"></i>
-                      <input type="text" id="inputCertifications" class="form-input live-sync" value="" placeholder="e.g. AWS Solutions Architect (2023), CKA Kubernetes (2024)" />
-                    </div>
-                  </div>
-
+                  <!-- Action Bar -->
                   <div class="editor-action-bar">
                     <button class="btn-secondary" id="btnDraftSaveFooter">
                       <i data-feather="save"></i>
@@ -782,18 +922,6 @@
 
           <!-- TAB 2: ATS ANALYZER -->
           <div class="tab-pane" id="tab-ats-analyzer">
-            <!-- Header Banner for ATS Diagnostics -->
-            <div class="ats-header-card">
-              <div class="ats-header-content">
-                <div class="header-badge">
-                  <i data-feather="cpu"></i>
-                  <span>Gemini 2.5 Flash AI Engine // Secure Backend ATS Parser</span>
-                </div>
-                <h2>ATS Resume Diagnostics &amp; Feedback</h2>
-                <p>Paste your target job description and upload your resume PDF to run AI keyword gap analysis powered by Google Gemini 2.5 Flash backend service.</p>
-              </div>
-            </div>
-
             <!-- Two-Column Input Grid -->
             <div class="dashboard-split-grid margin-top-lg">
               <!-- Left Column: Job Description Text Area -->
@@ -825,8 +953,14 @@
                           <option value="">-- Load Sample JD Template --</option>
                           <option value="frontend">Senior Frontend Architect</option>
                           <option value="fullstack">Senior Full Stack Engineer</option>
-                          <option value="devops">DevOps &amp; Cloud Systems Lead</option>
+                          <option value="backend">Lead Backend &amp; Systems Engineer</option>
+                          <option value="devops">DevOps &amp; Cloud Infrastructure Lead</option>
                           <option value="ai">AI / Machine Learning Engineer</option>
+                          <option value="mobile">Senior Mobile Engineer (iOS / Android)</option>
+                          <option value="data">Data Engineer &amp; Analytics Architect</option>
+                          <option value="cybersecurity">Cloud Security Specialist</option>
+                          <option value="qa_automation">Principal SDET &amp; QA Engineer</option>
+                          <option value="product_manager">Technical Product Manager (APIs)</option>
                         </select>
                       </div>
                     </div>
@@ -1215,17 +1349,6 @@ Key Requirements:
                 </div>
 
                 <div class="toolbar-actions-group">
-                  <div class="view-toggle-buttons">
-                    <button class="view-btn active" id="btnViewKanban" data-view="kanban" title="Kanban Board View">
-                      <i data-feather="columns"></i>
-                      <span>Board</span>
-                    </button>
-                    <button class="view-btn" id="btnViewTable" data-view="table" title="Table View">
-                      <i data-feather="list"></i>
-                      <span>Table</span>
-                    </button>
-                  </div>
-
                   <button class="btn-primary btn-sm btn-glow-effect" id="btnAddNewJob">
                     <i data-feather="plus"></i>
                     <span>Add Application</span>
@@ -1236,76 +1359,18 @@ Key Requirements:
 
             <!-- Pipeline Container View Modes -->
             <div class="pipeline-views-wrapper">
-              <!-- Kanban Board View -->
-              <div class="kanban-board-container" id="kanbanBoardContainer">
-                <div class="kanban-column column-wishlist" data-stage="wishlist">
-                  <div class="column-header">
-                    <div class="column-title">
-                      <span class="stage-dot wishlist-dot"></span>
-                      <span>Wishlist</span>
-                    </div>
-                    <span class="column-count" id="count-wishlist">0</span>
-                  </div>
-                  <div class="kanban-cards-list" id="column-cards-wishlist"></div>
-                </div>
-
-                <div class="kanban-column column-applied" data-stage="applied">
-                  <div class="column-header">
-                    <div class="column-title">
-                      <span class="stage-dot applied-dot"></span>
-                      <span>Applied</span>
-                    </div>
-                    <span class="column-count" id="count-applied">0</span>
-                  </div>
-                  <div class="kanban-cards-list" id="column-cards-applied"></div>
-                </div>
-
-                <div class="kanban-column column-interview" data-stage="interview">
-                  <div class="column-header">
-                    <div class="column-title">
-                      <span class="stage-dot interview-dot"></span>
-                      <span>Interviewing</span>
-                    </div>
-                    <span class="column-count" id="count-interview">0</span>
-                  </div>
-                  <div class="kanban-cards-list" id="column-cards-interview"></div>
-                </div>
-
-                <div class="kanban-column column-offer" data-stage="offer">
-                  <div class="column-header">
-                    <div class="column-title">
-                      <span class="stage-dot offer-dot"></span>
-                      <span>Offer</span>
-                    </div>
-                    <span class="column-count" id="count-offer">0</span>
-                  </div>
-                  <div class="kanban-cards-list" id="column-cards-offer"></div>
-                </div>
-
-                <div class="kanban-column column-rejected" data-stage="rejected">
-                  <div class="column-header">
-                    <div class="column-title">
-                      <span class="stage-dot rejected-dot"></span>
-                      <span>Closed</span>
-                    </div>
-                    <span class="column-count" id="count-rejected">0</span>
-                  </div>
-                  <div class="kanban-cards-list" id="column-cards-rejected"></div>
-                </div>
-              </div>
-
-              <!-- Table List View (Initially hidden) -->
-              <div class="table-view-container" id="tableViewContainer" style="display: none;">
+              <!-- Table List View -->
+              <div class="table-view-container" id="tableViewContainer">
                 <div class="dashboard-card glass-card">
                   <div class="table-responsive">
                     <table class="pipeline-table">
                       <thead>
                         <tr>
                           <th>Company &amp; Role</th>
-                          <th>Stage</th>
-                          <th>Applied Date</th>
-                          <th>Salary Range</th>
-                          <th>ATS Match</th>
+                          <th class="text-center">Stage</th>
+                          <th class="text-center">Applied Date</th>
+                          <th class="text-center">Salary Range</th>
+                          <th class="text-center">ATS Match</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
@@ -1603,7 +1668,7 @@ Key Requirements:
             <label for="jobSalary">Salary Range</label>
             <div class="input-icon-wrapper">
               <i data-feather="dollar-sign"></i>
-              <input type="text" id="jobSalary" class="form-input" placeholder="e.g. $160,000 - $195,000" />
+              <input type="text" id="jobSalary" class="form-input" placeholder="e.g. ₹25,00,000 - ₹40,00,000 (or ₹25 LPA - ₹40 LPA)" />
             </div>
           </div>
           <div class="form-group">
@@ -1663,6 +1728,78 @@ Key Requirements:
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Forgot Password Modal -->
+  <div class="modal-overlay" id="forgotPasswordModal" style="display:none;">
+    <div class="modal-panel glass-card" style="max-width:420px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-feather="mail"></i>
+          <h3>Reset Your Password</h3>
+        </div>
+        <button class="modal-close-btn" id="forgotModalClose"><i data-feather="x"></i></button>
+      </div>
+      <div style="padding: 1.5rem 2rem 2rem;">
+        <p style="color:var(--text-secondary); margin-bottom:1.25rem; font-size:0.9rem;">
+          Enter your email address and we'll send you a secure link to reset your password.
+        </p>
+        <div class="form-group">
+          <label for="forgotEmail">Email Address</label>
+          <div class="input-icon-wrapper">
+            <i data-feather="mail"></i>
+            <input type="email" id="forgotEmail" class="form-input" placeholder="name@company.com" autocomplete="email" />
+          </div>
+        </div>
+        <button type="button" class="btn-primary btn-full" id="forgotSubmitBtn" style="margin-top:1rem;">
+          <i data-feather="send"></i>
+          <span id="forgotSubmitText">Send Reset Link</span>
+        </button>
+        <p id="forgotFeedback" style="margin-top:0.75rem; font-size:0.85rem; text-align:center; min-height:1.2em;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Modal -->
+  <div class="modal-overlay" id="userProfileModal" style="display:none;">
+    <div class="modal-panel glass-card" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-feather="user"></i>
+          <h3>My Account</h3>
+        </div>
+        <button class="modal-close-btn" id="profileModalClose"><i data-feather="x"></i></button>
+      </div>
+      <div style="padding:1.5rem 2rem 2rem;">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+          <div class="user-avatar" id="profileModalAvatar" style="width:56px;height:56px;font-size:1.25rem;">DV</div>
+          <div>
+            <div class="user-name" id="profileModalName" style="font-size:1.1rem; font-weight:600;"></div>
+            <div class="user-role" id="profileModalEmail" style="font-size:0.85rem; color:var(--text-secondary);"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="profileDisplayName">Display Name</label>
+          <div class="input-icon-wrapper">
+            <i data-feather="user"></i>
+            <input type="text" id="profileDisplayName" class="form-input" placeholder="Your full name" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label for="profileNewPassword">New Password <span style="font-size:0.78rem;color:var(--text-muted);">(leave blank to keep current)</span></label>
+          <div class="input-icon-wrapper">
+            <i data-feather="key"></i>
+            <input type="password" id="profileNewPassword" class="form-input" placeholder="••••••••" />
+          </div>
+        </div>
+        <button type="button" class="btn-primary btn-full" id="profileSaveBtn" style="margin-top:1.25rem;">
+          <i data-feather="save"></i>
+          <span id="profileSaveText">Save Changes</span>
+        </button>
+        <p id="profileFeedback" style="margin-top:0.75rem; font-size:0.85rem; text-align:center; min-height:1.2em;"></p>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
+
