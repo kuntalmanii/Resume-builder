@@ -11,15 +11,23 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL  = 'https://kjcelcmovmyqwdspuano.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_nFBBIwdCjEAF3JQ0mdZLBQ_726HAvIZ';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: {
-    persistSession: true,           // keeps session in localStorage automatically
-    autoRefreshToken: true,
-    detectSessionInUrl: true        // needed for OAuth redirect flows
-  }
-});
+let supabase = null;
 
-// Expose globally so the non-module script.js can consume it
+try {
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: {
+      persistSession: true,           // keeps session in localStorage automatically
+      autoRefreshToken: true,
+      detectSessionInUrl: true        // needed for OAuth redirect flows
+    }
+  });
+} catch (err) {
+  console.warn('ResuAI: Supabase client initialization warning:', err.message);
+}
+
+// Expose globally so non-module script.js can consume it
 window.supabase = supabase;
+window.dispatchEvent(new CustomEvent('supabaseReady', { detail: supabase }));
 
 export default supabase;
+
