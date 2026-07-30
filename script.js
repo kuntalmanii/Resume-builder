@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Applies the chosen theme ID to the <body> data-theme attribute,
    * updates active states on theme switcher buttons, and saves to localStorage.
-   * @param {string} themeId - e.g. 'dark-obsidian', 'cyber-purple', 'emerald-slate', 'sunset-amber', 'twilight-haze', 'eucalyptus-glow'
+   * @param {string} themeId - e.g. 'sunset-amber', 'twilight-haze', 'eucalyptus-glow'
    */
   function syncSettingsThemeSwatches() {
-    const activeTheme = body.getAttribute('data-theme') || 'dark-obsidian';
+    const activeTheme = body.getAttribute('data-theme') || 'sunset-amber';
     const swatches = document.querySelectorAll('.settings-theme-swatch');
     swatches.forEach(swatch => {
       const themeId = swatch.getAttribute('data-theme-swatch');
@@ -90,9 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Restore saved theme on initial page load (default: 'dark-obsidian')
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'dark-obsidian';
-  setTheme(savedTheme);
+  // Restore saved theme on initial page load (default: 'sunset-amber')
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'sunset-amber';
+  // If a removed theme was previously saved, fall back to sunset-amber
+  const validThemes = ['sunset-amber', 'twilight-haze', 'eucalyptus-glow'];
+  setTheme(validThemes.includes(savedTheme) ? savedTheme : 'sunset-amber');
 
   /* ==========================================================================
      2. Auth State & Screen View Toggle — Supabase Integration
@@ -745,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const TAB_METADATA = {
     'resume-builder': {
-      title: 'Senior Developer Resume Studio',
+      title: 'Resume Studio',
       description: 'Optimize your developer resume for high-tier tech companies & ATS scanners with real-time scoring.',
       breadcrumb: 'Resume Builder'
     },
@@ -813,6 +815,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) metaDesc.setAttribute('content', `${meta.description} Powered by Google Gemini 2.5 Flash AI.`);
 
+    // Hide page header on studio workspace tabs (resume-builder & ats-analyzer) for clean full-height canvas
+    const contentHeader = document.getElementById('contentHeader');
+    if (contentHeader) {
+      contentHeader.style.display = (tabId === 'resume-builder' || tabId === 'ats-analyzer') ? 'none' : 'block';
+    }
+
     // Hide New Resume button on ATS Analyzer & non-builder tabs
     const btnNewResume = document.getElementById('btnNewResume');
     if (btnNewResume) {
@@ -870,6 +878,40 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileToggleBtn) mobileToggleBtn.addEventListener('click', openMobileSidebar);
   if (mobileCloseBtn) mobileCloseBtn.addEventListener('click', closeMobileSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileSidebar);
+
+  /* Sidebar Collapse Toggle (desktop) */
+  const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+  const SIDEBAR_COLLAPSED_KEY = 'resuai-sidebar-collapsed';
+
+  function applySidebarCollapsed(collapsed) {
+    if (!sidebar) return;
+    if (collapsed) {
+      sidebar.classList.add('collapsed');
+    } else {
+      sidebar.classList.remove('collapsed');
+    }
+  }
+
+  // Restore on load
+  applySidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1');
+
+  if (sidebarCollapseBtn) {
+    sidebarCollapseBtn.addEventListener('click', function () {
+      const isNowCollapsed = !sidebar.classList.contains('collapsed');
+      applySidebarCollapsed(isNowCollapsed);
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, isNowCollapsed ? '1' : '0');
+    });
+  }
+
+  // Re-expand sidebar when a collapsed nav item is clicked
+  if (sidebar) {
+    sidebar.querySelectorAll('.nav-item').forEach(function (item) {
+      item.addEventListener('click', function () {
+        // On mobile: close drawer
+        closeMobileSidebar();
+      });
+    });
+  }
 
   /* ==========================================================================
      5. Automatic Form Persistence (LocalStorage Auto-Save)
@@ -3384,7 +3426,7 @@ Key Requirements:
       const backupPackage = {
         exportedAt: new Date().toISOString(),
         version: '2.5',
-        theme: themeRaw || 'dark-obsidian',
+        theme: themeRaw || 'sunset-amber',
         settings: settingsObj,
         draftResume: draftObj
       };

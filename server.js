@@ -65,9 +65,8 @@ function safeParseJson(rawText) {
 
 /**
  * Server-side HTTPS call to Google Gemini REST API
- * @param {string} jdText 
- * @param {string} resumeText 
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.5-pro', 'gemini-1.5-pro'];
+ */
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
 /**
  * Robust HTTPS call to Google Gemini REST API supporting multiple model versions
@@ -491,8 +490,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle Backend API Endpoint: POST /api/analyze
-  if (req.method === 'POST' && pathname === '/api/analyze') {
+  // Handle Backend API Endpoint: POST /api/analyze or /api/analyze-ats
+  if (req.method === 'POST' && (pathname === '/api/analyze' || pathname === '/api/analyze-ats')) {
     (async () => {
       try {
         const { jdText, resumeText } = await readJsonBody(req, res);
