@@ -1,9 +1,6 @@
 /**
- * ResuAI // Secure Backend Server & Gemini Flash Proxy (Production Ready)
- * Pure Node.js — Zero External Dependencies Required!
- *
- * Keeps GEMINI_API_KEY completely secure on the backend server.
- * Never exposes API keys to client-side code or browser inspector.
+ * ResuAI // Secure Backend Server & Gemini Proxy Service
+ * Pure Node.js — Zero External Dependencies
  */
 
 const http = require('http');
@@ -11,7 +8,9 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-// Automatically load .env file if present in workspace root
+// ============================================================================
+// 1. CONFIGURATION & ENVIRONMENT LOAD
+// ============================================================================
 const envPath = path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
   try {
@@ -53,17 +52,26 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-/**
- * Structured ISO Timestamped Logger
- */
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+
+const SHARED_TAXONOMY_KEYWORDS = [
+  'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
+  'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
+  'Node', 'Node.js', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
+  'Project Management', 'System Architecture', 'Python', 'Git', 'Agile', 'SQL', 'AWS'
+];
+
+// ============================================================================
+// 2. LOGGING SERVICE
+// ============================================================================
 function log(level, message) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] [${level}] ${message}`);
 }
 
-/**
- * Environment-Based CORS Helper
- */
+// ============================================================================
+// 3. SECURITY & MIDDLEWARE SERVICES
+// ============================================================================
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin;
   if (ALLOWED_ORIGINS.length > 0) {
@@ -73,16 +81,12 @@ function setCorsHeaders(req, res) {
       res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
     }
   } else {
-    // Default fallback for local dev environment
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-/**
- * In-Memory IP Rate Limiter for AI Endpoints (Max 20 requests / 15 mins)
- */
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 20;
@@ -104,7 +108,6 @@ function isRateLimited(ip) {
   return userRecord.count > MAX_REQUESTS_PER_WINDOW;
 }
 
-// Periodically clean up stale rate limit entries
 setInterval(() => {
   const now = Date.now();
   for (const [ip, record] of rateLimitMap.entries()) {
@@ -114,11 +117,9 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-/**
- * Safely parses raw text from Gemini API, removing markdown backticks if present
- * @param {string} rawText 
- * @returns {Object}
- */
+// ============================================================================
+// 4. UTILITIES & BODY PARSING
+// ============================================================================
 function safeParseJson(rawText) {
   if (!rawText) throw new Error("Empty response from Gemini API");
   let clean = rawText.trim();
@@ -128,11 +129,46 @@ function safeParseJson(rawText) {
   return JSON.parse(clean);
 }
 
-/**
- * HTTPS call to Google Gemini REST API
- */
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    let isOverLimit = false;
 
+    req.on('data', chunk => {
+      if (isOverLimit) return;
+      body += chunk;
+      if (Buffer.byteLength(body, 'utf8') > maxBytes) {
+        isOverLimit = true;
+        setCorsHeaders(req, res);
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large. Maximum allowed size is 5MB.' }));
+        req.destroy();
+        reject(new Error('Payload too large'));
+      }
+    });
+
+    req.on('end', () => {
+      if (isOverLimit) return;
+      try {
+        const parsed = JSON.parse(body || '{}');
+        resolve(parsed);
+      } catch (err) {
+        setCorsHeaders(req, res);
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        reject(err);
+      }
+    });
+
+    req.on('error', (err) => {
+      if (!isOverLimit) reject(err);
+    });
+  });
+}
+
+// ============================================================================
+// 5. GEMINI API SERVICE
+// ============================================================================
 function makeGeminiRequest(modelName, promptText) {
   return new Promise((resolve, reject) => {
     if (!GEMINI_API_KEY) {
@@ -208,9 +244,6 @@ async function callGeminiWithModelFallback(promptText, preferredModel) {
   throw lastErr || new Error("All Gemini models failed");
 }
 
-/**
- * Server-side HTTPS call to Google Gemini REST API for ATS Analysis
- */
 function callGeminiApi(jdText, resumeText, preferredModel, atsEngine) {
   const engineConstraint = atsEngine ? `TARGET ATS ENGINE PROFILE: ${atsEngine}` : '';
 
@@ -243,56 +276,6 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
   return callGeminiWithModelFallback(prompt, preferredModel);
 }
 
-/**
- * Server-side heuristic fallback for local matching when no API key is provided
- */
-function runServerFallbackAnalysis(jdText, resumeText) {
-  const KNOWN_KEYWORDS = [
-    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
-    'Node', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
-    'Project Management', 'System Architecture', 'Python', 'Git', 'Agile'
-  ];
-
-  const jdLower = (jdText || "").toLowerCase();
-  const candidateLower = (resumeText || "").toLowerCase();
-
-  const jdKeywordsPresent = KNOWN_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
-  const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
-    ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
-
-  const matched = [];
-  const missing = [];
-
-  activeJdKeywords.forEach(kw => {
-    if (candidateLower.includes(kw.toLowerCase())) {
-      matched.push(kw);
-    } else {
-      missing.push(kw);
-    }
-  });
-
-  const total = activeJdKeywords.length || 1;
-  const matchRatio = matched.length / total;
-  const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
-
-  const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
-
-  return {
-    score: dynamicScore,
-    matchedKeywords: matched,
-    missingKeywords: missing,
-    recommendations: [
-      `Incorporate 1-2 instances of missing keywords (${topMissing}) under your experience bullet points.`,
-      `Quantify Web Vitals or performance metrics with explicit percentage improvements (e.g. Reduced LCP by 42%).`,
-      `Maintain standard section headings like TECHNICAL EXPERTISE for 100% parsing accuracy in Lever & Greenhouse.`
-    ]
-  };
-}
-
-/**
- * Server-side HTTPS call to Google Gemini for Resume Optimization
- */
 function callGeminiOptimize(jobTitle, experienceText, skills, preferredModel, sensitivity) {
   const sensVal = parseFloat(sensitivity);
   let toneGuidance = 'Maintain balanced technical keyword density and quantitative metrics.';
@@ -322,19 +305,6 @@ Instructions:
   return callGeminiWithModelFallback(prompt, preferredModel);
 }
 
-function runServerFallbackOptimization(jobTitle, experienceText) {
-  return {
-    optimizedBulletPoints: `• Architected high-performance UI component library serving 2M+ active monthly users.
-• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.
-• Spearheaded frontend migration to TypeScript and Next.js, boosting team release velocity by 35%.
-• Implemented client-side GraphQL caching layer, decreasing server payload size by 60%.`,
-    suggestedSkills: ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL"]
-  };
-}
-
-/**
- * Server-side HTTPS call to Gemini for Tailored Resume Generation
- */
 function callGeminiTailoredResume(jdText, resumeText, preferredModel) {
   const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.
 
@@ -388,6 +358,55 @@ Instructions:
   return callGeminiWithModelFallback(prompt, preferredModel);
 }
 
+// ============================================================================
+// 6. HEURISTIC ENGINE SERVICE (OFFLINE / FALLBACK)
+// ============================================================================
+function runServerFallbackAnalysis(jdText, resumeText) {
+  const jdLower = (jdText || "").toLowerCase();
+  const candidateLower = (resumeText || "").toLowerCase();
+
+  const jdKeywordsPresent = SHARED_TAXONOMY_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
+  const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
+    ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
+
+  const matched = [];
+  const missing = [];
+
+  activeJdKeywords.forEach(kw => {
+    if (candidateLower.includes(kw.toLowerCase())) {
+      matched.push(kw);
+    } else {
+      missing.push(kw);
+    }
+  });
+
+  const total = activeJdKeywords.length || 1;
+  const matchRatio = matched.length / total;
+  const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
+  const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
+
+  return {
+    score: dynamicScore,
+    matchedKeywords: matched,
+    missingKeywords: missing,
+    recommendations: [
+      `Incorporate 1-2 instances of missing keywords (${topMissing}) under your experience bullet points.`,
+      `Quantify Web Vitals or performance metrics with explicit percentage improvements (e.g. Reduced LCP by 42%).`,
+      `Maintain standard section headings like TECHNICAL EXPERTISE for 100% parsing accuracy in Lever & Greenhouse.`
+    ]
+  };
+}
+
+function runServerFallbackOptimization(jobTitle, experienceText) {
+  return {
+    optimizedBulletPoints: `• Architected high-performance UI component library serving 2M+ active monthly users.
+• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.
+• Spearheaded frontend migration to TypeScript and Next.js, boosting team release velocity by 35%.
+• Implemented client-side GraphQL caching layer, decreasing server payload size by 60%.`,
+    suggestedSkills: ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL"]
+  };
+}
+
 function extractResumeDetails(resumeText) {
   const text = (resumeText || '').trim();
 
@@ -425,13 +444,8 @@ function extractResumeDetails(resumeText) {
   }
   const education = eduList.length > 0 ? eduList : '';
 
-  const KNOWN_KEYWORDS = [
-    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
-    'Node', 'Node.js', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Python', 'Git', 'Agile', 'SQL', 'AWS'
-  ];
   const textLower = text.toLowerCase();
-  const skills = KNOWN_KEYWORDS.filter(kw => textLower.includes(kw.toLowerCase()));
+  const skills = SHARED_TAXONOMY_KEYWORDS.filter(kw => textLower.includes(kw.toLowerCase()));
 
   const bulletLines = lines.filter(l => {
     const low = l.toLowerCase();
@@ -444,7 +458,6 @@ function extractResumeDetails(resumeText) {
 
 function runFallbackTailoredResume(jdText, resumeText) {
   const details = extractResumeDetails(resumeText);
-  
   const titleMatch = jdText ? jdText.split(/\r?\n/)[0].replace(/^(we are looking for a|hiring|role:?|job title:?)\s*/i, '').trim() : '';
   const jobTitle = (titleMatch && titleMatch.length < 50) ? titleMatch : 'Target Role';
 
@@ -471,47 +484,9 @@ function runFallbackTailoredResume(jdText, resumeText) {
   };
 }
 
-/**
- * Reads and parses POST JSON request body with 5MB byte size limit
- */
-function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    let isOverLimit = false;
-
-    req.on('data', chunk => {
-      if (isOverLimit) return;
-      body += chunk;
-      if (Buffer.byteLength(body, 'utf8') > maxBytes) {
-        isOverLimit = true;
-        setCorsHeaders(req, res);
-        res.writeHead(413, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Payload too large. Maximum allowed size is 5MB.' }));
-        req.destroy();
-        reject(new Error('Payload too large'));
-      }
-    });
-
-    req.on('end', () => {
-      if (isOverLimit) return;
-      try {
-        const parsed = JSON.parse(body || '{}');
-        resolve(parsed);
-      } catch (err) {
-        setCorsHeaders(req, res);
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
-        reject(err);
-      }
-    });
-
-    req.on('error', (err) => {
-      if (!isOverLimit) reject(err);
-    });
-  });
-}
-
-// Create HTTP server
+// ============================================================================
+// 7. ROUTE CONTROLLERS & SERVER INITIALIZATION
+// ============================================================================
 const server = http.createServer((req, res) => {
   setCorsHeaders(req, res);
 
@@ -525,7 +500,6 @@ const server = http.createServer((req, res) => {
   const pathname = parsedUrl.pathname;
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
-  // Handle Backend API Endpoint: POST /api/optimize-resume
   if (req.method === 'POST' && pathname === '/api/optimize-resume') {
     (async () => {
       try {
@@ -553,14 +527,11 @@ const server = http.createServer((req, res) => {
         const fallback = runServerFallbackOptimization(jobTitle, experienceText);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
-      } catch (err) {
-        // Handled in readJsonBody
-      }
+      } catch (err) {}
     })();
     return;
   }
 
-  // Handle Backend API Endpoint: POST /api/analyze or /api/analyze-ats
   if (req.method === 'POST' && (pathname === '/api/analyze' || pathname === '/api/analyze-ats')) {
     (async () => {
       try {
@@ -588,14 +559,11 @@ const server = http.createServer((req, res) => {
         const fallbackResult = runServerFallbackAnalysis(jdText, resumeText);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallbackResult));
-      } catch (err) {
-        // Handled in readJsonBody
-      }
+      } catch (err) {}
     })();
     return;
   }
 
-  // Handle Backend API Endpoint: POST /api/generate-tailored-resume
   if (req.method === 'POST' && pathname === '/api/generate-tailored-resume') {
     (async () => {
       try {
@@ -623,14 +591,11 @@ const server = http.createServer((req, res) => {
         const fallback = runFallbackTailoredResume(jdText, resumeText);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
-      } catch (err) {
-        // Handled in readJsonBody
-      }
+      } catch (err) {}
     })();
     return;
   }
 
-  // Handle Backend API Endpoint: POST /api/login
   if (req.method === 'POST' && pathname === '/api/login') {
     (async () => {
       try {
@@ -657,7 +622,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve Static Files Safely with Path Traversal Protection
   const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
   const filePath = path.join(__dirname, safePath === '/' ? 'index.html' : safePath);
 

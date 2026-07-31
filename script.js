@@ -790,9 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // Initialize view state (handled by onAuthStateChange above)
-  // Legacy call kept as no-op placeholder for any downstream references
-  function updateAuthStateView() {} // legacy stub — replaced by onAuthStateChange
+
 
 
 
