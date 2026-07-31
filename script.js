@@ -4642,6 +4642,28 @@ Key Requirements:
   loadJobApplications();
   renderPipelineViews();
 
+  // Section Focus Mode Event Wiring (AI Studio Ambient Dimming)
+  const docEditorBody = document.querySelector('.doc-editor-body');
+  if (docEditorBody) {
+    docEditorBody.addEventListener('focusin', (e) => {
+      const block = e.target.closest('.doc-section-block');
+      if (block) {
+        document.querySelectorAll('.doc-section-block').forEach(b => b.classList.remove('is-focused'));
+        block.classList.add('is-focused');
+        docEditorBody.classList.add('has-focused-section');
+      }
+    });
+
+    docEditorBody.addEventListener('focusout', () => {
+      setTimeout(() => {
+        if (!docEditorBody.contains(document.activeElement)) {
+          document.querySelectorAll('.doc-section-block').forEach(b => b.classList.remove('is-focused'));
+          docEditorBody.classList.remove('has-focused-section');
+        }
+      }, 100);
+    });
+  }
+
   // Load saved settings on startup
   loadPlatformSettings();
 

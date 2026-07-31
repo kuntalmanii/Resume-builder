@@ -637,9 +637,21 @@
                            aria-label="Professional Summary"
                            style="min-height:80px;"></div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Generate Summary" onclick="sendAiAction('Generate a compelling professional summary based on my details')">
+                        <button class="doc-sha-btn" title="AI: Improve Writing" onclick="sendAiAction('Improve the writing of my professional summary')">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                          <span>✦ AI Summary</span>
+                          <span>✦ Improve Writing</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Shorten" onclick="sendAiAction('Shorten my summary to be concise and punchy')">
+                          <span>✦ Shorten</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Executive" onclick="sendAiAction('Rewrite my summary with an executive leadership tone')">
+                          <span>✦ Executive</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Technical" onclick="sendAiAction('Rewrite my summary with a strong technical focus')">
+                          <span>✦ Technical</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Friendly" onclick="sendAiAction('Optimize my summary for ATS keyword matching')">
+                          <span>✦ ATS Friendly</span>
                         </button>
                       </div>
                     </div>
@@ -716,9 +728,15 @@
                         </div>
                       </div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Generate Skills" onclick="sendAiAction('Suggest relevant skills based on my job title and experience')">
+                        <button class="doc-sha-btn" title="AI: Suggest Skills" onclick="document.getElementById('btnSuggestAiSkills')?.click()">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                          <span>✦ AI Skills</span>
+                          <span>✦ AI Suggest Skills</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Categorize Skills" onclick="sendAiAction('Categorize my skills into clean groups')">
+                          <span>✦ Categorize</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Tailor to Role" onclick="sendAiAction('Tailor my skills to match top industry job requirements')">
+                          <span>✦ Tailor to Role</span>
                         </button>
                       </div>
                     </div>
@@ -736,6 +754,11 @@
                            data-syncs="inputEducation"
                            id="docFieldEducation"
                            aria-label="Education"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format education for high ATS parser score')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- §6 CERTIFICATIONS -->
@@ -751,6 +774,14 @@
                            data-syncs="inputCertifications"
                            id="docFieldCerts"
                            aria-label="Certifications"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the professional credibility of my certifications')">
+                          <span>✦ Highlight Impact</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format certifications for optimal ATS scanning')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- §7 PROJECTS -->
@@ -766,6 +797,14 @@
                            data-syncs="inputProjects"
                            id="docFieldProjects"
                            aria-label="Projects"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight technical architecture and measurable impact of my projects')">
+                          <span>✦ Highlight Impact</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format key projects for high ATS parser score')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- §8 ACHIEVEMENTS -->
@@ -781,6 +820,14 @@
                            data-syncs="inputAchievements"
                            id="docFieldAchievements"
                            aria-label="Achievements"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the honor and impact of my achievements')">
+                          <span>✦ Highlight Impact</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format achievements for optimal ATS scanning')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- §9 DYNAMIC CUSTOM SECTIONS -->

@@ -2254,6 +2254,16 @@ i[data-feather] svg { width: 1em; height: 1em; }
   padding: 32px 0 !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
   position: relative;
+  transition: opacity 220ms ease-in-out, transform 220ms ease-in-out, border-color 220ms ease-in-out, padding 220ms ease-in-out;
+}
+.doc-editor-body.has-focused-section .doc-section-block:not(.is-focused) {
+  opacity: 0.42 !important;
+  filter: blur(0.2px);
+}
+.doc-section-block.is-focused {
+  opacity: 1 !important;
+  border-left: 2.5px solid #2563EB !important;
+  padding-left: 14px !important;
 }
 .doc-section-block:first-child,
 .paper-section:first-child { padding-top: 0 !important; }
@@ -2657,6 +2667,75 @@ i[data-feather] svg { width: 1em; height: 1em; }
   background: #F0F9FF;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
   transform: translateY(-1px);
+}
+
+/* Accessibility Focus Rings & Transition Curves */
+.doc-field:focus-visible,
+.doc-contact-field:focus-visible,
+.doc-bullet-text:focus-visible,
+.doc-name-field:focus-visible,
+.doc-title-field:focus-visible,
+.rtt-btn:focus-visible,
+.doc-sha-btn:focus-visible,
+.doc-skill-tag:focus-visible,
+.doc-skill-suggestion-chip:focus-visible {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 2px !important;
+  border-radius: 6px !important;
+}
+
+.doc-editor-body,
+.preview-paper-sheet,
+.doc-field,
+.doc-contact-field,
+.doc-bullet-text,
+.doc-project-card,
+.doc-cert-row,
+.doc-achievement-row,
+.custom-section-card,
+.rtt-btn,
+.doc-sha-btn {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 900px) {
+  .doc-editor-body,
+  .preview-paper-sheet {
+    padding: 36px 32px 48px !important;
+    border-radius: 12px !important;
+    max-width: 100% !important;
+  }
+  .doc-name-field,
+  .paper-candidate-name {
+    font-size: 26px !important;
+  }
+  .doc-contact-grid,
+  .paper-contact-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .doc-editor-body,
+  .preview-paper-sheet {
+    padding: 24px 20px 36px !important;
+    border-radius: 10px !important;
+  }
+  .doc-name-field,
+  .paper-candidate-name {
+    font-size: 22px !important;
+  }
+  .doc-contact-grid,
+  .paper-contact-row {
+    grid-template-columns: 1fr !important;
+  }
+  .doc-section-hover-actions {
+    position: static !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    margin-top: 8px !important;
+  }
 }
 .doc-sha-btn svg { width: 11px; height: 11px; stroke: #2563EB; }
 
