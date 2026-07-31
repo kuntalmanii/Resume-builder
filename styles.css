@@ -2628,16 +2628,19 @@ i[data-feather] svg { width: 1em; height: 1em; }
 /* Contextual Floating Section AI Actions */
 .doc-section-hover-actions {
   position: absolute;
-  right: 8px;
-  top: 14px;
+  right: 0;
+  top: 2px;
   display: flex;
   align-items: center;
   gap: 6px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateY(-4px);
-  z-index: 10;
+  z-index: 30;
+}
+.doc-section-block:first-child .doc-section-hover-actions {
+  top: -8px;
 }
 .doc-section-block:hover .doc-section-hover-actions {
   opacity: 1;
