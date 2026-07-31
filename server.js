@@ -1,5 +1,5 @@
 /**
- * ResuAI // Secure Backend Server & Gemini 2.5 Flash Proxy (Latest)
+ * ResuAI // Secure Backend Server & Gemini Flash Proxy (Production Ready)
  * Pure Node.js — Zero External Dependencies Required!
  *
  * Keeps GEMINI_API_KEY completely secure on the backend server.
@@ -37,6 +37,10 @@ if (fs.existsSync(envPath)) {
 
 const PORT = process.env.PORT || 8080;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const ALLOWED_ORIGINS_ENV = process.env.ALLOWED_ORIGINS || "";
+const ALLOWED_ORIGINS = ALLOWED_ORIGINS_ENV
+  ? ALLOWED_ORIGINS_ENV.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -48,6 +52,67 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon'
 };
+
+/**
+ * Structured ISO Timestamped Logger
+ */
+function log(level, message) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [${level}] ${message}`);
+}
+
+/**
+ * Environment-Based CORS Helper
+ */
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.length > 0) {
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
+    }
+  } else {
+    // Default fallback for local dev environment
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+/**
+ * In-Memory IP Rate Limiter for AI Endpoints (Max 20 requests / 15 mins)
+ */
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 20;
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const userRecord = rateLimitMap.get(ip) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
+
+  if (now > userRecord.resetTime) {
+    userRecord.count = 1;
+    userRecord.resetTime = now + RATE_LIMIT_WINDOW_MS;
+    rateLimitMap.set(ip, userRecord);
+    return false;
+  }
+
+  userRecord.count += 1;
+  rateLimitMap.set(ip, userRecord);
+
+  return userRecord.count > MAX_REQUESTS_PER_WINDOW;
+}
+
+// Periodically clean up stale rate limit entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 10 * 60 * 1000);
 
 /**
  * Safely parses raw text from Gemini API, removing markdown backticks if present
@@ -64,13 +129,10 @@ function safeParseJson(rawText) {
 }
 
 /**
- * Server-side HTTPS call to Google Gemini REST API
+ * HTTPS call to Google Gemini REST API
  */
 const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
-/**
- * Robust HTTPS call to Google Gemini REST API supporting multiple model versions
- */
 function makeGeminiRequest(modelName, promptText) {
   return new Promise((resolve, reject) => {
     if (!GEMINI_API_KEY) {
@@ -120,15 +182,24 @@ function makeGeminiRequest(modelName, promptText) {
   });
 }
 
-async function callGeminiWithModelFallback(promptText) {
+async function callGeminiWithModelFallback(promptText, preferredModel) {
+  let modelsToTry = [...GEMINI_MODELS];
+  if (preferredModel && typeof preferredModel === 'string') {
+    const trimmed = preferredModel.trim();
+    if (trimmed) {
+      modelsToTry = [trimmed, ...GEMINI_MODELS.filter(m => m !== trimmed)];
+    }
+  }
+
   let lastErr = null;
-  for (const model of GEMINI_MODELS) {
+  for (const model of modelsToTry) {
     try {
+      log('INFO', `Attempting Gemini API request with model: ${model}`);
       return await makeGeminiRequest(model, promptText);
     } catch (err) {
       lastErr = err;
       if (err.message.includes('404') || err.message.includes('no longer available')) {
-        console.warn(`Gemini model ${model} not available, retrying next model...`);
+        log('WARN', `Gemini model ${model} not available, retrying next model...`);
         continue;
       }
       throw err;
@@ -138,14 +209,15 @@ async function callGeminiWithModelFallback(promptText) {
 }
 
 /**
- * Server-side call to Google Gemini REST API for ATS Analysis
- * @param {string} jdText 
- * @param {string} resumeText 
- * @returns {Promise<Object>}
+ * Server-side HTTPS call to Google Gemini REST API for ATS Analysis
  */
-function callGeminiApi(jdText, resumeText) {
+function callGeminiApi(jdText, resumeText, preferredModel, atsEngine) {
+  const engineConstraint = atsEngine ? `TARGET ATS ENGINE PROFILE: ${atsEngine}` : '';
+
   const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
 Analyze the following Candidate Resume against the Target Job Description for ATS compatibility.
+
+${engineConstraint}
 
 JOB DESCRIPTION:
 ${jdText}
@@ -168,7 +240,7 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
   }
 }`;
 
-  return callGeminiWithModelFallback(prompt);
+  return callGeminiWithModelFallback(prompt, preferredModel);
 }
 
 /**
@@ -219,17 +291,22 @@ function runServerFallbackAnalysis(jdText, resumeText) {
 }
 
 /**
- * Server-side HTTPS call to Google Gemini 2.5 Flash for Resume Optimization
- * @param {string} jobTitle 
- * @param {string} experienceText 
- * @param {Array<string>} skills 
+ * Server-side HTTPS call to Google Gemini for Resume Optimization
  */
-function callGeminiOptimize(jobTitle, experienceText, skills) {
+function callGeminiOptimize(jobTitle, experienceText, skills, preferredModel, sensitivity) {
+  const sensVal = parseFloat(sensitivity);
+  let toneGuidance = 'Maintain balanced technical keyword density and quantitative metrics.';
+  if (!isNaN(sensVal)) {
+    if (sensVal <= 0.3) toneGuidance = 'Strictly prioritize exact ATS keyword match and standard industry terms.';
+    else if (sensVal >= 0.8) toneGuidance = 'Focus heavily on creative framing, high-impact leadership verbs, and dramatic performance metrics.';
+  }
+
   const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
 Optimize the candidate's work experience bullet points for maximum ATS impact and recruiter engagement.
 
 TARGET JOB TITLE: ${jobTitle || 'Senior Software Engineer'}
 SKILLS: ${Array.isArray(skills) ? skills.join(', ') : (skills || 'TypeScript, React')}
+TONE GUIDANCE: ${toneGuidance}
 CURRENT EXPERIENCE BULLET POINTS:
 ${experienceText || 'Built frontend UI components.'}
 
@@ -242,7 +319,7 @@ Instructions:
   "suggestedSkills": ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL", "Performance"]
 }`;
 
-  return callGeminiWithModelFallback(prompt);
+  return callGeminiWithModelFallback(prompt, preferredModel);
 }
 
 function runServerFallbackOptimization(jobTitle, experienceText) {
@@ -256,11 +333,9 @@ function runServerFallbackOptimization(jobTitle, experienceText) {
 }
 
 /**
- * Server-side HTTPS call to Gemini 2.5 Flash for Tailored Resume Generation
- * @param {string} jdText - Target job description
- * @param {string} resumeText - User's existing resume/profile text
+ * Server-side HTTPS call to Gemini for Tailored Resume Generation
  */
-function callGeminiTailoredResume(jdText, resumeText) {
+function callGeminiTailoredResume(jdText, resumeText, preferredModel) {
   const prompt = `You are an elite Senior Technical Resume Writer and ATS Specialist.
 
 IMPORTANT RULES — READ CAREFULLY:
@@ -310,21 +385,18 @@ Instructions:
   ]
 }`;
 
-  return callGeminiWithModelFallback(prompt);
+  return callGeminiWithModelFallback(prompt, preferredModel);
 }
 
 function extractResumeDetails(resumeText) {
   const text = (resumeText || '').trim();
 
-  // 1. Email extraction
   const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   const email = emailMatch ? emailMatch[0] : '';
 
-  // 2. Phone extraction
   const phoneMatch = text.match(/(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
   const phone = phoneMatch ? phoneMatch[0] : '';
 
-  // 3. Name extraction: look at top 5 non-empty lines
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
   let name = '';
   const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone'];
@@ -339,11 +411,9 @@ function extractResumeDetails(resumeText) {
     }
   }
 
-  // 4. Location extraction
   const locationMatch = text.match(/([A-Z][a-zA-Z\s]+,\s*(?:[A-Z]{2}|[A-Z][a-zA-Z\s]+))/);
   const location = locationMatch ? locationMatch[1] : '';
 
-  // 5. Education extraction
   const eduList = [];
   const eduKeywords = ['university', 'college', 'institute', 'bachelor', 'b.s.', 'b.tech', 'b.e.', 'master', 'm.s.', 'm.tech', 'ph.d', 'degree', 'diploma', 'stanford', 'mit', 'harvard', 'iit', 'certif'];
   for (const line of lines) {
@@ -355,7 +425,6 @@ function extractResumeDetails(resumeText) {
   }
   const education = eduList.length > 0 ? eduList : '';
 
-  // 6. Skills extraction
   const KNOWN_KEYWORDS = [
     'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
     'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
@@ -364,7 +433,6 @@ function extractResumeDetails(resumeText) {
   const textLower = text.toLowerCase();
   const skills = KNOWN_KEYWORDS.filter(kw => textLower.includes(kw.toLowerCase()));
 
-  // 7. Experience bullets extraction
   const bulletLines = lines.filter(l => {
     const low = l.toLowerCase();
     if (low.includes('@') || low.startsWith('skills:') || low.startsWith('skills ') || eduKeywords.some(kw => low.includes(kw))) return false;
@@ -377,7 +445,6 @@ function extractResumeDetails(resumeText) {
 function runFallbackTailoredResume(jdText, resumeText) {
   const details = extractResumeDetails(resumeText);
   
-  // Extract job title from JD first line or text
   const titleMatch = jdText ? jdText.split(/\r?\n/)[0].replace(/^(we are looking for a|hiring|role:?|job title:?)\s*/i, '').trim() : '';
   const jobTitle = (titleMatch && titleMatch.length < 50) ? titleMatch : 'Target Role';
 
@@ -405,11 +472,7 @@ function runFallbackTailoredResume(jdText, resumeText) {
 }
 
 /**
- * Safely reads and parses POST JSON request body with a maximum byte size limit
- * @param {http.IncomingMessage} req 
- * @param {http.ServerResponse} res 
- * @param {number} maxBytes 
- * @returns {Promise<Object>}
+ * Reads and parses POST JSON request body with 5MB byte size limit
  */
 function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
@@ -421,6 +484,7 @@ function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
       body += chunk;
       if (Buffer.byteLength(body, 'utf8') > maxBytes) {
         isOverLimit = true;
+        setCorsHeaders(req, res);
         res.writeHead(413, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Payload too large. Maximum allowed size is 5MB.' }));
         req.destroy();
@@ -434,6 +498,7 @@ function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
         const parsed = JSON.parse(body || '{}');
         resolve(parsed);
       } catch (err) {
+        setCorsHeaders(req, res);
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
         reject(err);
@@ -447,12 +512,8 @@ function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
 }
 
 // Create HTTP server
-
 const server = http.createServer((req, res) => {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -462,21 +523,30 @@ const server = http.createServer((req, res) => {
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
   // Handle Backend API Endpoint: POST /api/optimize-resume
   if (req.method === 'POST' && pathname === '/api/optimize-resume') {
     (async () => {
       try {
-        const { jobTitle, experienceText, skills } = await readJsonBody(req, res);
+        if (isRateLimited(clientIp)) {
+          log('WARN', `Rate limit exceeded for IP: ${clientIp} on /api/optimize-resume`);
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
+          return;
+        }
+
+        const { jobTitle, experienceText, skills, geminiModel, sensitivity } = await readJsonBody(req, res);
+        log('INFO', `Received /api/optimize-resume request from IP ${clientIp}`);
 
         if (GEMINI_API_KEY) {
           try {
-            const result = await callGeminiOptimize(jobTitle, experienceText, skills);
+            const result = await callGeminiOptimize(jobTitle, experienceText, skills, geminiModel, sensitivity);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
             return;
           } catch (err) {
-            console.warn("Gemini Optimize error on server, using fallback:", err.message);
+            log('WARN', `Gemini Optimize error on server, using fallback: ${err.message}`);
           }
         }
 
@@ -484,7 +554,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
       } catch (err) {
-        // Response already sent in readJsonBody if error occurred
+        // Handled in readJsonBody
       }
     })();
     return;
@@ -494,25 +564,32 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && (pathname === '/api/analyze' || pathname === '/api/analyze-ats')) {
     (async () => {
       try {
-        const { jdText, resumeText } = await readJsonBody(req, res);
+        if (isRateLimited(clientIp)) {
+          log('WARN', `Rate limit exceeded for IP: ${clientIp} on ${pathname}`);
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
+          return;
+        }
+
+        const { jdText, resumeText, geminiModel, atsEngine } = await readJsonBody(req, res);
+        log('INFO', `Received ${pathname} request from IP ${clientIp}`);
 
         if (GEMINI_API_KEY) {
           try {
-            const result = await callGeminiApi(jdText, resumeText);
+            const result = await callGeminiApi(jdText, resumeText, geminiModel, atsEngine);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
             return;
           } catch (err) {
-            console.warn("Gemini API call error on server, falling back to heuristic engine:", err.message);
+            log('WARN', `Gemini ATS API call error, falling back to heuristic engine: ${err.message}`);
           }
         }
 
-        // Fallback response if GEMINI_API_KEY is not set or request fails
         const fallbackResult = runServerFallbackAnalysis(jdText, resumeText);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallbackResult));
       } catch (err) {
-        // Response already sent in readJsonBody if error occurred
+        // Handled in readJsonBody
       }
     })();
     return;
@@ -522,16 +599,24 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && pathname === '/api/generate-tailored-resume') {
     (async () => {
       try {
-        const { jdText, resumeText } = await readJsonBody(req, res);
+        if (isRateLimited(clientIp)) {
+          log('WARN', `Rate limit exceeded for IP: ${clientIp} on /api/generate-tailored-resume`);
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
+          return;
+        }
+
+        const { jdText, resumeText, geminiModel } = await readJsonBody(req, res);
+        log('INFO', `Received /api/generate-tailored-resume request from IP ${clientIp}`);
 
         if (GEMINI_API_KEY) {
           try {
-            const result = await callGeminiTailoredResume(jdText, resumeText);
+            const result = await callGeminiTailoredResume(jdText, resumeText, geminiModel);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
             return;
           } catch (err) {
-            console.warn('Gemini tailored resume error, using fallback:', err.message);
+            log('WARN', `Gemini tailored resume error, using fallback: ${err.message}`);
           }
         }
 
@@ -539,7 +624,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
       } catch (err) {
-        // Response already sent in readJsonBody if error occurred
+        // Handled in readJsonBody
       }
     })();
     return;
@@ -549,10 +634,11 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && pathname === '/api/login') {
     (async () => {
       try {
-        const { email, password } = await readJsonBody(req, res);
+        const { email } = await readJsonBody(req, res);
         const emailToUse = (email && email.trim()) ? email.trim() : 'developer@resuai.dev';
         const token = 'token_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
 
+        log('INFO', `Successful login request for ${emailToUse}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
@@ -575,8 +661,8 @@ const server = http.createServer((req, res) => {
   const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
   const filePath = path.join(__dirname, safePath === '/' ? 'index.html' : safePath);
 
-  // Security Check: Verify resolved path stays strictly within root directory
   if (!filePath.startsWith(__dirname + path.sep) && filePath !== __dirname) {
+    log('WARN', `Forbidden path traversal attempt blocked: ${pathname}`);
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden: Access Denied');
     return;
@@ -588,13 +674,11 @@ const server = http.createServer((req, res) => {
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        // Return 404 for missing static assets (images, CSS, JS, JSON, etc.)
         if (extname && extname !== '.html') {
           res.writeHead(404, { 'Content-Type': 'text/plain' });
           res.end(`404 Not Found: ${safePath}`);
           return;
         }
-        // SPA Fallback for navigation routes without file extensions
         fs.readFile(path.join(__dirname, 'index.html'), (err2, htmlContent) => {
           res.writeHead(200, { 'Content-Type': 'text/html' });
           res.end(htmlContent, 'utf-8');
@@ -611,6 +695,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`ResuAI Server running at http://localhost:${PORT}`);
-  console.log(`GEMINI_API_KEY status: ${GEMINI_API_KEY ? "CONFIGURED (SECURE)" : "NOT SET (Using Server Fallback)"}`);
+  log('INFO', `ResuAI Server running at http://localhost:${PORT}`);
+  log('INFO', `GEMINI_API_KEY status: ${GEMINI_API_KEY ? "CONFIGURED (SECURE)" : "NOT SET (Using Server Fallback)"}`);
+  log('INFO', `CORS Whitelist status: ${ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS.join(', ') : "OPEN (Local Dev Default)"}`);
 });

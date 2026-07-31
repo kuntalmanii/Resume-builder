@@ -249,19 +249,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Helper to extract active frontend settings for backend API calls
+  function getActiveSettings() {
+    const settingGeminiModel = document.getElementById('settingGeminiModel');
+    const settingOptimizationSensitivity = document.getElementById('settingOptimizationSensitivity');
+    const settingAtsEngine = document.getElementById('settingAtsEngine');
+
+    return {
+      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.0-flash',
+      sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
+      atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever'
+    };
+  }
+
   // Subscribe to Supabase auth state changes if Supabase is active
   const sbClient = getSupabase();
-  if (sbClient) {
+  if (sbClient && sbClient.auth) {
     sbClient.auth.onAuthStateChange((event, session) => {
-      if (session && session.user) {
-        showAppScreen(session.user);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session && session.user) {
+          showAppScreen(session.user);
+        }
       } else if (event === 'SIGNED_OUT') {
-        showAuthScreen();
+        handleSignOut();
+      } else if (event === 'USER_UPDATED') {
+        if (session && session.user) {
+          loadUserProfileFromSupabase(session.user.id);
+        }
       }
     });
   }
 
   window.addEventListener('supabaseReady', () => {
+    const sb = getSupabase();
+    if (sb && sb.auth) {
+      sb.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session && session.user) {
+            showAppScreen(session.user);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          handleSignOut();
+        }
+      });
+    }
     checkAuthState();
   });
 
@@ -594,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try { await sb.auth.signOut(); } catch(err) {}
     }
 
-    // Clear local authentication tokens
+    // Clear local authentication tokens & caches
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       localStorage.removeItem(ANALYTICS_HISTORY_KEY);
@@ -604,6 +635,15 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch(err) {}
 
+    // Reset in-memory application state
+    jobApplicationsList = [];
+
+    // Reset top user header elements
+    const topUserName = document.getElementById('topUserName');
+    const topUserAvatar = document.getElementById('topUserAvatar');
+    if (topUserName) topUserName.textContent = 'Developer';
+    if (topUserAvatar) topUserAvatar.textContent = 'DV';
+
     // Reset form fields
     const formIds = ['inputFullName','inputJobTitle','inputEmail','inputPhone','inputLocation',
                      'inputGithub','inputLinkedin','inputPortfolio','inputSummary','inputCertifications'];
@@ -612,6 +652,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bp) bp.value = '';
     const skillsContainer = document.getElementById('skillsTagsContainer');
     if (skillsContainer) skillsContainer.querySelectorAll('.tag').forEach(t => t.remove());
+
+    if (typeof renderJobTrackerTable === 'function') renderJobTrackerTable();
+    if (typeof updateAnalyticsDashboard === 'function') updateAnalyticsDashboard();
 
     showAuthScreen();
     if (typeof syncLivePreview === 'function') syncLivePreview();
@@ -655,10 +698,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const displayName = user.user_metadata?.full_name || user.name || user.email?.split('@')[0] || 'Developer';
     const email = user.email || 'developer@resuai.dev';
     const avatar = displayName.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0,2).join('').toUpperCase() || 'DV';
+    const profileCurrentPassword = document.getElementById('profileCurrentPassword');
     if (profileModalAvatar) profileModalAvatar.textContent = avatar;
     if (profileModalName)   profileModalName.textContent   = displayName;
     if (profileModalEmail)  profileModalEmail.textContent  = email;
     if (profileDisplayName) profileDisplayName.value = displayName;
+    if (profileCurrentPassword) profileCurrentPassword.value = '';
     if (profileNewPassword) profileNewPassword.value = '';
     if (profileFeedback)    profileFeedback.textContent = '';
     userProfileModal.style.display = 'flex';
@@ -684,20 +729,38 @@ document.addEventListener('DOMContentLoaded', () => {
       if (profileSaveText) profileSaveText.textContent = 'Saving…';
 
       const newName = profileDisplayName?.value.trim();
-      const newPass = profileNewPassword?.value;
+      const newPass = profileNewPassword?.value?.trim();
+      const currentPass = document.getElementById('profileCurrentPassword')?.value?.trim();
       const sb = getSupabase();
 
       try {
-        if (sb) {
-          if (newPass && newPass.length >= 6) {
+        if (newPass && newPass.length > 0) {
+          if (newPass.length < 6) {
+            throw new Error('New password must be at least 6 characters long.');
+          }
+          if (!currentPass) {
+            throw new Error('Please enter your current password to authorize password update.');
+          }
+          if (sb) {
+            const { data: { user } } = await sb.auth.getUser();
+            if (user && user.email) {
+              const { error: verifyErr } = await sb.auth.signInWithPassword({
+                email: user.email,
+                password: currentPass
+              });
+              if (verifyErr) {
+                throw new Error('Incorrect current password. Verification failed.');
+              }
+            }
             await sb.auth.updateUser({ password: newPass });
           }
-          if (newName) {
-            await sb.auth.updateUser({ data: { full_name: newName } });
-            const { data: { user } } = await sb.auth.getUser();
-            if (user) {
-              await sb.from('user_profiles').upsert({ id: user.id, full_name: newName, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-            }
+        }
+
+        if (sb && newName) {
+          await sb.auth.updateUser({ data: { full_name: newName } });
+          const { data: { user } } = await sb.auth.getUser();
+          if (user) {
+            await sb.from('user_profiles').upsert({ id: user.id, full_name: newName, updated_at: new Date().toISOString() }, { onConflict: 'id' });
           }
         }
         
@@ -1150,10 +1213,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean);
 
       try {
+        const activeSettings = getActiveSettings();
         const response = await fetch('/api/optimize-resume', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobTitle, experienceText: expText, skills })
+          body: JSON.stringify({ jobTitle, experienceText: expText, skills, geminiModel: activeSettings.geminiModel, sensitivity: activeSettings.sensitivity })
         });
         const data = await response.json();
         
@@ -1820,10 +1884,11 @@ document.addEventListener('DOMContentLoaded', () => {
         .filter(Boolean);
 
       try {
+        const activeSettings = getActiveSettings();
         const response = await fetch('/api/optimize-resume', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobTitle, experienceText: expText, skills })
+          body: JSON.stringify({ jobTitle, experienceText: expText, skills, geminiModel: activeSettings.geminiModel, sensitivity: activeSettings.sensitivity })
         });
 
         const data = await response.json();
@@ -2669,10 +2734,11 @@ Key Requirements:
    * @param {string} resumeText 
    */
   async function fetchBackendAtsAnalysis(jdText, resumeText) {
+    const activeSettings = getActiveSettings();
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jdText, resumeText })
+      body: JSON.stringify({ jdText, resumeText, geminiModel: activeSettings.geminiModel, atsEngine: activeSettings.atsEngine })
     });
 
     if (!response.ok) {
@@ -3145,10 +3211,11 @@ Key Requirements:
       }, 80);
 
       try {
+        const activeSettings = getActiveSettings();
         const res = await fetch('/api/generate-tailored-resume', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jdText, resumeText })
+          body: JSON.stringify({ jdText, resumeText, geminiModel: activeSettings.geminiModel })
         });
         const data = await res.json();
 
