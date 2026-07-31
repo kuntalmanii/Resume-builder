@@ -299,6 +299,13 @@ class OnboardingManager {
       tooltip.querySelector('#btnTourSkip').addEventListener('click', () => this.finishProductTour());
       tooltip.querySelector('#btnTourNext').addEventListener('click', () => this.nextTourStep());
       tooltip.querySelector('#btnTourPrev').addEventListener('click', () => this.prevTourStep());
+
+      // Passive window resize listener for 60fps tour positioning recalculations
+      window.addEventListener('resize', () => {
+        if (this.tourSpotlightEl && this.tourSpotlightEl.classList.contains('is-active')) {
+          this.renderTourStep(this.currentTourIndex);
+        }
+      }, { passive: true });
     } else {
       this.tourTooltipEl = document.getElementById('resuaiTourTooltip');
     }

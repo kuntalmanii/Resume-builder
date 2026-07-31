@@ -553,3 +553,27 @@
   background: #1D4ED8;
   transform: translateY(-1px);
 }
+
+/* ══════════════════════════════════════════════
+   GLOBAL ACCESSIBILITY & PREFERS-REDUCED-MOTION
+   ══════════════════════════════════════════════ */
+.onboarding-btn:focus-visible,
+.tour-btn:focus-visible,
+.tour-skip-btn:focus-visible {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resuai-onboarding-overlay,
+  .resuai-onboarding-card,
+  .resuai-welcome-overlay,
+  .resuai-welcome-card,
+  .resuai-tour-spotlight,
+  .resuai-tour-tooltip {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
