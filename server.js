@@ -657,7 +657,7 @@ const server = http.createServer((req, res) => {
   const contentType = MIME_TYPES[extname] || 'text/html';
 
   const isStaticAsset = ['.css', '.js', '.png', '.jpg', '.jpeg', '.svg', '.ico'].includes(extname.toLowerCase());
-  const cacheControlHeader = isStaticAsset ? 'public, max-age=31536000, immutable' : 'no-cache, must-revalidate';
+  const cacheControlHeader = 'no-cache, must-revalidate';
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
