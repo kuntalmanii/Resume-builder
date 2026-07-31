@@ -737,11 +737,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (focusables.length === 0) return;
 
     const firstEl = focusables[0];
-    const lastEl = focusables[focusables.length - 1];
+    const lastEl  = focusables[focusables.length - 1];
 
-    function handleKeyDown(e) {
+    // Abort (and auto-remove) any listener registered by a previous open of this modal.
+    // Storing the controller on the element keeps no external state and survives any
+    // number of open/close cycles with exactly 1 active listener at all times.
+    if (modalEl._focusTrapController) {
+      modalEl._focusTrapController.abort();
+    }
+    const controller = new AbortController();
+    modalEl._focusTrapController = controller;
+    const { signal } = controller;
+
+    modalEl.addEventListener('keydown', function handleKeyDown(e) {
       if (e.key === 'Escape') {
         modalEl.style.display = 'none';
+        controller.abort(); // clean up listener immediately on close
         return;
       }
       if (e.key === 'Tab') {
@@ -757,9 +768,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       }
-    }
+    }, { signal });
 
-    modalEl.addEventListener('keydown', handleKeyDown);
     setTimeout(() => firstEl.focus(), 50);
   }
 

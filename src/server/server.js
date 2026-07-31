@@ -555,7 +555,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'POST' && (pathname === '/api/analyze' || pathname === '/api/analyze-ats')) {
+  if (req.method === 'POST' && (pathname === '/api/analyze' || pathname === '/api/analyze-ats' || pathname === '/api/ats-analyze')) {
     (async () => {
       try {
         if (isRateLimited(clientIp)) {

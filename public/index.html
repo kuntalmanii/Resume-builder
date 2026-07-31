@@ -10,19 +10,30 @@
   <meta name="keywords" content="Developer Resume Builder, ATS Resume Scanner, Tech Job Application Tracker, Senior Engineer Resume, Gemini AI Resume Optimizer" />
   <meta name="author" content="ResuAI Dev Team" />
   <meta name="theme-color" content="#C98B4A" />
-  <link rel="canonical" href="http://localhost:8080/" />
+  <link rel="canonical" id="canonicalTag" href="" />
 
   <!-- OpenGraph Social Meta Tags -->
   <meta property="og:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
   <meta property="og:description" content="Architect executive developer resumes and beat corporate ATS parsers with real-time AI keyword scoring." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://localhost:8080/" />
+  <meta property="og:url" id="ogUrlTag" content="" />
   <meta property="og:site_name" content="ResuAI Studio" />
 
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
   <meta name="twitter:description" content="Optimize software engineering resumes with 98%+ ATS pass guarantee powered by Gemini 2.5 AI." />
+
+  <!-- Dynamic Canonical & OG URL — resolves to correct domain in both dev and production -->
+  <script>
+    (function() {
+      var origin = window.location.origin;
+      var canonical = document.getElementById('canonicalTag');
+      var ogUrl    = document.getElementById('ogUrlTag');
+      if (canonical) canonical.setAttribute('href', origin + '/');
+      if (ogUrl)     ogUrl.setAttribute('content', origin + '/');
+    })();
+  </script>
 
   <!-- Schema.org Structured Data (JSON-LD) -->
   <script type="application/ld+json">
@@ -47,10 +58,18 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,600,500,400&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link id="dynamicTypographyLink" rel="stylesheet" href="" />
-  <!-- Feather Icons for modern vector icons -->
-  <script src="https://unpkg.com/feather-icons"></script>
-  <!-- PDF.js library for in-browser PDF parsing -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Feather Icons v4.29.2 — pinned version with SHA-384 Subresource Integrity -->
+  <script
+    src="https://unpkg.com/feather-icons@4.29.2/dist/feather.min.js"
+    integrity="sha384-qEqAs1VsN9WH2myXDbiP2wGGIttL9bMRZBKCl54ZnzpDlVqbYANP9vMaoT/wvQcf"
+    crossorigin="anonymous"
+  ></script>
+  <!-- PDF.js v3.11.174 — pinned version with SHA-384 Subresource Integrity -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+    integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"
+    crossorigin="anonymous"
+  ></script>
   <link rel="stylesheet" href="/src/client/styles/styles.css?v=2.5" />
   <link rel="stylesheet" href="/src/client/components/onboarding.css?v=2.5" />
   <link rel="stylesheet" href="/src/client/components/help-center.css?v=2.5" />
