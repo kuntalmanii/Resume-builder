@@ -5,6 +5,9 @@
     { "source": "/api/ats-analyze", "destination": "/api/ats-analyze" },
     { "source": "/api/analyze", "destination": "/api/ats-analyze" },
     { "source": "/api/analyze-ats", "destination": "/api/ats-analyze" },
+    { "source": "/api/generate-tailored-resume", "destination": "/api/generate-tailored-resume" },
+    { "source": "/api/optimize-resume", "destination": "/api/optimize-resume" },
+    { "source": "/api/login", "destination": "/api/login" },
     { "source": "/src/(.*)", "destination": "/public/src/$1" },
     { "source": "/(.*)", "destination": "/public/index.html" }
   ]
