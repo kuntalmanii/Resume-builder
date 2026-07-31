@@ -192,7 +192,7 @@ class OnboardingManager {
   startWelcomeTour() {
     localStorage.setItem(this.welcomeStorageKey, 'true');
     this.hideWelcomeModal();
-    this.start();
+    this.startProductTour();
   }
 
   skipWelcome() {
@@ -208,6 +208,201 @@ class OnboardingManager {
     if (this.welcomeKeyHandler) {
       document.removeEventListener('keydown', this.welcomeKeyHandler);
     }
+  }
+
+  /* ══════════════════════════════════════════════
+     INTERACTIVE PRODUCT TOUR SPOTLIGHT SYSTEM
+     ══════════════════════════════════════════════ */
+  static getProductTourSteps() {
+    return [
+      {
+        selector: '#sidebar',
+        title: 'Navigation Sidebar',
+        desc: 'Access your resume versions, ATS analyzer, score analytics, and job applications pipeline from here.'
+      },
+      {
+        selector: '.doc-editor-body',
+        title: 'Resume Builder Canvas',
+        desc: 'Direct inline document editing on pure white floating paper. Edit text, experience bullets, and skills effortlessly.'
+      },
+      {
+        selector: '.editor-right-panel',
+        title: 'ATS Analyzer Engine',
+        desc: 'Real-time ATS keyword matching and diagnostic score. Target top corporate recruiters with 98%+ pass rates.'
+      },
+      {
+        selector: '[data-tab="analytics"]',
+        title: 'Score Analytics',
+        desc: 'Track your overall resume progress, keyword density, and competitive FAANG benchmarks over time.'
+      },
+      {
+        selector: '[data-tab="job-tracker"]',
+        title: 'Job Applications Pipeline',
+        desc: 'Organize job applications across Wishlist, Applied, Interviewing, and Offer stages with interactive Kanban boards.'
+      },
+      {
+        selector: '[data-tab="settings"]',
+        title: 'System & Account Settings',
+        desc: 'Customize platform preferences, manage AI API keys, and update candidate account profiles.'
+      }
+    ];
+  }
+
+  startProductTour() {
+    this.productTourSteps = OnboardingManager.getProductTourSteps();
+    this.currentTourIndex = 0;
+
+    // Check sidebar collapsed state & auto-expand if needed
+    const sidebar = document.getElementById('sidebar');
+    this.wasSidebarCollapsed = sidebar ? sidebar.classList.contains('collapsed') : false;
+    if (this.wasSidebarCollapsed && sidebar) {
+      sidebar.classList.remove('collapsed');
+    }
+
+    this.createTourDomElements();
+    this.renderTourStep(0);
+  }
+
+  createTourDomElements() {
+    if (!document.getElementById('resuaiTourSpotlight')) {
+      const spotlight = document.createElement('div');
+      spotlight.className = 'resuai-tour-spotlight';
+      spotlight.id = 'resuaiTourSpotlight';
+      document.body.appendChild(spotlight);
+      this.tourSpotlightEl = spotlight;
+    } else {
+      this.tourSpotlightEl = document.getElementById('resuaiTourSpotlight');
+    }
+
+    if (!document.getElementById('resuaiTourTooltip')) {
+      const tooltip = document.createElement('div');
+      tooltip.className = 'resuai-tour-tooltip';
+      tooltip.id = 'resuaiTourTooltip';
+      tooltip.innerHTML = `
+        <div class="tour-tooltip-header">
+          <span class="tour-step-badge" id="tourStepBadge">Step 1 of 6</span>
+          <button class="tour-skip-btn" id="btnTourSkip">Skip</button>
+        </div>
+        <h4 class="tour-tooltip-title" id="tourTooltipTitle">Feature Title</h4>
+        <p class="tour-tooltip-desc" id="tourTooltipDesc">Feature Description</p>
+        <div class="tour-tooltip-footer">
+          <div class="tour-nav-btns">
+            <button class="tour-btn tour-btn-secondary" id="btnTourPrev" style="display:none;">Previous</button>
+            <button class="tour-btn tour-btn-primary" id="btnTourNext">Next →</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(tooltip);
+      this.tourTooltipEl = tooltip;
+
+      // Event listeners
+      tooltip.querySelector('#btnTourSkip').addEventListener('click', () => this.finishProductTour());
+      tooltip.querySelector('#btnTourNext').addEventListener('click', () => this.nextTourStep());
+      tooltip.querySelector('#btnTourPrev').addEventListener('click', () => this.prevTourStep());
+    } else {
+      this.tourTooltipEl = document.getElementById('resuaiTourTooltip');
+    }
+  }
+
+  renderTourStep(index) {
+    if (!this.productTourSteps || index < 0 || index >= this.productTourSteps.length) {
+      this.finishProductTour();
+      return;
+    }
+
+    const step = this.productTourSteps[index];
+    const targetEl = document.querySelector(step.selector);
+
+    if (!targetEl) {
+      // Fallback if target element not found
+      if (index < this.productTourSteps.length - 1) {
+        this.renderTourStep(index + 1);
+      } else {
+        this.finishProductTour();
+      }
+      return;
+    }
+
+    // Auto-scroll target element into view smoothly
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+    setTimeout(() => {
+      const rect = targetEl.getBoundingClientRect();
+      const padding = 8;
+
+      // Highlight spotlight position
+      if (this.tourSpotlightEl) {
+        this.tourSpotlightEl.style.top = `${rect.top - padding}px`;
+        this.tourSpotlightEl.style.left = `${rect.left - padding}px`;
+        this.tourSpotlightEl.style.width = `${rect.width + (padding * 2)}px`;
+        this.tourSpotlightEl.style.height = `${rect.height + (padding * 2)}px`;
+        this.tourSpotlightEl.classList.add('is-active');
+      }
+
+      // Update tooltip content
+      const badge = this.tourTooltipEl.querySelector('#tourStepBadge');
+      const title = this.tourTooltipEl.querySelector('#tourTooltipTitle');
+      const desc = this.tourTooltipEl.querySelector('#tourTooltipDesc');
+      const btnPrev = this.tourTooltipEl.querySelector('#btnTourPrev');
+      const btnNext = this.tourTooltipEl.querySelector('#btnTourNext');
+
+      if (badge) badge.textContent = `Step ${index + 1} of ${this.productTourSteps.length}`;
+      if (title) title.textContent = step.title;
+      if (desc) desc.textContent = step.desc;
+
+      if (btnPrev) btnPrev.style.display = (index > 0) ? 'inline-flex' : 'none';
+      if (btnNext) btnNext.textContent = (index === this.productTourSteps.length - 1) ? 'Done 🚀' : 'Next →';
+
+      // Position tooltip smart placement
+      const tooltipWidth = 320;
+      const tooltipHeight = 180;
+
+      let top = rect.bottom + 16;
+      let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+
+      if (top + tooltipHeight > window.innerHeight - 20) {
+        top = Math.max(20, rect.top - tooltipHeight - 16);
+      }
+      if (left + tooltipWidth > window.innerWidth - 20) {
+        left = window.innerWidth - tooltipWidth - 20;
+      }
+      if (left < 20) left = 20;
+
+      if (this.tourTooltipEl) {
+        this.tourTooltipEl.style.top = `${top}px`;
+        this.tourTooltipEl.style.left = `${left}px`;
+        this.tourTooltipEl.classList.add('is-active');
+      }
+    }, 200);
+  }
+
+  nextTourStep() {
+    if (this.currentTourIndex < this.productTourSteps.length - 1) {
+      this.currentTourIndex++;
+      this.renderTourStep(this.currentTourIndex);
+    } else {
+      this.finishProductTour();
+    }
+  }
+
+  prevTourStep() {
+    if (this.currentTourIndex > 0) {
+      this.currentTourIndex--;
+      this.renderTourStep(this.currentTourIndex);
+    }
+  }
+
+  finishProductTour() {
+    if (this.tourSpotlightEl) this.tourSpotlightEl.classList.remove('is-active');
+    if (this.tourTooltipEl) this.tourTooltipEl.classList.remove('is-active');
+
+    // Restore previous sidebar collapsed state
+    const sidebar = document.getElementById('sidebar');
+    if (this.wasSidebarCollapsed && sidebar) {
+      sidebar.classList.add('collapsed');
+    }
+
+    localStorage.setItem('resuai_product_tour_completed', 'true');
   }
 
   createDomElements() {
