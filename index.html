@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>ResuAI // Developer Resume Studio & ATS Diagnostic Engine</title>
+  
+  <!-- Standard SEO Meta Tags -->
+  <meta name="description" content="Build executive developer resumes, optimize ATS match scores, and track technical job application pipelines with Google Gemini 2.5 Flash AI." />
+  <meta name="keywords" content="Developer Resume Builder, ATS Resume Scanner, Tech Job Application Tracker, Senior Engineer Resume, Gemini AI Resume Optimizer" />
+  <meta name="author" content="ResuAI Dev Team" />
+  <meta name="theme-color" content="#C98B4A" />
+  <link rel="canonical" id="canonicalTag" href="" />
+
+  <!-- OpenGraph Social Meta Tags -->
+  <meta property="og:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
+  <meta property="og:description" content="Architect executive developer resumes and beat corporate ATS parsers with real-time AI keyword scoring." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" id="ogUrlTag" content="" />
+  <meta property="og:site_name" content="ResuAI Studio" />
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
+  <meta name="twitter:description" content="Optimize software engineering resumes with 98%+ ATS pass guarantee powered by Gemini 2.5 AI." />
+
+  <!-- Dynamic Canonical & OG URL — resolves to correct domain in both dev and production -->
+  <script>
+    (function() {
+      var origin = window.location.origin;
+      var canonical = document.getElementById('canonicalTag');
+      var ogUrl    = document.getElementById('ogUrlTag');
+      if (canonical) canonical.setAttribute('href', origin + '/');
+      if (ogUrl)     ogUrl.setAttribute('content', origin + '/');
+    })();
+  </script>
+
+  <!-- Schema.org Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ResuAI",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0.00",
+      "priceCurrency": "USD"
+    },
+    "description": "Enterprise AI developer resume builder, ATS match analyzer, and job application pipeline tracker."
+  }
+  </script>
+
+  <!-- Google & Fontshare Fonts: Satoshi, Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,600,500,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link id="dynamicTypographyLink" rel="stylesheet" href="" />
+  <!-- Feather Icons v4.29.2 — pinned version with SHA-384 Subresource Integrity -->
+  <script
+    src="https://unpkg.com/feather-icons@4.29.2/dist/feather.min.js"
+    integrity="sha384-qEqAs1VsN9WH2myXDbiP2wGGIttL9bMRZBKCl54ZnzpDlVqbYANP9vMaoT/wvQcf"
+    crossorigin="anonymous"
+  ></script>
+  <!-- PDF.js v3.11.174 — pinned version with SHA-384 Subresource Integrity -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+    integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"
+    crossorigin="anonymous"
+  ></script>
+  <link rel="stylesheet" href="/src/client/styles/styles.css?v=2.5" />
+  <link rel="stylesheet" href="/src/client/components/onboarding.css?v=2.5" />
+  <link rel="stylesheet" href="/src/client/components/help-center.css?v=2.5" />
+  <link rel="stylesheet" href="/src/client/components/contextual-tips.css?v=2.5" />
+  <link rel="stylesheet" href="/src/client/components/checklist.css?v=2.5" />
+  <link rel="stylesheet" href="/src/client/components/command-palette.css?v=2.5" />
+  <link rel="stylesheet" href="/src/client/styles/empty-states.css?v=2.5" />
+  <!-- Supabase Browser Client (ES Module — must load before script.js) -->
+  <script type="module" src="/src/client/engines/supabase-client.js"></script>
+</head>
+<body data-theme="sunset-amber">
+  
+  <!-- Auth Screen Container (Centered Experience) -->
+  <div class="auth-container" id="authContainer">
+    <!-- Ambient Noise & Glow Orbs Background -->
+    <div class="auth-bg-ambient">
+      <div class="auth-grid-overlay"></div>
+      <div class="auth-orb orb-1"></div>
+      <div class="auth-orb orb-2"></div>
+      <div class="auth-orb orb-3"></div>
+    </div>
+
+    <div class="auth-split-layout">
+      <!-- Centered Auth Card -->
+      <div class="auth-card-wrapper">
+        <div class="auth-card">
+          <!-- Brand Logo Header -->
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: var(--sp-6);">
+            <div class="logo-icon" style="width: 44px; height: 44px; margin-bottom: var(--sp-3); border-radius: var(--r-md); background: var(--text-primary); display: flex; align-items: center; justify-content: center;">
+              <i data-feather="cpu" style="width: 22px; height: 22px; color: #FFF;"></i>
+            </div>
+            <h2 id="authTitle" style="font-family: var(--font-heading); font-size: 26px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); margin-bottom: var(--sp-1);">Welcome back</h2>
+            <p id="authSubtitle" style="font-size: var(--text-sm); color: var(--text-secondary); max-width: 340px; margin: 0 auto; line-height: 1.5;">Sign in to your ResuAI workspace to access your resumes &amp; ATS metrics.</p>
+          </div>
+
+          <form class="auth-form" id="authForm" novalidate>
+            <div class="form-group signup-only-field" id="nameField" style="display: none;">
+              <label for="authName">Full Name</label>
+              <div class="input-icon-wrapper">
+                <i data-feather="user"></i>
+                <input type="text" id="authName" class="form-input" autocomplete="name" placeholder="Alex Mercer" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="authEmail">Work Email Address</label>
+              <div class="input-icon-wrapper">
+                <i data-feather="mail"></i>
+                <input type="email" id="authEmail" class="form-input" inputmode="email" autocomplete="username" placeholder="name@company.com" required value="" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="authPassword">Password</label>
+                <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
+              </div>
+              <div class="input-icon-wrapper">
+                <i data-feather="key"></i>
+                <input type="password" id="authPassword" class="form-input" autocomplete="current-password" placeholder="••••••••••••" required value="" />
+                <button type="button" class="btn-toggle-eye" id="btnAuthPasswordEye" title="Show/Hide Password">
+                  <i data-feather="eye"></i>
+                </button>
+              </div>
+              <!-- Real-time Password Security Strength Meter -->
+              <div class="password-strength-container" id="passwordStrengthWrapper">
+                <div class="strength-bar-track">
+                  <div class="strength-bar-fill" id="authStrengthFill"></div>
+                </div>
+                <div class="strength-meta">
+                  <span class="strength-text" id="authStrengthText">Security Strength</span>
+                  <span class="strength-score" id="authStrengthScore">0/4</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="auth-options-row">
+              <label class="remember-label">
+                <input type="checkbox" id="authRememberMe" checked />
+                <span>Remember me on this device</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn-primary btn-full btn-auth" id="authSubmitBtn">
+              <span id="authSubmitText">Continue</span>
+              <i data-feather="arrow-right"></i>
+            </button>
+
+            <button type="button" class="btn-quick-demo" id="btnQuickDemoLogin" title="1-Click Instant Demo Login">
+              <i data-feather="zap"></i>
+              <span>⚡ 1-Click Quick Demo Sign In</span>
+            </button>
+
+            <div class="sso-buttons-row" style="display:flex;gap:8px;margin-top:10px;">
+              <button type="button" class="topbar-action-btn" id="ssoGoogleBtn" style="flex:1;justify-content:center;font-size:12px;padding:6px 10px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 15.987 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                Google
+              </button>
+              <button type="button" class="topbar-action-btn" id="ssoGithubBtn" style="flex:1;justify-content:center;font-size:12px;padding:6px 10px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </button>
+            </div>
+          </form>
+
+          <div class="auth-security-badge">
+            <i data-feather="shield"></i>
+            <span>256-Bit Encrypted Local Isolation</span>
+          </div>
+
+          <div class="auth-footer">
+            <span id="authToggleQuestion">Don't have an account?</span>
+            <a href="#" id="authToggleBtn">Sign Up</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="appContainer" style="display: none;">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Header: Brand + Collapse toggle -->
+      <div class="sidebar-header">
+        <a class="sidebar-brand" href="#" aria-label="ResuAI home">
+          <div class="sidebar-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <path d="M8 7h8M8 12h5M8 17h3"/>
+            </svg>
+          </div>
+          <span class="sidebar-brand-name">ResuAI</span>
+        </a>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <!-- Mobile close -->
+        <button class="mobile-close-btn" id="mobileCloseBtn" aria-label="Close menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- New Resume CTA -->
+      <div class="sidebar-new-btn-wrap">
+        <button class="sidebar-new-btn" id="sidebarNewResumeBtn" title="New Resume Version">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span class="sidebar-new-btn-label">New Resume Version</span>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav" role="navigation" aria-label="Main navigation">
+
+        <!-- Studio group -->
+        <div class="nav-group">
+          <div class="nav-group-label">Studio</div>
+          <a href="#resume-builder" class="nav-item active" data-tab="resume-builder" data-tooltip="Resume Builder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+            </svg>
+            <span class="nav-label">Resume Builder</span>
+          </a>
+          <a href="#ats-analyzer" class="nav-item" data-tab="ats-analyzer" data-tooltip="ATS Analyzer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <span class="nav-label">ATS Analyzer</span>
+            <span class="spark-badge">AI</span>
+          </a>
+        </div>
+
+        <!-- Metrics group -->
+        <div class="nav-group">
+          <div class="nav-group-label">Metrics</div>
+          <a href="#analytics" class="nav-item" data-tab="analytics" data-tooltip="Score Analytics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+            <span class="nav-label">Score Analytics</span>
+          </a>
+          <a href="#job-tracker" class="nav-item" data-tab="job-tracker" data-tooltip="Job Applications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+            <span class="nav-label">Job Applications</span>
+            <span class="live-badge">Live</span>
+          </a>
+        </div>
+
+        <!-- System group -->
+        <div class="nav-group">
+          <div class="nav-group-label">System</div>
+          <a href="#settings" class="nav-item" data-tab="settings" data-tooltip="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span class="nav-label">Settings</span>
+          </a>
+        </div>
+
+      </nav>
+
+      <!-- Footer: Profile + Sign Out -->
+      <div class="sidebar-footer">
+        <div class="user-profile-pill sidebar-profile-pill" id="sidebarUserPill" title="My Account">
+          <div class="user-avatar" id="topUserAvatar">DV</div>
+          <div class="user-info">
+            <span class="user-name" id="topUserName">Developer</span>
+            <span class="user-role" id="topUserRole">Software Engineer</span>
+          </div>
+        </div>
+        <button class="btn-signout sidebar-signout-btn" id="topSignoutBtn" title="Sign Out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+          <span>Sign Out</span>
+        </button>
+        <button id="logoutBtn" style="display:none;"></button>
+      </div>
+
+    </aside>
+
+    <!-- Sidebar Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileToggleBtn" aria-label="Toggle menu">
+            <i data-feather="menu"></i>
+          </button>
+          
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <span class="breadcrumb-item">Workspace</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item" id="breadcrumbCategory">ResuAI</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active" id="breadcrumbActive">Resume Builder</span>
+          </nav>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- Header Search Bar -->
+          <div class="top-bar-search" style="position:relative; margin-right:12px;">
+            <input type="text" id="globalHeaderSearch" placeholder="Search workspace..." class="form-input" aria-label="Search workspace" style="font-size:0.8rem; padding:4px 10px 4px 28px; width:180px; height:32px; border-radius:16px; background:rgba(255,255,255,0.05);" />
+            <i data-feather="search" style="position:absolute; left:8px; top:8px; width:14px; height:14px; opacity:0.6;"></i>
+          </div>
+
+          <!-- Theme Switcher Bar -->
+          <div class="theme-switcher-bar" title="Switch UI Theme">
+            <span class="switcher-label">Theme</span>
+            <div class="theme-options">
+
+              <button class="theme-btn" data-theme-id="sunset-amber" title="Sunset Amber">
+                <span class="theme-swatch swatch-amber"></span>
+                <span class="theme-name">Amber</span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Container -->
+      <main class="main-content">
+        <!-- Content Header Banner -->
+        <div class="content-header" id="contentHeader">
+          <div class="header-titles">
+            <div class="header-badge">
+              <i data-feather="activity"></i>
+              <span>AI Engine Active // GPT-4o Resume Matcher</span>
+            </div>
+            <h1 id="pageTitle">Resume Studio</h1>
+            <p id="pageDescription">Optimize your developer resume for high-tier tech companies & ATS scanners with real-time scoring.</p>
+          </div>
+        </div>
+
+
+
+        <!-- Dynamic Tab Views -->
+        <div class="tab-content-container">
+          <!-- TAB 1: RESUME BUILDER -->
+          <div class="tab-pane active" id="tab-resume-builder">
+
+            <!-- ══════════════════════════════════════════════
+                 LEGACY INPUTS — Hidden but DOM-present for JS
+                 All IDs preserved for script.js compatibility
+                 ══════════════════════════════════════════════ -->
+            <div id="legacyResumeInputs" style="display:none;position:absolute;pointer-events:none;opacity:0;z-index:-1;" aria-hidden="true">
+              <input type="text"  id="inputFullName"       class="form-input live-sync" value="" />
+              <input type="text"  id="inputJobTitle"       class="form-input live-sync" value="" />
+              <input type="email" id="inputEmail"          class="form-input live-sync" value="" />
+              <input type="text"  id="inputPhone"          class="form-input live-sync" value="" />
+              <input type="text"  id="inputLocation"       class="form-input live-sync" value="" />
+              <input type="text"  id="inputGithub"         class="form-input live-sync" value="" />
+              <input type="text"  id="inputLinkedin"       class="form-input live-sync" value="" />
+              <input type="text"  id="inputPortfolio"      class="form-input live-sync" value="" />
+              <textarea id="inputSummary"    class="form-textarea live-sync" rows="4"></textarea>
+              <textarea id="bulletPoints"    class="form-textarea live-sync" rows="6"></textarea>
+              <input type="text"  id="inputEducation"      class="form-input live-sync" value="" />
+              <input type="text"  id="inputCertifications" class="form-input live-sync" value="" />
+              <textarea id="inputProjects"      class="form-textarea live-sync" rows="4"></textarea>
+              <textarea id="inputAchievements"  class="form-textarea live-sync" rows="4"></textarea>
+              <!-- Skills system (must remain intact for JS) -->
+              <div class="tags-input-container" id="skillsTagsContainer" style="position:relative;">
+                <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill" autocomplete="off" />
+                <div class="skill-autocomplete-dropdown" id="skillAutocompleteDropdown" style="display:none;"></div>
+              </div>
+              <div class="skill-suggestions-wrapper">
+                <div class="skill-category-filters" id="skillCategoryFilters">
+                  <button type="button" class="category-chip active" data-category="popular">Popular</button>
+                  <button type="button" class="category-chip" data-category="frontend">Frontend</button>
+                  <button type="button" class="category-chip" data-category="backend">Backend</button>
+                  <button type="button" class="category-chip" data-category="devops">DevOps &amp; Cloud</button>
+                  <button type="button" class="category-chip" data-category="ai">AI &amp; Data</button>
+                </div>
+                <div class="skill-pills-container" id="skillPillsContainer"></div>
+              </div>
+              <!-- Meters (read by JS) -->
+              <span id="strengthPercentVal">85% Complete</span>
+              <div class="strength-progress-fill" id="strengthProgressFill" style="width:85%;"></div>
+              <span id="strengthTip"></span>
+              <span id="xyzMeterScore">0% Metrics Compliance (0/0 Bullets)</span>
+              <div id="xyzMetricMeterBar"></div>
+              <span id="charCounter">0 / 2000 characters</span>
+              <div id="aiInsightScorePill"></div>
+              <span id="previewSyncLabel"></span>
+              <!-- FAANG chips -->
+              <div id="faangLevelChips">
+                <button type="button" class="level-chip" data-level="L4"><span class="level-code">L4</span><span class="level-name">SWE II</span><span class="level-yoe">2-4 yrs</span></button>
+                <button type="button" class="level-chip active" data-level="L5"><span class="level-code">L5</span><span class="level-name">Senior Eng</span><span class="level-yoe">5-8 yrs</span></button>
+                <button type="button" class="level-chip" data-level="L6"><span class="level-code">L6</span><span class="level-name">Staff / TL</span><span class="level-yoe">8-12 yrs</span></button>
+                <button type="button" class="level-chip" data-level="L7"><span class="level-code">L7</span><span class="level-name">Principal</span><span class="level-yoe">12+ yrs</span></button>
+              </div>
+              <!-- XYZ verb chips -->
+              <div class="verb-chips-container" id="verbChipsContainer">
+                <button type="button" class="verb-chip" data-verb="Architected high-throughput microservices using Go &amp; gRPC, scaling system capacity by 350% to 50,000 req/sec.">Scaled 50k req/sec</button>
+                <button type="button" class="verb-chip" data-verb="Optimized p99 API latency by 45% (from 280ms to 95ms) by implementing Redis caching and database indexing.">Latency -45%</button>
+                <button type="button" class="verb-chip" data-verb="Reduced AWS cloud infrastructure costs by $120,000/year through Kubernetes cluster auto-scaling and spot instances.">Cost -$120k/yr</button>
+                <button type="button" class="verb-chip" data-verb="Spearheaded cross-functional team of 12 engineers, delivering zero-downtime CI/CD deployment pipelines.">Led 12 Engineers</button>
+                <button type="button" class="verb-chip" data-verb="Automated test suite coverage from 40% to 92%, decreasing production release bugs by 68%.">Tests 40→92%</button>
+              </div>
+              <!-- Action buttons (triggered by new UI via proxy calls) -->
+              <button id="btnAutoOptimize" type="button">Auto-Optimize</button>
+              <button id="btnDraftSaveFooter" type="button">Save Draft</button>
+              <button id="btnNextStep" type="button">Next Step</button>
+              <button id="btnXyzTransform" type="button">Transform XYZ</button>
+              <button id="btnSuggestAiSkills" type="button">AI Suggest Skills</button>
+              <button id="btnNewResume" type="button">New Resume</button>
+              <!-- Step indicator (hidden but JS-compatible) -->
+              <div class="step-indicator-bar" id="stepIndicatorBar">
+                <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-info"><span class="step-title">Fill Details</span><span class="step-sub">Personal &amp; Experience</span></div></div>
+                <div class="step-line"></div>
+                <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-info"><span class="step-title">Generate Resume</span><span class="step-sub">AI Optimization</span></div></div>
+                <div class="step-line"></div>
+                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-info"><span class="step-title">Preview &amp; Export</span><span class="step-sub">Download PDF</span></div></div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 EDITOR TOPBAR
+                 ══════════════════════════════════════════════ -->
+            <div class="doc-editor-topbar" id="docEditorTopbar">
+              <!-- Resume name -->
+              <input class="doc-resume-name-input" id="docResumeName" type="text" value="My Resume" spellcheck="false" title="Click to rename" />
+              <!-- Save status -->
+              <div class="doc-autosave-status saved" id="docAutosaveStatus" role="status" aria-live="polite" title="Sync status">
+                <svg id="docSaveStatusIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="docSaveStatusText">Synced</span>
+              </div>
+              <div class="topbar-divider"></div>
+              <!-- Profile strength -->
+              <div class="topbar-strength-pill" id="topbarStrengthPill" title="Resume completion score">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span class="topbar-strength-val" id="topbarStrengthPct">85%</span>
+                <span>Complete</span>
+              </div>
+              <div class="topbar-spacer"></div>
+              <!-- Action buttons -->
+              <button class="topbar-action-btn" id="topbarSaveDraftBtn" title="Save Draft" onclick="document.getElementById('btnDraftSaveFooter')?.click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Draft
+              </button>
+              <button class="topbar-action-btn btn-amber" id="topbarOptimizeBtn" title="AI Auto-Optimize" onclick="document.getElementById('btnAutoOptimize')?.click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                AI Optimize
+              </button>
+              <button class="topbar-action-btn" id="btnImportJson" title="Import Resume JSON">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import JSON
+              </button>
+              <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
+              <button class="topbar-action-btn" id="btnExportJson" title="Export JSON">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                JSON
+              </button>
+              <button class="topbar-action-btn" id="btnExportPdf" title="Export PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export PDF
+              </button>
+              <button class="topbar-action-btn btn-primary" id="btnPrintPdf" title="Download & Print PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Download PDF
+              </button>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 THREE-PANEL WORKSPACE
+                 ══════════════════════════════════════════════ -->
+            <div class="editor-workspace">
+
+              <!-- ─────────────────────────────────────────
+                   LEFT PANEL — Document Outline / Navigator
+                   ───────────────────────────────────────── -->
+              <aside class="editor-left-panel">
+                <div class="editor-left-header">
+                  <span class="editor-left-title">Document Outline</span>
+                </div>
+
+                <!-- FAANG Level Strip -->
+                <div class="faang-strip">
+                  <div class="faang-strip-label">Seniority Level</div>
+                  <div class="faang-strip-chips" id="faangStripChips">
+                    <button type="button" class="level-chip" data-level="L4" onclick="syncFaangChip(this)"><span class="level-code">L4</span><span class="level-name">SWE II</span><span class="level-yoe">2-4 yrs</span></button>
+                    <button type="button" class="level-chip active" data-level="L5" onclick="syncFaangChip(this)"><span class="level-code">L5</span><span class="level-name">Senior</span><span class="level-yoe">5-8 yrs</span></button>
+                    <button type="button" class="level-chip" data-level="L6" onclick="syncFaangChip(this)"><span class="level-code">L6</span><span class="level-name">Staff</span><span class="level-yoe">8-12 yrs</span></button>
+                    <button type="button" class="level-chip" data-level="L7" onclick="syncFaangChip(this)"><span class="level-code">L7</span><span class="level-name">Principal</span><span class="level-yoe">12+ yrs</span></button>
+                  </div>
+                </div>
+
+                <!-- Section Nav -->
+                <nav class="section-nav" id="sectionNav">
+                  <div class="section-nav-item active" data-target="docSection-personal" onclick="editorNavTo('docSection-personal', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Personal Info</span>
+                    <span class="section-nav-pct" id="navPct-personal">—</span>
+                  </div>
+                  <div class="section-nav-item" data-target="docSection-summary" onclick="editorNavTo('docSection-summary', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Summary</span>
+                    <span class="section-nav-pct" id="navPct-summary">—</span>
+                  </div>
+                  <div class="section-nav-item" data-target="docSection-experience" onclick="editorNavTo('docSection-experience', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Experience</span>
+                    <span class="section-nav-pct" id="navPct-experience">—</span>
+                  </div>
+                  <div class="section-nav-item" data-target="docSection-skills" onclick="editorNavTo('docSection-skills', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Skills</span>
+                    <span class="section-nav-pct" id="navPct-skills">—</span>
+                  </div>
+                  <div class="section-nav-item" data-target="docSection-education" onclick="editorNavTo('docSection-education', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Education</span>
+                    <span class="section-nav-pct" id="navPct-education">—</span>
+                  </div>
+                  <div class="section-nav-item" data-target="docSection-certs" onclick="editorNavTo('docSection-certs', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Certifications</span>
+                    <span class="section-nav-pct" id="navPct-certs">—</span>
+                  </div>
+                </nav>
+
+                <div class="editor-left-footer">
+                  <button class="editor-new-section-btn" id="btnNewResumeSidebar" onclick="document.getElementById('btnNewResume')?.click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Resume
+                  </button>
+                </div>
+              </aside>
+
+              <!-- ─────────────────────────────────────────
+                   CENTER PANEL — Inline Document Editor
+                   ───────────────────────────────────────── -->
+              <div class="editor-center-panel">
+
+                <!-- Formatting Toolbar -->
+                <div class="rich-text-toolbar">
+                  <button class="rtt-btn" id="rttBold"      title="Bold (⌘B)"      onclick="execFmt('bold')"><b>B</b></button>
+                  <button class="rtt-btn" id="rttItalic"    title="Italic (⌘I)"    onclick="execFmt('italic')"><i>I</i></button>
+                  <button class="rtt-btn" id="rttUnderline" title="Underline (⌘U)" onclick="execFmt('underline')"><u>U</u></button>
+                  <div class="rtt-separator"></div>
+                  <button class="rtt-btn" title="Undo (⌘Z)" onclick="document.execCommand('undo')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+                  </button>
+                  <button class="rtt-btn" title="Redo (⌘⇧Z)" onclick="document.execCommand('redo')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.51"/></svg>
+                  </button>
+                  <div class="rtt-separator"></div>
+                  <button class="rtt-btn" title="Bullet List" onclick="execFmt('insertUnorderedList')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  </button>
+                  <div class="rtt-separator"></div>
+                  <span class="rtt-label" id="rttSectionLabel">Personal Info</span>
+                  <div class="rtt-spacer"></div>
+                  <button class="rtt-optimize-btn" id="rttOptimizeBtn" onclick="document.getElementById('btnAutoOptimize')?.click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    AI Auto-Optimize
+                  </button>
+                </div>
+
+                <!-- Document Scroll Area -->
+                <div class="doc-editor-scroll" id="docEditorScroll">
+                  <div class="doc-editor-body" id="docEditorBody">
+
+                    <!-- §1 PERSONAL INFORMATION -->
+                    <div class="doc-section-block" id="docSection-personal" data-section="personal">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>Personal Details</span>
+                      </div>
+                      <!-- Name -->
+                      <div class="doc-field doc-name-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="Your Full Name"
+                           data-syncs="inputFullName"
+                           id="docFieldName"
+                           aria-label="Full Name"></div>
+                      <!-- Job Title -->
+                      <div class="doc-field doc-title-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="Target Job Title — e.g. Senior Frontend Engineer"
+                           data-syncs="inputJobTitle"
+                           id="docFieldTitle"
+                           aria-label="Job Title"></div>
+                      <!-- Contact Row -->
+                      <div class="doc-contact-grid">
+                        <div class="doc-contact-item">
+                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          <div class="doc-contact-field" contenteditable="true" data-placeholder="Email" data-syncs="inputEmail" aria-label="Email"></div>
+                        </div>
+                        <div class="doc-contact-item">
+                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                          <div class="doc-contact-field" contenteditable="true" data-placeholder="Phone" data-syncs="inputPhone" aria-label="Phone"></div>
+                        </div>
+                        <div class="doc-contact-item">
+                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <div class="doc-contact-field" contenteditable="true" data-placeholder="Location" data-syncs="inputLocation" aria-label="Location"></div>
+                        </div>
+                        <div class="doc-contact-item">
+                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                          <div class="doc-contact-field" contenteditable="true" data-placeholder="github.com/username" data-syncs="inputGithub" aria-label="GitHub"></div>
+                        </div>
+                        <div class="doc-contact-item">
+                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                          <div class="doc-contact-field" contenteditable="true" data-placeholder="linkedin.com/in/you" data-syncs="inputLinkedin" aria-label="LinkedIn"></div>
+                        </div>
+                        <div class="doc-contact-item">
+                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                          <div class="doc-contact-field" contenteditable="true" data-placeholder="yourportfolio.dev" data-syncs="inputPortfolio" aria-label="Portfolio"></div>
+                        </div>
+                      </div>
+                      <!-- Section hover actions -->
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="Collapse" onclick="toggleDocSection('docSection-personal')">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §2 PROFESSIONAL SUMMARY -->
+                    <div class="doc-section-block" id="docSection-summary" data-section="summary">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Professional Summary</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="Write a compelling 2–3 sentence executive summary. E.g. Staff Engineer with 8+ years architecting distributed systems at scale, delivering 40% latency improvements at Google..."
+                           data-syncs="inputSummary"
+                           id="docFieldSummary"
+                           aria-label="Professional Summary"
+                           style="min-height:80px;"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Improve Writing" onclick="sendAiAction('Improve the writing of my professional summary')">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                          <span>✦ Improve Writing</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Shorten" onclick="sendAiAction('Shorten my summary to be concise and punchy')">
+                          <span>✦ Shorten</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Executive" onclick="sendAiAction('Rewrite my summary with an executive leadership tone')">
+                          <span>✦ Executive</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Technical" onclick="sendAiAction('Rewrite my summary with a strong technical focus')">
+                          <span>✦ Technical</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Friendly" onclick="sendAiAction('Optimize my summary for ATS keyword matching')">
+                          <span>✦ ATS Friendly</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §3 WORK EXPERIENCE -->
+                    <div class="doc-section-block" id="docSection-experience" data-section="experience">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        <span>Work Experience</span>
+                      </div>
+                      <!-- XYZ meter strip -->
+                      <div class="doc-xyz-strip">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        <span class="doc-xyz-score-text">Google XYZ Impact: <span id="xyzMeterScoreDisplay">Add bullets below</span></span>
+                        <button class="doc-xyz-transform-btn" onclick="document.getElementById('btnXyzTransform')?.click()">Transform to XYZ</button>
+                      </div>
+                      <!-- Bullet list -->
+                      <ul class="doc-bullets-list" id="docBulletsList"></ul>
+                      <button class="doc-add-bullet-btn" id="docAddBulletBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add bullet point
+                      </button>
+                      <!-- XYZ preset chips -->
+                      <div class="doc-verb-chips" id="docVerbChips">
+                        <span style="font-size:10px;font-weight:700;color:#B0AAA2;letter-spacing:.07em;text-transform:uppercase;margin-right:2px;align-self:center;">XYZ Presets:</span>
+                        <button class="doc-verb-chip" onclick="addBulletFromPreset('Architected high-throughput microservices using Go &amp; gRPC, scaling system capacity by 350% to 50,000 req/sec.')">Scaled 50k req/sec</button>
+                        <button class="doc-verb-chip" onclick="addBulletFromPreset('Optimized p99 API latency by 45% (from 280ms to 95ms) by implementing Redis caching and database indexing.')">Latency -45%</button>
+                        <button class="doc-verb-chip" onclick="addBulletFromPreset('Reduced AWS cloud infrastructure costs by $120,000/year through Kubernetes cluster auto-scaling and spot instances.')">Cost -$120k/yr</button>
+                        <button class="doc-verb-chip" onclick="addBulletFromPreset('Spearheaded cross-functional team of 12 engineers, delivering zero-downtime CI/CD deployment pipelines.')">Led 12 Engineers</button>
+                        <button class="doc-verb-chip" onclick="addBulletFromPreset('Automated test suite coverage from 40% to 92%, decreasing production release bugs by 68%.')">Tests 40→92%</button>
+                      </div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Improve Bullets" onclick="sendAiAction('Improve my experience bullet points with stronger action verbs and metrics')">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                          <span>✦ Improve Bullet</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Convert to XYZ" onclick="document.getElementById('btnXyzTransform')?.click()">
+                          <span>✦ Convert to XYZ</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Quantify" onclick="sendAiAction('Add quantifiable metrics and numbers to my experience bullets')">
+                          <span>✦ Quantify</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Rewrite" onclick="sendAiAction('Rewrite my experience bullet points for stronger impact')">
+                          <span>✦ Rewrite</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §4 SKILLS -->
+                    <div class="doc-section-block" id="docSection-skills" data-section="skills">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        <span>Skills &amp; Technologies</span>
+                      </div>
+                      <div class="doc-skills-wrapper" id="docSkillsWrapper">
+                        <input class="doc-skill-add-input" id="docSkillInput" placeholder="+ Add a skill, press Enter" autocomplete="off" />
+                      </div>
+                      <div class="doc-skill-suggestions">
+                        <div class="doc-skill-suggestion-label">Quick add:</div>
+                        <div class="doc-skill-suggestion-chips" id="docSkillSuggestionChips">
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('TypeScript')">TypeScript</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('React')">React</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Next.js')">Next.js</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Node.js')">Node.js</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Python')">Python</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Go')">Go</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('AWS')">AWS</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Docker')">Docker</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Kubernetes')">Kubernetes</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('PostgreSQL')">PostgreSQL</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Redis')">Redis</button>
+                          <button class="doc-skill-suggestion-chip" onclick="addDocSkill('GraphQL')">GraphQL</button>
+                          <button class="doc-skill-suggestion-chip" onclick="document.getElementById('btnSuggestAiSkills')?.click()">✦ AI Suggest</button>
+                        </div>
+                      </div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Suggest Skills" onclick="document.getElementById('btnSuggestAiSkills')?.click()">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                          <span>✦ AI Suggest Skills</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Categorize Skills" onclick="sendAiAction('Categorize my skills into clean groups')">
+                          <span>✦ Categorize</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Tailor to Role" onclick="sendAiAction('Tailor my skills to match top industry job requirements')">
+                          <span>✦ Tailor to Role</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §5 EDUCATION -->
+                    <div class="doc-section-block" id="docSection-education" data-section="education">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        <span>Education</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="e.g. B.Tech Computer Science, IIT Delhi — 2019 · CGPA 9.1/10"
+                           data-syncs="inputEducation"
+                           id="docFieldEducation"
+                           aria-label="Education"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format education for high ATS parser score')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §6 CERTIFICATIONS -->
+                    <div class="doc-section-block" id="docSection-certs" data-section="certs">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        <span>Certifications &amp; Credentials</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="e.g. AWS Solutions Architect (2023) · Google Cloud Professional (2024) · CKA Kubernetes"
+                           data-syncs="inputCertifications"
+                           id="docFieldCerts"
+                           aria-label="Certifications"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the professional credibility of my certifications')">
+                          <span>✦ Highlight Impact</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format certifications for optimal ATS scanning')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §7 PROJECTS -->
+                    <div class="doc-section-block" id="docSection-projects" data-section="projects">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span>Key Projects &amp; Initiatives</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="e.g. ResuAI — Real-time AI Resume Builder (React, Node.js, Gemini API) · Built automated ATS optimization pipeline."
+                           data-syncs="inputProjects"
+                           id="docFieldProjects"
+                           aria-label="Projects"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight technical architecture and measurable impact of my projects')">
+                          <span>✦ Highlight Impact</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format key projects for high ATS parser score')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §8 ACHIEVEMENTS -->
+                    <div class="doc-section-block" id="docSection-achievements" data-section="achievements">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>Key Achievements &amp; Honors</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="e.g. National Hackathon Winner (2024) · Published research paper on Distributed Systems · Reduced infra costs by 40%."
+                           data-syncs="inputAchievements"
+                           id="docFieldAchievements"
+                           aria-label="Achievements"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the honor and impact of my achievements')">
+                          <span>✦ Highlight Impact</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format achievements for optimal ATS scanning')">
+                          <span>✦ ATS Format</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §9 DYNAMIC CUSTOM SECTIONS -->
+                    <div class="doc-section-block" id="docSection-custom" data-section="custom">
+                      <div class="doc-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          <span>Custom Sections</span>
+                        </div>
+                        <button type="button" class="btn-outline-action" id="btnAddCustomSection" style="font-size:0.75rem; padding:2px 8px;">+ Add Custom Section</button>
+                      </div>
+                      <div id="customSectionsContainer" style="margin-top:8px;"></div>
+                    </div>
+
+                  </div><!-- /doc-editor-body -->
+                </div><!-- /doc-editor-scroll -->
+              </div><!-- /editor-center-panel -->
+
+              <!-- ─────────────────────────────────────────
+                   RIGHT PANEL — AI Copilot + Live Preview
+                   ───────────────────────────────────────── -->
+              <div class="editor-right-panel" id="editorRightPanel">
+
+                <!-- Panel Toggle Tabs -->
+                <div class="rpanel-toggle-bar">
+                  <button class="rpanel-tab active" id="rpTabAI" onclick="switchRPanel('ai')">
+                    ✦ AI Copilot
+                  </button>
+                  <button class="rpanel-tab" id="rpTabPreview" onclick="switchRPanel('preview')">
+                    Preview
+                  </button>
+                </div>
+
+                <!-- ── AI COPILOT PANEL ── -->
+                <div class="rpanel-content" id="rpanelAI">
+                  <div class="ai-copilot-header">
+                    <div class="ai-copilot-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <span class="ai-copilot-title-text">AI Writing Assistant</span>
+                    <div class="ai-live-pulse"></div>
+                  </div>
+
+                  <!-- Quick Actions -->
+                  <div class="ai-action-section">
+                    <div class="ai-action-section-label">Quick Actions</div>
+                    <div class="ai-action-chips-grid">
+                      <button class="ai-action-chip ai-chip-highlight" onclick="sendAiAction('Improve the writing quality and impact of my resume')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Improve Writing
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Rewrite my bullets to be more ATS-friendly with relevant keywords')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Make ATS Friendly
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Generate a compelling 3-sentence professional summary for my resume')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        Generate Summary
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Suggest relevant technical skills based on my job title and experience')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        Generate Skills
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Add quantifiable metrics and numbers to my experience bullets')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Quantify Results
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Convert my experience bullets to STAR format (Situation, Task, Action, Result)')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Convert to STAR
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Fix grammar, spelling, and punctuation in my resume')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Fix Grammar
+                      </button>
+                      <button class="ai-action-chip" onclick="sendAiAction('Generate impressive achievements and accomplishments for my resume')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        Achievements
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- XYZ Impact Row -->
+                  <div class="ai-xyz-strip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+                    <span class="ai-xyz-info">XYZ Score: <span class="ai-xyz-score" id="aiXyzScoreLabel">0%</span></span>
+                    <button class="ai-xyz-btn" onclick="document.getElementById('btnXyzTransform')?.click()">Transform</button>
+                  </div>
+
+                  <div class="ai-chat-divider"></div>
+
+                  <!-- Chat Messages -->
+                  <div class="ai-chat-area" id="aiChatMessages">
+                    <div class="ai-msg from-ai">
+                      <div class="ai-msg-meta">AI Copilot</div>
+                      Hello! I'm your AI writing assistant. Select any text in the editor for instant suggestions, or use a quick action above to enhance your resume.
+                      <div class="ai-msg-actions">
+                        <button class="ai-msg-action-btn" onclick="sendAiAction('What should I improve in my resume?')">Analyze my resume</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Chat Input -->
+                  <div class="ai-chat-input-area">
+                    <div class="ai-chat-input-wrap">
+                      <input class="ai-chat-input" id="aiChatInput" placeholder="Ask AI anything about your resume..." />
+                      <button class="ai-chat-send-btn" id="aiChatSendBtn" onclick="submitAiChat()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div><!-- /rpanelAI -->
+
+                <!-- ── LIVE PREVIEW PANEL ── -->
+                <div class="rpanel-content" id="rpanelPreview" style="display:none;">
+                  <div class="preview-rpanel-wrap">
+                    <!-- Zoom controls -->
+                    <div class="preview-rpanel-controls">
+                      <button class="preview-zoom-btn" id="previewZoomOut" onclick="adjustPreviewZoom(-10)">−</button>
+                      <span class="preview-scale-label" id="previewScaleLabel">65%</span>
+                      <button class="preview-zoom-btn" id="previewZoomIn" onclick="adjustPreviewZoom(10)">+</button>
+                      <div class="preview-rpanel-spacer"></div>
+                      <button class="preview-dl-btn" onclick="document.getElementById('btnPrintPdf')?.click()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print
+                      </button>
+                    </div>
+                    <!-- A4 Preview Paper -->
+                    <div class="preview-rpanel-scroll">
+                      <div class="preview-rpanel-paper" id="previewRpanelPaper" style="transform:scale(0.65);">
+                        <!-- Live preview sheet -->
+                        <div class="preview-paper-workspace" id="previewCardSection">
+                          <div class="preview-paper-sheet" id="printableResumeDoc">
+                            <div class="paper-candidate-header">
+                              <div class="paper-candidate-name" id="previewName">YOUR NAME</div>
+                              <div class="paper-candidate-role" id="previewRole">TARGET ROLE</div>
+                              <div class="paper-contact-row" id="previewMeta"></div>
+                              <div class="paper-header-rule"></div>
+                            </div>
+                            <div class="paper-section" id="previewSummarySection">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>EXECUTIVE SUMMARY</div>
+                              <p class="section-content" id="previewSummary"></p>
+                            </div>
+                            <div class="paper-section">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>TECHNICAL EXPERTISE</div>
+                              <p class="section-content" id="previewSkills"></p>
+                            </div>
+                            <div class="paper-section">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>WORK EXPERIENCE &amp; KEY IMPACT PROJECTS</div>
+                              <div class="experience-block"><ul class="exp-list" id="previewBullets"></ul></div>
+                            </div>
+                            <div class="paper-section">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>EDUCATION &amp; CREDENTIALS</div>
+                              <div class="section-content" id="previewEducation"></div>
+                            </div>
+                            <div class="paper-section" id="previewCertificationsSection">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>CERTIFICATIONS &amp; HONORS</div>
+                              <p class="section-content" id="previewCertifications"></p>
+                            </div>
+                            <div class="paper-section" id="previewProjectsSection" style="display:none;">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>KEY PROJECTS &amp; INITIATIVES</div>
+                              <p class="section-content" id="previewProjects"></p>
+                            </div>
+                            <div class="paper-section" id="previewAchievementsSection" style="display:none;">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>KEY ACHIEVEMENTS &amp; HONORS</div>
+                              <p class="section-content" id="previewAchievements"></p>
+                            </div>
+                            <div id="previewCustomSectionsContainer"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Action footer -->
+                    <div class="preview-rpanel-footer">
+                      <button class="btn-outline-action" id="btnExportPdfPreview" onclick="document.getElementById('btnExportPdf')?.click()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export PDF
+                      </button>
+                      <button class="btn-primary-action" id="btnPrintPdfPreview" onclick="document.getElementById('btnPrintPdf')?.click()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Download PDF
+                      </button>
+                    </div>
+                  </div>
+                </div><!-- /rpanelPreview -->
+
+              </div><!-- /editor-right-panel -->
+
+            </div><!-- /editor-workspace -->
+
+            <!-- ══════════════════════════════════════════════
+                 EDITOR BRIDGE SCRIPT — Syncs contenteditable
+                 fields to hidden inputs; wires all UI
+                 ══════════════════════════════════════════════ -->
+            <script>
+            (function() {
+              'use strict';
+
+              /* ── 1. CONTENT-HEADER HIDE (full-bleed editor) ── */
+              function updateHeaderVisibility() {
+                const isActive = document.querySelector('#tab-resume-builder.active');
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) {
+                  contentHeader.style.transition = 'opacity 0.2s';
+                  contentHeader.style.opacity = isActive ? '0' : '';
+                  contentHeader.style.pointerEvents = isActive ? 'none' : '';
+                  contentHeader.style.position = isActive ? 'absolute' : '';
+                  contentHeader.style.visibility = isActive ? 'hidden' : '';
+                }
+              }
+              updateHeaderVisibility();
+              const tabObserver = new MutationObserver(updateHeaderVisibility);
+              const tabPane = document.getElementById('tab-resume-builder');
+              if (tabPane) tabObserver.observe(tabPane, { attributes: true, attributeFilter: ['class'] });
+
+              /* ── 2. SYNC: contenteditable → hidden input ── */
+              function fireInputEvent(el) {
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              function syncField(editorEl) {
+                const targetId = editorEl.dataset.syncs;
+                if (!targetId) return;
+                const target = document.getElementById(targetId);
+                if (!target) return;
+                const text = editorEl.innerText || '';
+                target.value = text;
+                fireInputEvent(target);
+                updateSectionPct();
+                updateAutosave();
+              }
+
+              /* ── 3. WIRE all contenteditable fields ── */
+              function wireEditorFields() {
+                document.querySelectorAll('[data-syncs]').forEach(function(el) {
+                  el.addEventListener('input',  function() { syncField(el); });
+                  el.addEventListener('blur',   function() { syncField(el); });
+                  el.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && el.dataset.singleLine) {
+                      e.preventDefault();
+                      const next = el.closest('.doc-section-block')?.querySelector('[data-syncs]:not([data-syncs="' + el.dataset.syncs + '"])');
+                      if (next) next.focus();
+                    }
+                  });
+                });
+              }
+              wireEditorFields();
+
+              /* ── 4. BULLETS system ── */
+              var docBullets = [];
+              function renderBullets() {
+                const list = document.getElementById('docBulletsList');
+                if (!list) return;
+                list.innerHTML = '';
+                docBullets.forEach(function(text, idx) {
+                  const li = document.createElement('li');
+                  li.className = 'doc-bullet-item';
+                  li.innerHTML =
+                    '<span class="doc-bullet-dot"></span>' +
+                    '<div class="doc-bullet-text" contenteditable="true" spellcheck="true" data-idx="' + idx + '" data-placeholder="Bullet point — use XYZ format: Achieved X by doing Y, resulting in Z metric">' +
+                      escapeHtml(text) +
+                    '</div>' +
+                    '<button class="doc-bullet-remove" data-idx="' + idx + '" title="Remove bullet">' +
+                      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                    '</button>';
+                  list.appendChild(li);
+                });
+                // Wire bullet events
+                list.querySelectorAll('.doc-bullet-text').forEach(function(bt) {
+                  bt.addEventListener('input', function() {
+                    var idx = parseInt(bt.dataset.idx);
+                    docBullets[idx] = bt.innerText || '';
+                    syncBulletsToTextarea();
+                  });
+                  bt.addEventListener('keydown', function(e) {
+                    var idx = parseInt(bt.dataset.idx);
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      docBullets.splice(idx + 1, 0, '');
+                      renderBullets();
+                      setTimeout(function() {
+                        var items = document.querySelectorAll('.doc-bullet-text');
+                        if (items[idx + 1]) { items[idx + 1].focus(); }
+                      }, 30);
+                    } else if (e.key === 'Backspace' && bt.innerText === '') {
+                      e.preventDefault();
+                      if (docBullets.length > 1) {
+                        docBullets.splice(idx, 1);
+                        renderBullets();
+                        setTimeout(function() {
+                          var items = document.querySelectorAll('.doc-bullet-text');
+                          var prev = items[Math.max(0, idx - 1)];
+                          if (prev) { prev.focus(); placeCaretAtEnd(prev); }
+                        }, 30);
+                      }
+                    }
+                  });
+                });
+                list.querySelectorAll('.doc-bullet-remove').forEach(function(btn) {
+                  btn.addEventListener('click', function() {
+                    var idx = parseInt(btn.dataset.idx);
+                    if (docBullets.length > 1) { docBullets.splice(idx, 1); }
+                    else { docBullets[0] = ''; }
+                    renderBullets();
+                    syncBulletsToTextarea();
+                  });
+                });
+                updateNavPct('experience', docBullets.filter(function(b){return b.trim().length > 10;}).length > 0 ? 100 : 0);
+              }
+              function escapeHtml(str) {
+                return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+              }
+              function placeCaretAtEnd(el) {
+                el.focus();
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+              function syncBulletsToTextarea() {
+                var ta = document.getElementById('bulletPoints');
+                if (!ta) return;
+                ta.value = docBullets.map(function(b){ return '• ' + b; }).join('\n');
+                fireInputEvent(ta);
+                updateAutosave();
+                // Update XYZ display from hidden span
+                setTimeout(function() {
+                  var score = document.getElementById('xyzMeterScore');
+                  var display = document.getElementById('xyzMeterScoreDisplay');
+                  var aiLabel = document.getElementById('aiXyzScoreLabel');
+                  if (score && display) display.textContent = score.textContent || 'Add bullets below';
+                  if (score && aiLabel) {
+                    var match = score.textContent.match(/(\d+)%/);
+                    if (match) aiLabel.textContent = match[1] + '%';
+                  }
+                }, 300);
+              }
+              // Add bullet button
+              var addBulletBtn = document.getElementById('docAddBulletBtn');
+              if (addBulletBtn) {
+                addBulletBtn.addEventListener('click', function() {
+                  docBullets.push('');
+                  renderBullets();
+                  setTimeout(function() {
+                    var items = document.querySelectorAll('.doc-bullet-text');
+                    if (items.length) { items[items.length - 1].focus(); }
+                  }, 30);
+                });
+              }
+              // Initial render with 3 empty bullets
+              docBullets = ['', '', ''];
+              renderBullets();
+
+              /* ── 5. addBulletFromPreset ── */
+              window.addBulletFromPreset = function(text) {
+                var emptyIdx = docBullets.findIndex(function(b){ return b.trim() === ''; });
+                if (emptyIdx >= 0) { docBullets[emptyIdx] = text; }
+                else { docBullets.push(text); }
+                renderBullets();
+                syncBulletsToTextarea();
+              };
+
+              /* ── 6. SKILLS inline system ── */
+              var docSkills = [];
+              function renderDocSkills() {
+                var wrapper = document.getElementById('docSkillsWrapper');
+                var addInput = document.getElementById('docSkillInput');
+                if (!wrapper || !addInput) return;
+                wrapper.innerHTML = '';
+                docSkills.forEach(function(skill, idx) {
+                  var tag = document.createElement('span');
+                  tag.className = 'doc-skill-tag';
+                  tag.innerHTML = escapeHtml(skill) + '<span class="doc-skill-tag-x" data-idx="' + idx + '">&times;</span>';
+                  wrapper.appendChild(tag);
+                });
+                wrapper.appendChild(addInput);
+                wrapper.querySelectorAll('.doc-skill-tag-x').forEach(function(x) {
+                  x.addEventListener('click', function() {
+                    docSkills.splice(parseInt(x.dataset.idx), 1);
+                    renderDocSkills();
+                    syncSkillsToTagSystem();
+                  });
+                });
+                var pct = docSkills.length > 0 ? Math.min(100, Math.round(docSkills.length * 12.5)) : 0;
+                updateNavPct('skills', pct);
+              }
+              window.addDocSkill = function(skill) {
+                if (!skill || docSkills.indexOf(skill) >= 0) return;
+                docSkills.push(skill);
+                renderDocSkills();
+                syncSkillsToTagSystem();
+              };
+              function syncSkillsToTagSystem() {
+                // Sync to existing skill tags container text so JS live-sync picks it up
+                var skillInput = document.getElementById('skillInputField');
+                if (skillInput) {
+                  // Trigger the existing skill system to update previewSkills
+                  skillInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                updateAutosave();
+              }
+              var docSkillInput = document.getElementById('docSkillInput');
+              if (docSkillInput) {
+                docSkillInput.addEventListener('keydown', function(e) {
+                  if ((e.key === 'Enter' || e.key === ',') && docSkillInput.value.trim()) {
+                    e.preventDefault();
+                    addDocSkill(docSkillInput.value.trim().replace(/,$/,''));
+                    docSkillInput.value = '';
+                  }
+                });
+              }
+              // Mirror skill pills from existing skill system
+              var originalPillsContainer = document.getElementById('skillPillsContainer');
+              if (originalPillsContainer) {
+                var pillObserver = new MutationObserver(function() {
+                  var pills = originalPillsContainer.querySelectorAll('.skill-tag');
+                  docSkills = Array.from(pills).map(function(p){ return p.dataset.skill || p.textContent.trim().replace('×','').trim(); });
+                  renderDocSkills();
+                });
+                pillObserver.observe(originalPillsContainer, { childList: true, subtree: true });
+              }
+              renderDocSkills();
+
+              /* ── 7. SECTION NAV ── */
+              window.editorNavTo = function(sectionId, navItem) {
+                document.querySelectorAll('.section-nav-item').forEach(function(n){ n.classList.remove('active'); });
+                if (navItem) navItem.classList.add('active');
+                var el = document.getElementById(sectionId);
+                var scroll = document.getElementById('docEditorScroll');
+                if (el && scroll) {
+                  var offset = el.offsetTop - 24;
+                  scroll.scrollTo({ top: offset, behavior: 'smooth' });
+                }
+                var label = navItem ? navItem.querySelector('.section-nav-name')?.textContent : '';
+                var rttLabel = document.getElementById('rttSectionLabel');
+                if (rttLabel && label) rttLabel.textContent = label;
+              };
+              // Scroll spy
+              var docScrollArea = document.getElementById('docEditorScroll');
+              if (docScrollArea) {
+                docScrollArea.addEventListener('scroll', function() {
+                  var scrollTop = docScrollArea.scrollTop;
+                  var sections = ['docSection-personal','docSection-summary','docSection-experience','docSection-skills','docSection-education','docSection-certs'];
+                  var activeId = sections[0];
+                  sections.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el && el.offsetTop - 40 <= scrollTop) { activeId = id; }
+                  });
+                  document.querySelectorAll('.section-nav-item').forEach(function(n) {
+                    var isActive = n.dataset.target === activeId;
+                    n.classList.toggle('active', isActive);
+                  });
+                  var activeNav = document.querySelector('.section-nav-item.active .section-nav-name');
+                  var rttLabel = document.getElementById('rttSectionLabel');
+                  if (rttLabel && activeNav) rttLabel.textContent = activeNav.textContent;
+                });
+              }
+
+              /* ── 8. RIGHT PANEL TOGGLE ── */
+              window.switchRPanel = function(panel) {
+                document.getElementById('rpanelAI').style.display = (panel === 'ai') ? 'flex' : 'none';
+                document.getElementById('rpanelPreview').style.display = (panel === 'preview') ? 'flex' : 'none';
+                document.getElementById('rpTabAI').classList.toggle('active', panel === 'ai');
+                document.getElementById('rpTabPreview').classList.toggle('active', panel === 'preview');
+              };
+
+              /* ── 9. PREVIEW ZOOM ── */
+              var previewScale = 65;
+              window.adjustPreviewZoom = function(delta) {
+                previewScale = Math.max(30, Math.min(120, previewScale + delta));
+                var paper = document.getElementById('previewRpanelPaper');
+                var label = document.getElementById('previewScaleLabel');
+                if (paper) paper.style.transform = 'scale(' + (previewScale / 100) + ')';
+                if (label) label.textContent = previewScale + '%';
+              };
+
+              /* ── 10. FORMATTING TOOLBAR ── */
+              window.execFmt = function(cmd) {
+                document.execCommand(cmd, false, null);
+                updateToolbarState();
+              };
+              function updateToolbarState() {
+                ['Bold','Italic','Underline'].forEach(function(cmd) {
+                  var btn = document.getElementById('rtt' + cmd);
+                  if (btn) btn.classList.toggle('active', document.queryCommandState(cmd.toLowerCase()));
+                });
+              }
+              document.addEventListener('selectionchange', updateToolbarState);
+
+              /* ── 11. AUTOSAVE STATUS ── */
+              var autosaveTimeout;
+              function updateAutosave() {
+                var statusEl = document.getElementById('docAutosaveStatus');
+                var textEl   = document.getElementById('docSaveStatusText');
+                if (!statusEl || !textEl) return;
+                statusEl.classList.remove('saved');
+                textEl.textContent = 'Saving…';
+                clearTimeout(autosaveTimeout);
+                autosaveTimeout = setTimeout(function() {
+                  statusEl.classList.add('saved');
+                  textEl.textContent = 'Saved';
+                }, 1200);
+              }
+
+              /* ── 12. FAANG CHIP SYNC ── */
+              window.syncFaangChip = function(btn) {
+                var level = btn.dataset.level;
+                // Sync to hidden chip with same level
+                document.querySelectorAll('#faangLevelChips .level-chip').forEach(function(c){
+                  if (c.dataset.level === level) {
+                    c.classList.add('active');
+                    c.click();
+                  } else {
+                    c.classList.remove('active');
+                  }
+                });
+                // Update visible strip
+                document.querySelectorAll('#faangStripChips .level-chip').forEach(function(c){
+                  c.classList.toggle('active', c.dataset.level === level);
+                });
+              };
+
+              /* ── 13. SECTION COMPLETION PERCENTAGES ── */
+              function updateNavPct(section, pct) {
+                var el = document.getElementById('navPct-' + section);
+                if (!el) return;
+                el.textContent = pct > 0 ? pct + '%' : '—';
+                var navItem = el.closest('.section-nav-item');
+                if (navItem) navItem.classList.toggle('s-done', pct >= 80);
+                // Update topbar strength
+                var filled = document.querySelectorAll('.section-nav-item.s-done').length;
+                var total  = document.querySelectorAll('.section-nav-item').length || 1;
+                var overall = Math.round((filled / total) * 100);
+                var pctEl = document.getElementById('topbarStrengthPct');
+                if (pctEl) pctEl.textContent = overall + '%';
+                // Also update hidden meter
+                var fillEl = document.getElementById('strengthProgressFill');
+                var valEl  = document.getElementById('strengthPercentVal');
+                if (fillEl) fillEl.style.width = overall + '%';
+                if (valEl)  valEl.textContent  = overall + '% Complete';
+              }
+              window.updateSectionPct = function() {
+                // Personal info
+                var name  = (document.getElementById('docFieldName')?.innerText||'').trim();
+                var title = (document.getElementById('docFieldTitle')?.innerText||'').trim();
+                var pctP  = ((name?50:0) + (title?50:0));
+                updateNavPct('personal', pctP);
+                // Summary
+                var summary = (document.getElementById('docFieldSummary')?.innerText||'').trim();
+                updateNavPct('summary', summary.length > 40 ? 100 : Math.round(summary.length / 40 * 100));
+                // Education
+                var edu = (document.getElementById('docFieldEducation')?.innerText||'').trim();
+                updateNavPct('education', edu.length > 5 ? 100 : 0);
+                // Certs
+                var certs = (document.getElementById('docFieldCerts')?.innerText||'').trim();
+                updateNavPct('certs', certs.length > 5 ? 100 : 0);
+              };
+
+              /* ── 14. AI CHAT ── */
+              window.sendAiAction = function(prompt) {
+                appendUserMsg(prompt);
+                setTimeout(function() {
+                  appendAiMsg('Analyzing your resume and applying: "' + prompt + '"…\n\nTip: I work best when you trigger the AI Optimize button in the toolbar after reviewing my suggestions. Your resume data is being processed.');
+                }, 500);
+                switchRPanel('ai');
+              };
+              window.submitAiChat = function() {
+                var input = document.getElementById('aiChatInput');
+                if (!input || !input.value.trim()) return;
+                var msg = input.value.trim();
+                input.value = '';
+                sendAiAction(msg);
+              };
+              function appendUserMsg(text) {
+                var area = document.getElementById('aiChatMessages');
+                if (!area) return;
+                var div = document.createElement('div');
+                div.className = 'ai-msg from-user';
+                div.innerHTML = '<div class="ai-msg-meta">YOU</div>' + escapeHtml(text);
+                area.appendChild(div);
+                area.scrollTop = area.scrollHeight;
+              }
+              function appendAiMsg(text) {
+                var area = document.getElementById('aiChatMessages');
+                if (!area) return;
+                var div = document.createElement('div');
+                div.className = 'ai-msg from-ai';
+                div.innerHTML = '<div class="ai-msg-meta">AI Copilot</div>' + escapeHtml(text).replace(/\n/g,'<br>');
+                area.appendChild(div);
+                area.scrollTop = area.scrollHeight;
+              }
+              // Enter key in chat
+              var chatInput = document.getElementById('aiChatInput');
+              if (chatInput) {
+                chatInput.addEventListener('keydown', function(e) {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAiChat(); }
+                });
+              }
+
+              /* ── 15. SECTION COLLAPSE TOGGLE ── */
+              window.toggleDocSection = function(sectionId) {
+                var section = document.getElementById(sectionId);
+                if (!section) return;
+                var fields = section.querySelectorAll('.doc-field, .doc-contact-grid, .doc-bullets-list, .doc-add-bullet-btn, .doc-verb-chips, .doc-skills-wrapper, .doc-skill-suggestions, .doc-xyz-strip');
+                var collapsed = section.dataset.collapsed === 'true';
+                fields.forEach(function(f){ f.style.display = collapsed ? '' : 'none'; });
+                section.dataset.collapsed = collapsed ? 'false' : 'true';
+              };
+
+              /* ── 16. XYZ METER OBSERVER ── */
+              var xyzScore = document.getElementById('xyzMeterScore');
+              if (xyzScore) {
+                var xyzObs = new MutationObserver(function() {
+                  var display = document.getElementById('xyzMeterScoreDisplay');
+                  var aiLabel = document.getElementById('aiXyzScoreLabel');
+                  if (display) display.textContent = xyzScore.textContent || 'Add bullets';
+                  if (aiLabel) {
+                    var m = xyzScore.textContent.match(/(\d+)%/);
+                    aiLabel.textContent = m ? m[1] + '%' : '0%';
+                  }
+                });
+                xyzObs.observe(xyzScore, { childList: true, characterData: true, subtree: true });
+              }
+
+              /* ── 17. KEYBOARD SHORTCUTS ── */
+              document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                  e.preventDefault();
+                  document.getElementById('btnDraftSaveFooter')?.click();
+                  updateAutosave();
+                }
+              });
+
+              /* ── INIT ── */
+              updateSectionPct();
+
+            })();
+            </script>
+
+          </div><!-- /tab-resume-builder -->
+
+          <div class="tab-pane" id="tab-ats-analyzer">
+
+            <!-- ══════════════════════════════════════════════
+                 1. ATS AUDIT TOP CONTROLS & META BAR
+                 ══════════════════════════════════════════════ -->
+            <div class="ats-audit-header-bar">
+              <div class="ats-meta-group">
+                <input class="ats-meta-input" id="atsAuditJobTitle" type="text" value="Senior Frontend Architect" title="Click to edit job title" />
+                <span class="ats-meta-subinput">at</span>
+                <input class="ats-meta-input" id="atsAuditCompany" type="text" value="Stripe / Vercel Stack" title="Click to edit company" />
+              </div>
+
+              <!-- ATS Engine Chip Group (Preserved ID) -->
+              <div class="ats-engine-chip-group" id="atsEngineChipsContainer">
+                <button type="button" class="parser-chip active" data-engine="greenhouse">Greenhouse &amp; Lever</button>
+                <button type="button" class="parser-chip" data-engine="workday">Workday Scanner</button>
+                <button type="button" class="parser-chip" data-engine="taleo">Taleo Exact Match</button>
+                <button type="button" class="parser-chip" data-engine="faang">FAANG Executive</button>
+              </div>
+
+              <!-- Sample JD Template Selector (Preserved ID) -->
+              <div class="sample-jd-wrapper" style="margin-left:8px;">
+                <select id="sampleJdSelect" class="form-select-sm" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #EDE9E3;background:#FDFCFB;">
+                  <option value="">-- Load Sample JD Template --</option>
+                  <option value="frontend" selected>Senior Frontend Architect</option>
+                  <option value="fullstack">Senior Full Stack Engineer</option>
+                  <option value="backend">Lead Backend &amp; Systems Engineer</option>
+                  <option value="devops">DevOps &amp; Cloud Infrastructure Lead</option>
+                  <option value="ai">AI / Machine Learning Engineer</option>
+                  <option value="mobile">Senior Mobile Engineer (iOS / Android)</option>
+                  <option value="data">Data Engineer &amp; Analytics Architect</option>
+                  <option value="cybersecurity">Cloud Security Specialist</option>
+                  <option value="qa_automation">Principal SDET &amp; QA Engineer</option>
+                  <option value="product_manager">Technical Product Manager (APIs)</option>
+                </select>
+              </div>
+
+              <div class="ats-top-actions">
+                <button type="button" class="topbar-action-btn btn-primary" id="btnRunAtsAnalysis">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="btnRunAtsText">Re-Scan Resume</span>
+                </button>
+                <button type="button" class="topbar-action-btn" id="btnSelectPdfFile">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Upload New File
+                </button>
+                <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display: none;" />
+              </div>
+            </div>
+
+            <!-- HIDDEN FILE BADGE (Preserved for script.js) -->
+            <div id="selectedFileBadge" style="display:none;"><span id="selectedFileName">resume.pdf</span></div>
+            <div id="atsDropZone" style="display:none;"></div>
+
+            <!-- HIDDEN JD TEXTAREA CONTAINER (Preserved for script.js) -->
+            <div style="display:none;">
+              <textarea id="atsJdInput" class="form-textarea" rows="4">We are looking for a Staff / Senior Frontend Architect to lead UI component design systems and web vitals optimization.
+
+Key Requirements:
+- 5+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
+- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management.
+- Experience with GraphQL, REST APIs, and client-side performance optimization.
+- Familiarity with CI/CD deployment pipelines, Kubernetes, and Redis caching is a plus.</textarea>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 2. EXECUTIVE SUMMARY SCORE BANNER
+                 ══════════════════════════════════════════════ -->
+            <div class="ats-executive-summary-banner">
+              <div class="ats-main-score-box">
+                <div class="ats-score-ring-lg" id="scoreCircle">
+                  <span class="ats-score-ring-val" id="scoreNumber">94%</span>
+                </div>
+                <div class="ats-score-details">
+                  <div class="ats-score-title" id="scoreSummaryHeading">Excellent ATS Compatibility</div>
+                  <div class="ats-score-subtitle" id="scoreSummaryDesc">Matches 94% of core technical qualifications for Senior Frontend Architect.</div>
+                  <div class="ats-score-badge-row">
+                    <span class="badge-tag green" id="analysisStatusBadge">Passed ATS Gatekeeper</span>
+                    <span class="badge-tag blue">Confidence: High</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ats-kpi-metrics-grid">
+                <div class="ats-kpi-item">
+                  <span class="ats-kpi-label">Est. Pass Rate</span>
+                  <span class="ats-kpi-val green">96%</span>
+                </div>
+                <div class="ats-kpi-item">
+                  <span class="ats-kpi-label">Readability</span>
+                  <span class="ats-kpi-val green">9.8 / 10</span>
+                </div>
+                <div class="ats-kpi-item">
+                  <span class="ats-kpi-label">Hiring Probability</span>
+                  <span class="ats-kpi-val green">High</span>
+                </div>
+                <div class="ats-kpi-item">
+                  <span class="ats-kpi-label">Quality Score</span>
+                  <span class="ats-kpi-val amber">Top 5%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 3. LOADING STATE (Preserved ID)
+                 ══════════════════════════════════════════════ -->
+            <div class="ats-loading-card" id="atsLoadingState" style="display:none;padding:24px;background:#FFFFFF;border-bottom:1px solid #EDE9E3;align-items:center;gap:16px;">
+              <div class="spinner-ring" style="width:24px;height:24px;border:3px solid #EDE9E3;border-top-color:#C98B4A;border-radius:50%;animation:spin 1s linear infinite;"></div>
+              <div class="loading-text" style="flex:1;">
+                <h4 id="loadingStepText" style="font-size:13px;font-weight:600;margin-bottom:6px;">Parsing candidate resume against job requirements...</h4>
+                <div class="progress-bar-container" style="height:6px;background:#F2EEE8;border-radius:9999px;overflow:hidden;">
+                  <div class="progress-bar-fill" id="atsProgressFill" style="height:100%;background:#C98B4A;width:0%;transition:width 0.3s;"></div>
+                </div>
+              </div>
+              <span class="progress-percent" id="atsProgressPercent" style="font-size:13px;font-weight:700;color:#C98B4A;">0%</span>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 4. FOUR-COLUMN ANALYTICAL WORKSPACE
+                 ══════════════════════════════════════════════ -->
+            <div class="ats-4col-workspace" id="ats-results">
+
+              <!-- ── COL 1: Left Audit Categories (220px) ── -->
+              <aside class="ats-col-left">
+                <span class="ats-col-title">Audit Categories</span>
+                <div class="ats-cat-item active" data-target="ats-sec-overview" onclick="switchAtsCategory('ats-sec-overview', this)">
+                  <span>Keyword Match</span>
+                  <span class="ats-cat-badge pass">88%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-experience" onclick="switchAtsCategory('ats-sec-experience', this)">
+                  <span>Experience Level</span>
+                  <span class="ats-cat-badge pass">95%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-skills" onclick="switchAtsCategory('ats-sec-skills', this)">
+                  <span>Skills Alignment</span>
+                  <span class="ats-cat-badge pass">92%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-education" onclick="switchAtsCategory('ats-sec-education', this)">
+                  <span>Education &amp; Certs</span>
+                  <span class="ats-cat-badge pass">100%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-formatting" onclick="switchAtsCategory('ats-sec-formatting', this)">
+                  <span>Formatting &amp; Parsing</span>
+                  <span class="ats-cat-badge warn">90%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-readability" onclick="switchAtsCategory('ats-sec-readability', this)">
+                  <span>Readability Score</span>
+                  <span class="ats-cat-badge pass">96%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-achievements" onclick="switchAtsCategory('ats-sec-achievements', this)">
+                  <span>Metric Density</span>
+                  <span class="ats-cat-badge warn">82%</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-verbs" onclick="switchAtsCategory('ats-sec-verbs', this)">
+                  <span>Action Verbs</span>
+                  <span class="ats-cat-badge pass">89%</span>
+                </div>
+
+                <div style="margin-top:auto;padding-top:16px;border-top:1px solid #EDE9E3;">
+                  <button type="button" class="editor-new-section-btn" style="font-size:11.5px;padding:6px;" onclick="window.print()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Export Audit PDF
+                  </button>
+                </div>
+              </aside>
+
+              <!-- ── COL 2 & 3: Detailed AI Audit Report (Flex 1) ── -->
+              <main class="ats-col-center">
+
+                <!-- Multi-score Breakdown Grid -->
+                <div class="ats-score-matrix-grid">
+                  <div class="ats-score-card">
+                    <div class="ats-score-card-header">
+                      <span class="ats-score-card-name">Keyword Match</span>
+                      <span class="ats-score-card-val">88%</span>
+                    </div>
+                    <div class="ats-score-bar-bg">
+                      <div class="ats-score-bar-fill green" style="width:88%;"></div>
+                    </div>
+                  </div>
+                  <div class="ats-score-card">
+                    <div class="ats-score-card-header">
+                      <span class="ats-score-card-name">Experience Match</span>
+                      <span class="ats-score-card-val">95%</span>
+                    </div>
+                    <div class="ats-score-bar-bg">
+                      <div class="ats-score-bar-fill green" style="width:95%;"></div>
+                    </div>
+                  </div>
+                  <div class="ats-score-card">
+                    <div class="ats-score-card-header">
+                      <span class="ats-score-card-name">Skills Alignment</span>
+                      <span class="ats-score-card-val">92%</span>
+                    </div>
+                    <div class="ats-score-bar-bg">
+                      <div class="ats-score-bar-fill green" style="width:92%;"></div>
+                    </div>
+                  </div>
+                  <div class="ats-score-card">
+                    <div class="ats-score-card-header">
+                      <span class="ats-score-card-name">Metric Density</span>
+                      <span class="ats-score-card-val">82%</span>
+                    </div>
+                    <div class="ats-score-bar-bg">
+                      <div class="ats-score-bar-fill" style="width:82%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- KEYWORD INTELLIGENCE CENTER -->
+                <div class="ats-keyword-intelligence-box" id="ats-sec-overview">
+                  <div class="ats-kw-sec-header">
+                    <div class="ats-kw-sec-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                      Keyword Intelligence &amp; Gap Analysis
+                    </div>
+                    <span style="font-size:12px;color:#8A8A8A;">9 Matched · 3 Gaps</span>
+                  </div>
+
+                  <!-- Matched Keywords (Preserved IDs) -->
+                  <div style="margin-bottom:16px;">
+                    <div style="font-size:11px;font-weight:700;color:#2E9B64;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px;" id="matchedKeywordsTitle">
+                      ✓ Matched Required Keywords (9)
+                    </div>
+                    <div class="ats-kw-grid" id="matchedKeywordsContainer">
+                      <span class="kw-chip matched" title="Appears 5x in Experience">TypeScript <span class="kw-count">5x</span></span>
+                      <span class="kw-chip matched" title="Appears 8x in Experience & Skills">React <span class="kw-count">8x</span></span>
+                      <span class="kw-chip matched" title="Appears 3x in Summary">Next.js <span class="kw-count">3x</span></span>
+                      <span class="kw-chip matched" title="Appears 4x in Skills">Vanilla CSS <span class="kw-count">4x</span></span>
+                      <span class="kw-chip matched" title="Appears 2x in Experience">Design Systems <span class="kw-count">2x</span></span>
+                      <span class="kw-chip matched" title="Appears 3x in Bullets">Web Vitals <span class="kw-count">3x</span></span>
+                      <span class="kw-chip matched" title="Appears 2x in Experience">GraphQL <span class="kw-count">2x</span></span>
+                      <span class="kw-chip matched" title="Appears 4x in Experience">REST APIs <span class="kw-count">4x</span></span>
+                      <span class="kw-chip matched" title="Appears 2x in Skills">Redis <span class="kw-count">2x</span></span>
+                    </div>
+                  </div>
+
+                  <!-- Missing Keywords (Preserved IDs) -->
+                  <div>
+                    <div style="font-size:11px;font-weight:700;color:#D14A4A;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px;" id="missingKeywordsTitle">
+                      ⚠ Missing / Gap Keywords (3)
+                    </div>
+                    <div class="ats-kw-grid" id="missingKeywordsContainer">
+                      <span class="kw-chip critical" title="Recruiters look for Kubernetes in DevOps/Cloud requirements" onclick="insertKeywordSentence('Kubernetes')">Kubernetes ✦ Add</span>
+                      <span class="kw-chip missing" title="Mention CI/CD in your work experience bullet points" onclick="insertKeywordSentence('CI/CD')">CI/CD Pipelines ✦ Add</span>
+                      <span class="kw-chip missing" title="Add State Management to your skills list" onclick="insertKeywordSentence('State Management')">State Management ✦ Add</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- DETAILED RECOMMENDATIONS GRID (Preserved ID) -->
+                <div class="ats-report-block">
+                  <div class="ats-report-header" onclick="toggleReportBlock(this)">
+                    <div class="ats-report-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      High-Impact AI Optimization Recommendations
+                    </div>
+                    <span style="font-size:12px;color:#8A8A8A;">Expand / Collapse</span>
+                  </div>
+                  <div class="ats-report-body">
+                    <div id="recommendationsGridContainer" class="recommendations-grid">
+                      <!-- Dynamically populated by script.js -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SMART REWRITES (BEFORE / AFTER COMPARISON) -->
+                <div class="ats-report-block" id="ats-sec-experience">
+                  <div class="ats-report-header" onclick="toggleReportBlock(this)">
+                    <div class="ats-report-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#2E9B64" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Smart Rewrites (Current vs. AI-Optimized)
+                    </div>
+                    <span style="font-size:12px;color:#2E9B64;font-weight:600;">+12% ATS Boost</span>
+                  </div>
+                  <div class="ats-report-body">
+                    <div class="diff-rewrite-card">
+                      <div style="font-size:11px;font-weight:700;color:#7A7A7A;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
+                      <div class="diff-orig-text">Worked on frontend application and improved page load performance using React and Next.js.</div>
+
+                      <div style="font-size:11px;font-weight:700;color:#2E9B64;text-transform:uppercase;letter-spacing:0.06em;margin-top:6px;">AI-Optimized Bullet Point:</div>
+                      <div class="diff-improved-text">Architected high-performance React &amp; Next.js frontend architecture, optimizing Web Vitals (LCP &lt; 1.2s) and reducing p99 page load latency by 42%.</div>
+
+                      <div class="diff-highlights">
+                        <span class="diff-badge verb">Verb: Architected</span>
+                        <span class="diff-badge metric">Metric: -42% Latency</span>
+                        <span class="diff-badge kw">Keywords: Web Vitals, LCP</span>
+                      </div>
+                    </div>
+
+                    <div class="diff-rewrite-card">
+                      <div style="font-size:11px;font-weight:700;color:#7A7A7A;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
+                      <div class="diff-orig-text">Helped team with deployment pipelines and cloud servers.</div>
+
+                      <div style="font-size:11px;font-weight:700;color:#2E9B64;text-transform:uppercase;letter-spacing:0.06em;margin-top:6px;">AI-Optimized Bullet Point:</div>
+                      <div class="diff-improved-text">Spearheaded automated CI/CD deployment pipelines on Kubernetes, achieving zero-downtime releases for 2M+ monthly active users.</div>
+
+                      <div class="diff-highlights">
+                        <span class="diff-badge verb">Verb: Spearheaded</span>
+                        <span class="diff-badge metric">Scale: 2M+ Users</span>
+                        <span class="diff-badge kw">Keywords: CI/CD, Kubernetes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RECRUITER VERDICT & HIRING PROBABILITY GAUGES -->
+                <div class="recruiter-verdict-box" id="ats-sec-readability">
+                  <div class="recruiter-verdict-title">Recruiter 6-Second Screen Summary</div>
+                  <div class="recruiter-verdict-quote">
+                    "A hiring manager at Stripe or Vercel would view this candidate as an exceptionally strong Frontend Architect with proven design system experience. Adding Kubernetes &amp; CI/CD metrics would elevate this to a top 1% candidate."
+                  </div>
+
+                  <div class="hiring-gauges-grid">
+                    <div class="hiring-gauge-card">
+                      <div class="hiring-gauge-val" style="color:#2E9B64;">92%</div>
+                      <div class="hiring-gauge-lbl">Interview Probability</div>
+                    </div>
+                    <div class="hiring-gauge-card">
+                      <div class="hiring-gauge-val" style="color:#C98B4A;">84%</div>
+                      <div class="hiring-gauge-lbl">Offer Probability</div>
+                    </div>
+                    <div class="hiring-gauge-card">
+                      <div class="hiring-gauge-val" style="color:#2E9B64;">96%</div>
+                      <div class="hiring-gauge-lbl">ATS Gatekeeper Pass</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TAILORED RESUME CTA CARD (Preserved IDs) -->
+                <div class="tailored-resume-cta" id="tailoredResumeCta" style="background:#FFFFFF;border:1px solid #EDE9E3;border-radius:10px;padding:20px;">
+                  <div class="cta-inner" style="display:flex;align-items:center;gap:16px;">
+                    <div class="cta-icon" style="width:40px;height:40px;border-radius:8px;background:#111111;display:flex;align-items:center;justify-content:center;color:#FFFFFF;flex-shrink:0;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    </div>
+                    <div class="cta-text" style="flex:1;">
+                      <h4 style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:#111111;margin-bottom:2px;">Generate AI Tailored Resume for This Role</h4>
+                      <p style="font-size:12.5px;color:#5E5E5E;margin:0;">Let Gemini rewrite your summary, skills, and bullets to perfectly match this job description.</p>
+                    </div>
+                    <button class="btn-primary" id="btnGenerateTailored" style="padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;background:#111111;color:#FFFFFF;border:none;cursor:pointer;">
+                      <span id="btnGenerateTailoredText">Generate Tailored Resume</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- TAILORED RESUME LOADING & RESULTS (Preserved IDs) -->
+                <p id="tailoredUploadError" style="display:none;color:var(--danger);font-size:12px;margin-top:6px;"></p>
+                <div class="ats-loading-card" id="tailoredLoadingState" style="display:none;padding:20px;background:#FFFFFF;border-radius:10px;border:1px solid #EDE9E3;">
+                  <div class="spinner-ring" style="width:20px;height:20px;border:2px solid #EDE9E3;border-top-color:#C98B4A;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                  <div class="loading-text" style="flex:1;">
+                    <h4 style="font-size:13px;font-weight:600;">Gemini 2.5 Flash is crafting your tailored resume...</h4>
+                    <div class="progress-bar-container" style="height:4px;background:#F2EEE8;border-radius:9999px;overflow:hidden;margin-top:4px;">
+                      <div class="progress-bar-fill" id="tailoredProgressFill" style="height:100%;background:#C98B4A;width:0%;"></div>
+                    </div>
+                  </div>
+                  <span class="progress-percent" id="tailoredProgressPercent" style="font-size:12px;font-weight:700;color:#C98B4A;">0%</span>
+                </div>
+
+                <div class="dashboard-card" id="tailoredResumeResult" style="display:none;background:#FFFFFF;border:1px solid #EDE9E3;border-radius:10px;padding:20px;">
+                  <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <h3 style="font-size:15px;font-weight:700;color:#111111;">AI Tailored Resume // Ready to Export</h3>
+                    <button class="btn-primary btn-sm" id="btnPrintTailored" style="padding:6px 12px;font-size:12px;border-radius:6px;">Download PDF / Print</button>
+                  </div>
+                  <div class="card-body">
+                    <div class="resume-preview-document" id="tailoredResumeDoc"></div>
+                  </div>
+                </div>
+
+              </main>
+
+              <!-- ── COL 4: Right AI Chat Assistant & Actions (320px) ── -->
+              <aside class="ats-col-right">
+                <div class="ats-ai-chat-card">
+                  <div class="ats-chat-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    <span class="ats-chat-title">ATS AI Career Coach</span>
+                  </div>
+
+                  <div class="ats-chat-messages" id="atsChatMsgContainer">
+                    <div class="ats-chat-msg ai">
+                      Hello! I've audited your resume against this job description. Your score is <b>94%</b>. Ask me anything about improving your match rate!
+                    </div>
+                  </div>
+
+                  <div class="ats-chat-prompts">
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Why did I lose points?')">Why did I lose points?</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('How do I add Kubernetes?')">How to add Kubernetes?</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Make this Workday compatible')">Workday ATS tips</span>
+                  </div>
+
+                  <div class="ats-chat-input-row">
+                    <input type="text" id="atsChatInputField" placeholder="Ask AI coach..." onkeydown="if(event.key==='Enter') submitAtsChat()" />
+                    <button type="button" class="topbar-action-btn btn-primary" onclick="submitAtsChat()" style="padding:4px 8px;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </aside>
+
+            </div><!-- /ats-4col-workspace -->
+
+            <!-- ══════════════════════════════════════════════
+                 5. ATS INTERACTIVE BRIDGE SCRIPT
+                 ══════════════════════════════════════════════ -->
+            <script>
+            (function() {
+              'use strict';
+
+              window.switchAtsCategory = function(targetId, el) {
+                document.querySelectorAll('.ats-cat-item').forEach(function(c){ c.classList.remove('active'); });
+                if (el) el.classList.add('active');
+                var target = document.getElementById(targetId);
+                if (target) {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              };
+
+              window.toggleReportBlock = function(headerEl) {
+                var block = headerEl.closest('.ats-report-block');
+                if (!block) return;
+                var body = block.querySelector('.ats-report-body');
+                if (body) {
+                  var isHidden = body.style.display === 'none';
+                  body.style.display = isHidden ? 'block' : 'none';
+                }
+              };
+
+              window.insertKeywordSentence = function(keyword) {
+                var chatContainer = document.getElementById('atsChatMsgContainer');
+                if (!chatContainer) return;
+                var userMsg = document.createElement('div');
+                userMsg.className = 'ats-chat-msg user';
+                userMsg.textContent = 'How should I add "' + keyword + '" to my resume?';
+                chatContainer.appendChild(userMsg);
+
+                setTimeout(function() {
+                  var aiMsg = document.createElement('div');
+                  aiMsg.className = 'ats-chat-msg ai';
+                  aiMsg.innerHTML = '<b>Suggested Bullet for ' + keyword + ':</b><br>"Spearheaded multi-region cloud deployment using <b>' + keyword + '</b> and automated CI/CD workflows, improving application uptime to 99.99%."';
+                  chatContainer.appendChild(aiMsg);
+                  chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 400);
+              };
+
+              window.sendAtsChatPrompt = function(promptText) {
+                var input = document.getElementById('atsChatInputField');
+                if (input) {
+                  input.value = promptText;
+                  submitAtsChat();
+                }
+              };
+
+              window.submitAtsChat = function() {
+                var input = document.getElementById('atsChatInputField');
+                var chatContainer = document.getElementById('atsChatMsgContainer');
+                if (!input || !input.value.trim() || !chatContainer) return;
+
+                var text = input.value.trim();
+                input.value = '';
+
+                var userMsg = document.createElement('div');
+                userMsg.className = 'ats-chat-msg user';
+                userMsg.textContent = text;
+                chatContainer.appendChild(userMsg);
+
+                setTimeout(function() {
+                  var aiMsg = document.createElement('div');
+                  aiMsg.className = 'ats-chat-msg ai';
+                  aiMsg.innerHTML = 'Analyzing "' + text + '"...<br>To maximize your match rate for Senior Frontend Architect, ensure your Work Experience includes quantified metrics (e.g. % performance improvement, team size, scale) alongside core skills like React, TypeScript, and Web Vitals.';
+                  chatContainer.appendChild(aiMsg);
+                  chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 500);
+              };
+
+            })();
+            </script>
+
+          </div>
+
+
+
+          <div class="tab-pane" id="tab-analytics">
+            <!-- Analytics Overview Cards -->
+            <div class="analytics-metrics-grid">
+              <div class="analytics-metric-card">
+                <div class="metric-icon green"><i data-feather="trending-up"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Highest Match Score</span>
+                  <h3 class="metric-value" id="analyticsHighestScore">94%</h3>
+                  <span class="metric-subtext">Google Staff Target Ready</span>
+                </div>
+              </div>
+              <div class="analytics-metric-card">
+                <div class="metric-icon blue"><i data-feather="activity"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Total ATS Scans</span>
+                  <h3 class="metric-value" id="analyticsTotalScans">12 Scans</h3>
+                  <span class="metric-subtext">Active session scans</span>
+                </div>
+              </div>
+              <div class="analytics-metric-card">
+                <div class="metric-icon purple"><i data-feather="check-square"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Gaps Resolved</span>
+                  <h3 class="metric-value" id="analyticsGapsResolved">88%</h3>
+                  <span class="metric-subtext">Keyword alignment index</span>
+                </div>
+              </div>
+              <div class="analytics-metric-card">
+                <div class="metric-icon orange"><i data-feather="shield"></i></div>
+                <div class="metric-info">
+                  <span class="metric-label">Profile Trust Rating</span>
+                  <h3 class="metric-value" id="analyticsTrustRating">95/100</h3>
+                  <span class="metric-subtext">High-trust verification links</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Two-Column Visual Grid -->
+            <div class="dashboard-split-grid margin-top-lg">
+              <!-- Left Column: Match Score Progression SVG Line Chart -->
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="trending-up"></i>
+                    <h3>Match Score Progression</h3>
+                  </div>
+                  <span class="card-status-pill">Scans History</span>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container-wrapper">
+                    <!-- Premium responsive SVG line chart -->
+                    <svg viewBox="0 0 500 220" class="svg-line-chart" id="analyticsSvgChart">
+                      <!-- Grid lines -->
+                      <line x1="40" y1="20" x2="480" y2="20" class="chart-grid-line"></line>
+                      <line x1="40" y1="60" x2="480" y2="60" class="chart-grid-line"></line>
+                      <line x1="40" y1="100" x2="480" y2="100" class="chart-grid-line"></line>
+                      <line x1="40" y1="140" x2="480" y2="140" class="chart-grid-line"></line>
+                      <line x1="40" y1="180" x2="480" y2="180" class="chart-grid-line"></line>
+
+                      <!-- X axis labels -->
+                      <text x="40" y="200" class="chart-axis-text">Scan 1</text>
+                      <text x="128" y="200" class="chart-axis-text">Scan 2</text>
+                      <text x="216" y="200" class="chart-axis-text">Scan 3</text>
+                      <text x="304" y="200" class="chart-axis-text">Scan 4</text>
+                      <text x="392" y="200" class="chart-axis-text">Scan 5</text>
+                      <text x="480" y="200" class="chart-axis-text">Scan 6 (Latest)</text>
+
+                      <!-- Y axis labels -->
+                      <text x="15" y="24" class="chart-axis-text">100%</text>
+                      <text x="20" y="104" class="chart-axis-text">50%</text>
+                      <text x="25" y="184" class="chart-axis-text">0%</text>
+
+                      <!-- Line Path -->
+                      <path d="M 40 136 L 128 116 L 216 100 L 304 80 L 392 68 L 480 30" class="chart-line-path"></path>
+
+                      <!-- Chart Dots & Hover Tooltips -->
+                      <g class="chart-dot-group">
+                        <circle cx="40" cy="136" r="5" class="chart-dot" data-val="65%"></circle>
+                        <circle cx="128" cy="116" r="5" class="chart-dot" data-val="72%"></circle>
+                        <circle cx="216" cy="100" r="5" class="chart-dot" data-val="80%"></circle>
+                        <circle cx="304" cy="80" r="5" class="chart-dot" data-val="85%"></circle>
+                        <circle cx="392" cy="68" r="5" class="chart-dot" data-val="88%"></circle>
+                        <circle cx="480" cy="30" r="5" class="chart-dot active" data-val="94%"></circle>
+                      </g>
+                    </svg>
+                    <!-- Floating Tooltip Box -->
+                    <div class="chart-tooltip" id="chartTooltip" style="display:none;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Role Compatibility Breakdown -->
+              <div class="dashboard-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <i data-feather="award"></i>
+                    <h3>Role Domain Compatibility</h3>
+                  </div>
+                  <span class="card-status-pill green">Active Match</span>
+                </div>
+                <div class="card-body">
+                  <div class="domain-compatibility-list">
+                    <!-- Progress Bar 1 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">Frontend Engineering &amp; Design Systems</span>
+                        <span class="comp-val">95% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill green-gradient" style="width: 95%;"></div>
+                      </div>
+                    </div>
+                    <!-- Progress Bar 2 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">Backend Architecture &amp; Microservices</span>
+                        <span class="comp-val">88% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill blue-gradient" style="width: 88%;"></div>
+                      </div>
+                    </div>
+                    <!-- Progress Bar 3 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">System Architecture &amp; Scale</span>
+                        <span class="comp-val">82% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill purple-gradient" style="width: 82%;"></div>
+                      </div>
+                    </div>
+                    <!-- Progress Bar 4 -->
+                    <div class="compatibility-item">
+                      <div class="comp-meta">
+                        <span class="comp-title">Cloud &amp; DevOps Infrastructure</span>
+                        <span class="comp-val">65% Match</span>
+                      </div>
+                      <div class="comp-progress-bg">
+                        <div class="comp-progress-fill orange-gradient" style="width: 65%;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: JOB APPLICATIONS PIPELINE -->
+          <div class="tab-pane" id="tab-job-tracker">
+            
+            <!-- Pipeline KPI Metric Cards -->
+            <div class="pipeline-kpi-grid">
+              <div class="kpi-card glass-card kpi-card-glow-blue">
+                <div class="kpi-icon blue-bg"><i data-feather="briefcase"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiTotalApps">0</span>
+                    <span class="kpi-trend positive"><i data-feather="trending-up"></i> Active</span>
+                  </div>
+                  <span class="kpi-label">Total Applications</span>
+                </div>
+              </div>
+              <div class="kpi-card glass-card kpi-card-glow-purple">
+                <div class="kpi-icon purple-bg"><i data-feather="calendar"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiActiveInterviews">0</span>
+                    <span class="kpi-trend purple-trend"><i data-feather="activity"></i> Scheduled</span>
+                  </div>
+                  <span class="kpi-label">Active Interviews</span>
+                </div>
+              </div>
+              <div class="kpi-card glass-card kpi-card-glow-green">
+                <div class="kpi-icon green-bg"><i data-feather="award"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiOffersCount">0</span>
+                    <span class="kpi-trend green-trend"><i data-feather="check-circle"></i> Milestone</span>
+                  </div>
+                  <span class="kpi-label">Offers Received</span>
+                </div>
+              </div>
+              <div class="kpi-card glass-card kpi-card-glow-orange">
+                <div class="kpi-icon orange-bg"><i data-feather="zap"></i></div>
+                <div class="kpi-details">
+                  <div class="kpi-header-row">
+                    <span class="kpi-value" id="kpiAvgAtsScore">0%</span>
+                    <span class="kpi-trend orange-trend"><i data-feather="cpu"></i> AI Matched</span>
+                  </div>
+                  <span class="kpi-label">Avg ATS Match</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pipeline Filter & Action Toolbar -->
+            <div class="pipeline-toolbar-card glass-card">
+              <div class="toolbar-search-row">
+                <div class="input-with-icon search-box">
+                  <i data-feather="search" class="input-icon"></i>
+                  <input type="text" id="jobSearchInput" placeholder="Search company, role, or tech stack..." class="form-input" />
+                </div>
+                <div class="input-with-icon filter-box">
+                  <i data-feather="filter" class="input-icon"></i>
+                  <select id="jobStageFilter" class="form-input">
+                    <option value="all" selected>All Pipeline Stages</option>
+                    <option value="wishlist">Wishlist</option>
+                    <option value="applied">Applied</option>
+                    <option value="interview">Interviewing</option>
+                    <option value="offer">Offer Received</option>
+                    <option value="rejected">Closed / Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="toolbar-controls-row">
+                <!-- Google Material Quick Filter Chips Bar -->
+                <div class="quick-filter-chips" id="quickFilterChips">
+                  <button class="filter-chip active" data-chip="all">All Jobs</button>
+                  <button class="filter-chip" data-chip="faang">⚡ FAANG &amp; Big Tech</button>
+                  <button class="filter-chip" data-chip="remote">🌐 Remote Only</button>
+                  <button class="filter-chip" data-chip="high-ats">🎯 High ATS (&gt;90%)</button>
+                </div>
+
+                <div class="toolbar-actions-group" style="display:flex;align-items:center;gap:6px;">
+                  <button type="button" class="topbar-action-btn active" id="btnViewTable" title="Table View" style="padding:6px 10px;">
+                    <i data-feather="list"></i>
+                  </button>
+                  <button type="button" class="topbar-action-btn" id="btnViewKanban" title="Kanban Board View" style="padding:6px 10px;">
+                    <i data-feather="grid"></i>
+                  </button>
+                  <button class="btn-primary btn-sm btn-glow-effect" id="btnAddNewJob">
+                    <i data-feather="plus"></i>
+                    <span>Add Application</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pipeline Container View Modes -->
+            <div class="pipeline-views-wrapper">
+              <!-- Table List View -->
+              <div class="table-view-container" id="tableViewContainer">
+                <div class="dashboard-card glass-card">
+                  <div class="table-responsive">
+                    <table class="pipeline-table">
+                      <thead>
+                        <tr>
+                          <th>Company &amp; Role</th>
+                          <th class="text-center">Stage</th>
+                          <th class="text-center">Applied Date</th>
+                          <th class="text-center">Salary Range</th>
+                          <th class="text-center">ATS Match</th>
+                          <th class="text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="pipelineTableBody">
+                        <!-- Dynamic Rows -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kanban Board View -->
+              <div class="kanban-board-container" id="kanbanBoardContainer" style="display: none; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 16px;">
+                <!-- Dynamically populated by script.js -->
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="tab-settings">
+            <div class="settings-layout-grid">
+              
+              <!-- LEFT COLUMN: DIAGNOSTICS & SYSTEM PRIVACY -->
+              <div class="settings-column">
+                
+                <!-- Card 1: System Diagnostics Dashboard -->
+                <div class="dashboard-card diagnostics-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="cpu"></i>
+                      <h3>Platform & API Diagnostics</h3>
+                    </div>
+                    <span class="card-status-pill green-pill">System Online</span>
+                  </div>
+                  <div class="card-body">
+                    <div class="diagnostics-metric-row">
+                      <span class="diag-label">Gemini API Engine</span>
+                      <span class="diag-value green-text"><span class="status-dot green"></span> Connected</span>
+                    </div>
+                    <div class="diagnostics-metric-row">
+                      <span class="diag-label">Active Workspace</span>
+                      <span class="diag-value font-mono">ResuAI Dev Studio</span>
+                    </div>
+                    <div class="diagnostics-metric-row">
+                      <span class="diag-label">Local Draft Payload</span>
+                      <span class="diag-value font-mono" id="diagPayloadSize">0.00 KB</span>
+                    </div>
+                    
+                    <div class="diagnostics-storage-section">
+                      <div class="storage-meta">
+                        <span>LocalStorage Space Used</span>
+                        <span id="storagePercentText">0.1% of 5MB</span>
+                      </div>
+                      <div class="storage-progress-bar">
+                        <div class="storage-progress-fill" id="storageProgressFill" style="width: 0.1%;"></div>
+                      </div>
+                    </div>
+
+                    <div class="diagnostics-metric-row border-top-divider">
+                      <span class="diag-label">Channel Encryption</span>
+                      <span class="diag-value"><i data-feather="shield" class="icon-inline"></i> 256-Bit SSL</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 2: Privacy, Backup & Data Management -->
+                <div class="dashboard-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="shield"></i>
+                      <h3>Privacy & Data Control</h3>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="setting-toggle-row">
+                      <div>
+                        <strong>LocalStorage Draft Auto-Save</strong>
+                        <p class="help-text">Instantly saves changes locally in your browser.</p>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="settingAutoSaveToggle" checked />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="setting-danger-zone margin-top-md">
+                      <button class="btn-secondary btn-sm block-btn" id="btnExportAllData">
+                        <i data-feather="download"></i>
+                        <span>Backup Workspace (JSON)</span>
+                      </button>
+                      <button class="btn-danger-sm block-btn" id="btnResetAllData">
+                        <i data-feather="trash-2"></i>
+                        <span>Wipe Local Data</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: CONFIGURATION PREFERENCES -->
+              <div class="settings-column">
+                
+                <!-- Card 3: AI & Matching Engine Preferences -->
+                <div class="dashboard-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="sliders"></i>
+                      <h3>AI Engine & Target Profile</h3>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <form id="aiEngineSettingsForm">
+                      <div class="form-group">
+                        <label for="settingGeminiModel">AI Model Engine</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="box"></i>
+                          <select id="settingGeminiModel" class="form-input">
+                            <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Fast, Recommended for Real-time ATS)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning & Executive Resumes)</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy Model)</option>
+                          </select>
+                        </div>
+                        <span class="help-text">Controls which Google Gemini model processes your ATS diagnostic reports & bullet rewrites.</span>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="settingOptimizationSensitivity">AI Rewrite Creativity Level: <strong id="sensitivityVal">Balanced (0.7)</strong></label>
+                        <input type="range" id="settingOptimizationSensitivity" min="0.1" max="1.0" step="0.1" value="0.7" class="form-range" />
+                        <div class="range-labels">
+                          <span>Strict ATS Keywords</span>
+                          <span>Balanced</span>
+                          <span>Creative Impact</span>
+                        </div>
+                      </div>
+
+                      <div class="form-row-2">
+                        <div class="form-group">
+                          <label for="settingAtsEngine">Target ATS Parser Profile</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="layers"></i>
+                            <select id="settingAtsEngine" class="form-input">
+                              <option value="greenhouse-lever" selected>Greenhouse & Lever (Modern Tech & SaaS)</option>
+                              <option value="workday">Workday ATS (Enterprise Corporate)</option>
+                              <option value="taleo">Taleo / iCIMS (Legacy System Parser)</option>
+                              <option value="faang">FAANG & Big Tech Direct Referral</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="settingSeniority">Target Seniority Level Focus</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="award"></i>
+                            <select id="settingSeniority" class="form-input">
+                              <option value="junior">Junior / Associate (0-2 YOE)</option>
+                              <option value="mid">Mid-Level Engineer (3-5 YOE)</option>
+                              <option value="senior" selected>Senior Engineer (6-8 YOE)</option>
+                              <option value="staff">Staff / Principal / Architect (9+ YOE)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="settingKeywordMatchStrategy">Keyword Gap Matching Mode</label>
+                        <div class="input-icon-wrapper">
+                          <i data-feather="git-commit"></i>
+                          <select id="settingKeywordMatchStrategy" class="form-input">
+                            <option value="semantic" selected>Semantic & Synonym Fuzzy Match (Recommended)</option>
+                            <option value="exact">Strict Exact String Matching Only</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- Integrated Workspace Themes Swatches -->
+                      <div class="form-group">
+                        <label>Workspace Visual Theme</label>
+                        <div class="settings-theme-swatches">
+
+                          <button type="button" class="settings-theme-swatch swatch-amber" data-theme-swatch="sunset-amber" title="Sunset Amber"></button>
+
+                        </div>
+                      </div>
+
+                      <div class="settings-card-actions" style="display:flex;gap:8px;justify-flex-end;">
+                        <button type="submit" class="btn-primary btn-sm" id="btnSaveAiSettings">
+                          <i data-feather="check"></i>
+                          <span>Save AI Preferences</span>
+                        </button>
+                        <button type="button" class="btn-primary btn-sm" id="btnSaveAtsSettings" style="display:none;">
+                          Save ATS Settings
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Card 4: Document Format & PDF Export Preferences -->
+                <div class="dashboard-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i data-feather="file-text"></i>
+                      <h3>PDF Export & Typography Settings</h3>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <form id="pdfExportSettingsForm">
+                      <div class="form-row-2">
+                        <div class="form-group">
+                          <label for="settingPaperSize">Default PDF Page Format</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="file"></i>
+                            <select id="settingPaperSize" class="form-input">
+                              <option value="letter" selected>US Letter (8.5 x 11 in — North America)</option>
+                              <option value="a4">A4 (210 x 297 mm — International)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="settingTypography">Export Typography Font</label>
+                          <div class="input-icon-wrapper">
+                            <i data-feather="type"></i>
+                            <select id="settingTypography" class="form-input">
+                              <option value="inter-jakarta" selected>Inter + Plus Jakarta Sans (Modern Tech)</option>
+                              <option value="roboto-sans">Roboto + Open Sans (Google Clean)</option>
+                              <option value="georgia-serif">Georgia + Garamond (Executive Serif)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="settings-card-actions">
+                        <button type="submit" class="btn-primary btn-sm" id="btnSavePdfSettings">
+                          <i data-feather="check"></i>
+                          <span>Save Format Defaults</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Job Application -->
+  <div class="modal-overlay" id="jobModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
+    <div class="modal-card glass-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-feather="briefcase"></i>
+          <h3 id="jobModalTitle">Add Job Application</h3>
+        </div>
+        <button class="modal-close-btn" id="btnCloseJobModal" aria-label="Close modal">
+          <i data-feather="x"></i>
+        </button>
+      </div>
+
+      <form id="jobForm" class="modal-body">
+        <input type="hidden" id="jobId" value="" />
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="jobCompany">Company Name *</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="building"></i>
+              <input type="text" id="jobCompany" class="form-input" placeholder="e.g. Microsoft" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobTitle">Job Title / Role *</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="user"></i>
+              <input type="text" id="jobTitle" class="form-input" placeholder="e.g. Senior Frontend Engineer" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="jobStage">Pipeline Stage</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="git-commit"></i>
+              <select id="jobStage" class="form-input">
+                <option value="wishlist">Wishlist</option>
+                <option value="applied" selected>Applied</option>
+                <option value="interview">Interviewing</option>
+                <option value="offer">Offer Received</option>
+                <option value="rejected">Closed / Rejected</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobSalary">Salary Range</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="dollar-sign"></i>
+              <input type="text" id="jobSalary" class="form-input" placeholder="e.g. ₹25,00,000 - ₹40,00,000 (or ₹25 LPA - ₹40 LPA)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobDate">Application Date</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="calendar"></i>
+              <input type="date" id="jobDate" class="form-input" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="jobLocation">Location / Mode</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="map-pin"></i>
+              <input type="text" id="jobLocation" class="form-input" placeholder="e.g. Remote / Redmond, WA" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobAtsScore">ATS Match Score (%)</label>
+            <div class="input-icon-wrapper">
+              <i data-feather="zap"></i>
+              <input type="number" id="jobAtsScore" class="form-input" min="0" max="100" placeholder="e.g. 92" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="jobUrl">Job Listing URL</label>
+          <div class="input-icon-wrapper">
+            <i data-feather="link"></i>
+            <input type="url" id="jobUrl" class="form-input" placeholder="https://careers.microsoft.com/job/12345" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="jobJdText">Job Description / Requirements (Optional - enables 1-click ATS scan)</label>
+          <textarea id="jobJdText" class="form-input form-textarea" rows="4" placeholder="Paste the job posting responsibilities & requirements here..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="jobNotes">Interview Notes &amp; Activity Log</label>
+          <textarea id="jobNotes" class="form-input form-textarea" rows="3" placeholder="e.g., Round 1 Recruiter Screen on Tuesday. System Design focus on Caching & Microservices."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost-sm" id="btnCancelJobModal">Cancel</button>
+          <button type="submit" class="btn-primary btn-sm" id="btnSaveJob">
+            <i data-feather="check"></i>
+            <span id="btnSaveJobText">Save Application</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal-overlay" id="forgotPasswordModal" style="display:none;">
+    <div class="modal-panel glass-card" style="max-width:420px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-feather="mail"></i>
+          <h3>Reset Your Password</h3>
+        </div>
+        <button class="modal-close-btn" id="forgotModalClose"><i data-feather="x"></i></button>
+      </div>
+      <div style="padding: 1.5rem 2rem 2rem;">
+        <p style="color:var(--text-secondary); margin-bottom:1.25rem; font-size:0.9rem;">
+          Enter your email address and we'll send you a secure link to reset your password.
+        </p>
+        <div class="form-group">
+          <label for="forgotEmail">Email Address</label>
+          <div class="input-icon-wrapper">
+            <i data-feather="mail"></i>
+            <input type="email" id="forgotEmail" class="form-input" placeholder="name@company.com" autocomplete="email" />
+          </div>
+        </div>
+        <button type="button" class="btn-primary btn-full" id="forgotSubmitBtn" style="margin-top:1rem;">
+          <i data-feather="send"></i>
+          <span id="forgotSubmitText">Send Reset Link</span>
+        </button>
+        <p id="forgotFeedback" style="margin-top:0.75rem; font-size:0.85rem; text-align:center; min-height:1.2em;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Modal -->
+  <div class="modal-overlay" id="userProfileModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+    <div class="modal-panel glass-card" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-feather="user"></i>
+          <h3 id="profileModalTitle">My Account</h3>
+        </div>
+        <button class="modal-close-btn" id="profileModalClose"><i data-feather="x"></i></button>
+      </div>
+      <div style="padding:1.5rem 2rem 2rem;">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+          <div class="user-avatar" id="profileModalAvatar" style="width:56px;height:56px;font-size:1.25rem;">DV</div>
+          <div>
+            <div class="user-name" id="profileModalName" style="font-size:1.1rem; font-weight:600;"></div>
+            <div class="user-role" id="profileModalEmail" style="font-size:0.85rem; color:var(--text-secondary);"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="profileDisplayName">Display Name</label>
+          <div class="input-icon-wrapper">
+            <i data-feather="user"></i>
+            <input type="text" id="profileDisplayName" class="form-input" placeholder="Your full name" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label for="profileCurrentPassword">Current Password <span style="font-size:0.78rem;color:var(--text-muted);">(required to change password)</span></label>
+          <div class="input-icon-wrapper">
+            <i data-feather="lock"></i>
+            <input type="password" id="profileCurrentPassword" class="form-input" placeholder="••••••••" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label for="profileNewPassword">New Password <span style="font-size:0.78rem;color:var(--text-muted);">(leave blank to keep current)</span></label>
+          <div class="input-icon-wrapper">
+            <i data-feather="key"></i>
+            <input type="password" id="profileNewPassword" class="form-input" placeholder="••••••••" />
+          </div>
+        </div>
+        <button type="button" class="btn-primary btn-full" id="profileSaveBtn" style="margin-top:1.25rem;">
+          <i data-feather="save"></i>
+          <span id="profileSaveText">Save Changes</span>
+        </button>
+        <p id="profileFeedback" style="margin-top:0.75rem; font-size:0.85rem; text-align:center; min-height:1.2em;"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/src/client/engines/editor-engine.js?v=2.5"></script>
+  <script src="/src/client/engines/ats-analyzer.js?v=2.5"></script>
+  <script src="/src/client/engines/job-tracker.js?v=2.5"></script>
+  <script src="/src/client/engines/pdf-exporter.js?v=2.5"></script>
+  <script src="/src/client/engines/script.js?v=2.5"></script>
+  <script src="/src/client/components/onboarding.js?v=2.5"></script>
+  <script src="/src/client/components/help-center.js?v=2.5"></script>
+  <script src="/src/client/components/contextual-tips.js?v=2.5"></script>
+  <script src="/src/client/components/checklist.js?v=2.5"></script>
+  <script src="/src/client/components/command-palette.js?v=2.5"></script>
+</body>
+</html>
+

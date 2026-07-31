@@ -1,0 +1,579 @@
+/**
+ * ResuAI // Isolated Onboarding System Styles
+ * Scoped overlay, modal card, progress dots, and micro-interactions
+ */
+
+.resuai-onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1), visibility 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resuai-onboarding-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.resuai-onboarding-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow:
+    0 24px 64px -12px rgba(15, 23, 42, 0.15),
+    0 8px 24px rgba(15, 23, 42, 0.08);
+  width: 100%;
+  max-width: 520px;
+  padding: 28px;
+  position: relative;
+  transform: scale(0.96) translateY(8px);
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resuai-onboarding-overlay.is-active .resuai-onboarding-card {
+  transform: scale(1) translateY(0);
+}
+
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+}
+
+.onboarding-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onboarding-icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563EB;
+}
+
+.onboarding-title-text h3 {
+  font-family: var(--font-heading, 'Inter', sans-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.onboarding-title-text span {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.onboarding-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 180ms ease-in-out;
+}
+
+.onboarding-close-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.onboarding-slide-body {
+  padding: 18px;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid #E2E8F0;
+  min-height: 140px;
+}
+
+.onboarding-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.onboarding-step-title {
+  font-family: var(--font-heading, 'Inter', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 6px;
+}
+
+.onboarding-step-desc {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #475569;
+  margin: 0;
+}
+
+.onboarding-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.onboarding-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onboarding-dot.is-active {
+  width: 22px;
+  border-radius: 9999px;
+  background: #2563EB;
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-btn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms ease-in-out;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  border: 1px solid transparent;
+}
+
+.onboarding-btn-secondary {
+  background: transparent;
+  border-color: #E2E8F0;
+  color: #475569;
+}
+
+.onboarding-btn-secondary:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.onboarding-btn-primary {
+  background: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.onboarding-btn-primary:hover {
+  background: #1D4ED8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* ══════════════════════════════════════════════
+   PREMIUM WELCOME MODAL STYLES (20px Rounded, Glassmorphism)
+   ══════════════════════════════════════════════ */
+.resuai-welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.50);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1), visibility 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resuai-welcome-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.resuai-welcome-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  box-shadow:
+    0 28px 64px -12px rgba(15, 23, 42, 0.18),
+    0 12px 32px rgba(15, 23, 42, 0.08);
+  width: 100%;
+  max-width: 480px;
+  padding: 32px;
+  position: relative;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resuai-welcome-overlay.is-active .resuai-welcome-card {
+  transform: scale(1) translateY(0);
+}
+
+.welcome-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.welcome-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading, 'Inter', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: #2563EB;
+}
+
+.welcome-logo-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(37, 99, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-setup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #D97706;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+}
+
+.welcome-title-group h2 {
+  font-family: var(--font-heading, 'Inter', sans-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.welcome-title-group p {
+  font-size: 13.5px;
+  color: #64748B;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.welcome-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.welcome-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  transition: background 180ms ease-in-out;
+}
+
+.welcome-feature-item:hover {
+  background: #F1F5F9;
+}
+
+.welcome-feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.welcome-feature-text h4 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0 0 2px;
+  font-family: var(--font-heading, 'Inter', sans-serif);
+}
+
+.welcome-feature-text p {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.welcome-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms ease-in-out;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+
+.welcome-btn-secondary {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #475569;
+}
+
+.welcome-btn-secondary:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.welcome-btn-primary {
+  background: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+.welcome-btn-primary:hover {
+  background: #1D4ED8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+.welcome-btn:focus-visible {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+/* ══════════════════════════════════════════════
+   INTERACTIVE PRODUCT TOUR SPOTLIGHT & TOOLTIP STYLES
+   ══════════════════════════════════════════════ */
+.resuai-tour-spotlight {
+  position: fixed;
+  z-index: 10001;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 9999px rgba(15, 23, 42, 0.65),
+    0 0 0 2px #2563EB,
+    0 0 24px rgba(37, 99, 235, 0.45);
+  pointer-events: none;
+  transition: top 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              left 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              width 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              height 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 200ms ease-in-out,
+              visibility 200ms ease-in-out;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.resuai-tour-spotlight.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.resuai-tour-tooltip {
+  position: fixed;
+  z-index: 10002;
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 16px;
+  box-shadow:
+    0 24px 56px -12px rgba(15, 23, 42, 0.22),
+    0 4px 16px rgba(15, 23, 42, 0.08);
+  width: 320px;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              top 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              left 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.resuai-tour-tooltip.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tour-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tour-step-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563EB;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tour-skip-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 150ms ease-in-out;
+}
+
+.tour-skip-btn:hover {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+
+.tour-tooltip-title {
+  font-family: var(--font-heading, 'Inter', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px;
+}
+
+.tour-tooltip-desc {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0 0 16px;
+}
+
+.tour-tooltip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.tour-nav-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.tour-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms ease-in-out;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  border: 1px solid transparent;
+}
+
+.tour-btn-secondary {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #475569;
+}
+
+.tour-btn-secondary:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.tour-btn-primary {
+  background: #2563EB;
+  color: #FFFFFF;
+}
+
+.tour-btn-primary:hover {
+  background: #1D4ED8;
+  transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════
+   GLOBAL ACCESSIBILITY & PREFERS-REDUCED-MOTION
+   ══════════════════════════════════════════════ */
+.onboarding-btn:focus-visible,
+.tour-btn:focus-visible,
+.tour-skip-btn:focus-visible {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resuai-onboarding-overlay,
+  .resuai-onboarding-card,
+  .resuai-welcome-overlay,
+  .resuai-welcome-card,
+  .resuai-tour-spotlight,
+  .resuai-tour-tooltip {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
