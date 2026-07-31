@@ -3147,6 +3147,9 @@ i[data-feather] svg { width: 1em; height: 1em; }
   padding: 4px 8px;
   outline: none;
   transition: all 0.12s;
+  field-sizing: content;
+  min-width: 260px;
+  max-width: 440px;
 }
 .ats-meta-input:hover { background: #F2EEE8; border-color: #ECE8E1; }
 .ats-meta-input:focus { background: #FFFFFF; border-color: #B9824A; box-shadow: 0 0 0 2px rgba(201,139,74,0.15); }

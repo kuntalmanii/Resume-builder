@@ -3166,12 +3166,32 @@ Key Requirements:
 
   const sampleJdSelect = document.getElementById('sampleJdSelect');
   const atsEngineChipsContainer = document.getElementById('atsEngineChipsContainer');
+  const atsAuditJobTitle = document.getElementById('atsAuditJobTitle');
+  const atsAuditCompany = document.getElementById('atsAuditCompany');
+
+  function autoFitMetaInput(inputEl) {
+    if (!inputEl) return;
+    const len = inputEl.value ? inputEl.value.length : 12;
+    inputEl.style.width = Math.max(len + 2, 22) + 'ch';
+  }
+
+  [atsAuditJobTitle, atsAuditCompany].forEach(inputEl => {
+    if (inputEl) {
+      autoFitMetaInput(inputEl);
+      inputEl.addEventListener('input', () => autoFitMetaInput(inputEl));
+    }
+  });
 
   if (sampleJdSelect && atsJdInput) {
     sampleJdSelect.addEventListener('change', () => {
       const selected = sampleJdSelect.value;
       if (selected && SAMPLE_JD_TEMPLATES[selected]) {
         atsJdInput.value = SAMPLE_JD_TEMPLATES[selected];
+        const selectedOption = sampleJdSelect.options[sampleJdSelect.selectedIndex];
+        if (selectedOption && selectedOption.value && atsAuditJobTitle) {
+          atsAuditJobTitle.value = selectedOption.text;
+          autoFitMetaInput(atsAuditJobTitle);
+        }
         autoSaveFormFields();
       }
     });
