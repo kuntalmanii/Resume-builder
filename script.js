@@ -708,6 +708,51 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileFeedback)    profileFeedback.textContent = '';
     userProfileModal.style.display = 'flex';
     if (window.feather) feather.replace();
+    trapModalFocus(userProfileModal);
+  }
+
+  function trapModalFocus(modalEl) {
+    if (!modalEl) return;
+    const focusables = Array.from(modalEl.querySelectorAll('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+    if (focusables.length === 0) return;
+
+    const firstEl = focusables[0];
+    const lastEl = focusables[focusables.length - 1];
+
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        modalEl.style.display = 'none';
+        return;
+      }
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstEl) {
+            e.preventDefault();
+            lastEl.focus();
+          }
+        } else {
+          if (document.activeElement === lastEl) {
+            e.preventDefault();
+            firstEl.focus();
+          }
+        }
+      }
+    }
+
+    modalEl.addEventListener('keydown', handleKeyDown);
+    setTimeout(() => firstEl.focus(), 50);
+  }
+
+  const globalHeaderSearch = document.getElementById('globalHeaderSearch');
+  if (globalHeaderSearch) {
+    globalHeaderSearch.addEventListener('input', debounce((e) => {
+      const query = e.target.value.trim().toLowerCase();
+      const jobSearchInput = document.getElementById('jobSearchInput');
+      if (jobSearchInput) {
+        jobSearchInput.value = query;
+        if (typeof filterJobApplications === 'function') filterJobApplications(query);
+      }
+    }, 200));
   }
 
   function populateProfileModalFromLocal() {
@@ -844,15 +889,17 @@ document.addEventListener('DOMContentLoaded', () => {
    * and updates breadcrumb headers smoothly without page reloads.
    * @param {string} tabId - ID of target tab (e.g. 'resume-builder', 'ats-analyzer')
    */
-  function switchTab(tabId) {
+  function switchTab(tabId, pushState = true) {
     if (!tabId || !TAB_METADATA[tabId]) return;
 
     // Toggle active state on sidebar navigation links
     navItems.forEach((item) => {
       if (item.getAttribute('data-tab') === tabId) {
         item.classList.add('active');
+        item.setAttribute('aria-selected', 'true');
       } else {
         item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
       }
     });
 
@@ -893,9 +940,23 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('resuai-active-tab', tabId);
     } catch (e) {}
 
+    if (pushState && window.history && window.history.pushState) {
+      if (window.location.hash !== '#' + tabId) {
+        window.history.pushState({ tabId }, '', '#' + tabId);
+      }
+    }
+
     // Close mobile drawer if active
     closeMobileSidebar();
   }
+
+  window.addEventListener('popstate', (e) => {
+    const hash = window.location.hash.replace('#', '');
+    const tabId = (e.state && e.state.tabId) || hash || 'resume-builder';
+    if (TAB_METADATA[tabId]) {
+      switchTab(tabId, false);
+    }
+  });
 
   function restoreSavedTab() {
     try {

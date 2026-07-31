@@ -301,6 +301,12 @@
         </div>
 
         <div class="top-bar-right">
+          <!-- Header Search Bar -->
+          <div class="top-bar-search" style="position:relative; margin-right:12px;">
+            <input type="text" id="globalHeaderSearch" placeholder="Search workspace..." class="form-input" aria-label="Search workspace" style="font-size:0.8rem; padding:4px 10px 4px 28px; width:180px; height:32px; border-radius:16px; background:rgba(255,255,255,0.05);" />
+            <i data-feather="search" style="position:absolute; left:8px; top:8px; width:14px; height:14px; opacity:0.6;"></i>
+          </div>
+
           <!-- Theme Switcher Bar -->
           <div class="theme-switcher-bar" title="Switch UI Theme">
             <span class="switcher-label">Theme</span>
@@ -2395,7 +2401,7 @@ Key Requirements:
   </div>
 
   <!-- Modal: Add / Edit Job Application -->
-  <div class="modal-overlay" id="jobModal" style="display: none;">
+  <div class="modal-overlay" id="jobModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
     <div class="modal-card glass-card">
       <div class="modal-header">
         <div class="modal-title">
@@ -2503,7 +2509,7 @@ Key Requirements:
     </div>
   </div>
 
-  <div class="toast-container" id="toastContainer"></div>
+  <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
   <!-- Forgot Password Modal -->
   <div class="modal-overlay" id="forgotPasswordModal" style="display:none;">
@@ -2536,12 +2542,12 @@ Key Requirements:
   </div>
 
   <!-- User Profile Modal -->
-  <div class="modal-overlay" id="userProfileModal" style="display:none;">
+  <div class="modal-overlay" id="userProfileModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
     <div class="modal-panel glass-card" style="max-width:480px;">
       <div class="modal-header">
         <div class="modal-title-group">
           <i data-feather="user"></i>
-          <h3>My Account</h3>
+          <h3 id="profileModalTitle">My Account</h3>
         </div>
         <button class="modal-close-btn" id="profileModalClose"><i data-feather="x"></i></button>
       </div>
