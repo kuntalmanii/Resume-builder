@@ -13,6 +13,19 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Global Error Boundary & Monitoring Hooks
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    console.error('[ResuAI Error Boundary]', { msg, url, lineNo, columnNo, error });
+    if (typeof showToast === 'function') {
+      showToast('An unexpected UI error occurred. All progress is saved locally.', 'error');
+    }
+    return false;
+  };
+
+  window.onunhandledrejection = function (event) {
+    console.error('[ResuAI Unhandled Rejection]', event.reason);
+  };
+
   // Initialize Feather Vector Icons
   if (window.feather) {
     feather.replace();

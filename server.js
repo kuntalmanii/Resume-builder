@@ -87,6 +87,27 @@ function setCorsHeaders(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+function setSecurityHeaders(req, res) {
+  setCorsHeaders(req, res);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co;");
+}
+
+function sanitizeInputText(str, maxLength = 50000) {
+  if (!str || typeof str !== 'string') return '';
+  let clean = str.trim();
+  clean = clean.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  clean = clean.replace(/javascript:/gi, '');
+  if (clean.length > maxLength) {
+    clean = clean.substring(0, maxLength);
+  }
+  return clean;
+}
+
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 20;
@@ -488,7 +509,7 @@ function runFallbackTailoredResume(jdText, resumeText) {
 // 7. ROUTE CONTROLLERS & SERVER INITIALIZATION
 // ============================================================================
 const server = http.createServer((req, res) => {
-  setCorsHeaders(req, res);
+  setSecurityHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
