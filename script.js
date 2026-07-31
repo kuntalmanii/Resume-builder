@@ -228,6 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
       loadUserProfileFromSupabase(user.id);
       loadJobApplicationsFromSupabase(user.id);
     }
+
+    // Auto-launch Quick Guide for first-time login without needing button click
+    setTimeout(function() {
+      if (window.onboardingManager && !localStorage.getItem('resuai_welcome_modal_seen')) {
+        window.onboardingManager.showWelcomeModal();
+      }
+    }, 500);
   }
 
   /* ------ Auth state verification engine ------ */

@@ -143,6 +143,8 @@ class OnboardingManager {
   }
 
   showWelcomeModal() {
+    const authContainer = document.getElementById('authContainer');
+    if (authContainer && authContainer.style.display !== 'none') return;
     if (!this.welcomeOverlayEl) return;
     this.welcomeOverlayEl.classList.add('is-active');
     this.welcomeOverlayEl.setAttribute('aria-hidden', 'false');
