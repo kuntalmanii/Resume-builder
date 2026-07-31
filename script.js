@@ -990,6 +990,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputSummary = document.getElementById('inputSummary');
   const inputEducation = document.getElementById('inputEducation');
   const inputCertifications = document.getElementById('inputCertifications');
+  const inputProjects = document.getElementById('inputProjects');
+  const inputAchievements = document.getElementById('inputAchievements');
   const bulletPoints = document.getElementById('bulletPoints');
   const charCounter = document.getElementById('charCounter');
   const atsJdInput = document.getElementById('atsJdInput');
@@ -1004,6 +1006,95 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewBullets = document.getElementById('previewBullets');
   const previewCertifications = document.getElementById('previewCertifications');
   const previewCertificationsSection = document.getElementById('previewCertificationsSection');
+  const previewProjects = document.getElementById('previewProjects');
+  const previewProjectsSection = document.getElementById('previewProjectsSection');
+  const previewAchievements = document.getElementById('previewAchievements');
+  const previewAchievementsSection = document.getElementById('previewAchievementsSection');
+  
+  const btnAddCustomSection = document.getElementById('btnAddCustomSection');
+  const customSectionsContainer = document.getElementById('customSectionsContainer');
+  const previewCustomSectionsContainer = document.getElementById('previewCustomSectionsContainer');
+  const btnImportJson = document.getElementById('btnImportJson');
+  const jsonFileInput = document.getElementById('jsonFileInput');
+
+  let customSectionsList = [];
+
+  function renderCustomSectionInputs() {
+    if (!customSectionsContainer) return;
+    customSectionsContainer.innerHTML = '';
+
+    customSectionsList.forEach((sec, idx) => {
+      const block = document.createElement('div');
+      block.className = 'custom-section-card';
+      block.style.cssText = 'background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; margin-bottom: 12px;';
+      
+      block.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <input type="text" class="form-input custom-sec-title" data-idx="${idx}" placeholder="Section Title (e.g. Publications)" value="${escapeHTML(sec.title || '')}" style="font-weight:600; width:70%; font-size:0.85rem;" />
+          <button type="button" class="btn-outline-action remove-custom-sec-btn" data-idx="${idx}" style="color:#ef4444; border-color:rgba(239,68,68,0.3); font-size:0.75rem; padding:2px 8px;">Remove</button>
+        </div>
+        <textarea class="form-textarea custom-sec-content" data-idx="${idx}" rows="3" placeholder="Enter section content..." style="font-size:0.85rem;">${escapeHTML(sec.content || '')}</textarea>
+      `;
+      customSectionsContainer.appendChild(block);
+    });
+
+    customSectionsContainer.querySelectorAll('.custom-sec-title').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        if (customSectionsList[idx]) {
+          customSectionsList[idx].title = e.target.value;
+          renderCustomSectionsPreview();
+          if (typeof debouncedAutoSave === 'function') debouncedAutoSave();
+        }
+      });
+    });
+
+    customSectionsContainer.querySelectorAll('.custom-sec-content').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        if (customSectionsList[idx]) {
+          customSectionsList[idx].content = e.target.value;
+          renderCustomSectionsPreview();
+          if (typeof debouncedAutoSave === 'function') debouncedAutoSave();
+        }
+      });
+    });
+
+    customSectionsContainer.querySelectorAll('.remove-custom-sec-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        customSectionsList.splice(idx, 1);
+        renderCustomSectionInputs();
+        renderCustomSectionsPreview();
+        if (typeof debouncedAutoSave === 'function') debouncedAutoSave();
+      });
+    });
+  }
+
+  function renderCustomSectionsPreview() {
+    if (!previewCustomSectionsContainer) return;
+    previewCustomSectionsContainer.innerHTML = '';
+
+    customSectionsList.forEach(sec => {
+      if (!sec.title && !sec.content) return;
+      const secDiv = document.createElement('div');
+      secDiv.className = 'paper-section';
+      secDiv.innerHTML = `
+        <div class="paper-section-title"><span class="section-accent-bar"></span>${escapeHTML((sec.title || 'CUSTOM SECTION').toUpperCase())}</div>
+        <p class="section-content">${escapeHTML(sec.content || '')}</p>
+      `;
+      previewCustomSectionsContainer.appendChild(secDiv);
+    });
+  }
+
+  if (btnAddCustomSection) {
+    btnAddCustomSection.addEventListener('click', () => {
+      customSectionsList.push({ id: 'sec_' + Date.now(), title: 'Custom Section', content: '' });
+      renderCustomSectionInputs();
+      renderCustomSectionsPreview();
+      if (typeof debouncedAutoSave === 'function') debouncedAutoSave();
+    });
+  }
 
   const strengthPercentVal = document.getElementById('strengthPercentVal');
   const strengthProgressFill = document.getElementById('strengthProgressFill');
@@ -1258,6 +1349,9 @@ document.addEventListener('DOMContentLoaded', () => {
       summary: inputSummary ? inputSummary.value : '',
       education: inputEducation ? inputEducation.value : '',
       certifications: inputCertifications ? inputCertifications.value : '',
+      projects: inputProjects ? inputProjects.value : '',
+      achievements: inputAchievements ? inputAchievements.value : '',
+      customSections: customSectionsList,
       bulletPoints: bulletPoints ? bulletPoints.value : '',
       atsJdText: atsJdInput ? atsJdInput.value : '',
       skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean)
@@ -1302,6 +1396,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isClean(draft.summary) && inputSummary) inputSummary.value = draft.summary;
         if (isClean(draft.education) && inputEducation) inputEducation.value = draft.education;
         if (isClean(draft.certifications) && inputCertifications) inputCertifications.value = draft.certifications;
+        if (isClean(draft.projects) && inputProjects) inputProjects.value = draft.projects;
+        if (isClean(draft.achievements) && inputAchievements) inputAchievements.value = draft.achievements;
+        if (Array.isArray(draft.customSections)) {
+          customSectionsList = draft.customSections;
+          renderCustomSectionInputs();
+        }
         if (isClean(draft.bulletPoints) && bulletPoints) bulletPoints.value = draft.bulletPoints;
         if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
 
@@ -1573,6 +1673,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (previewCertificationsSection.style.display !== 'none') previewCertificationsSection.style.display = 'none';
       }
     }
+
+    if (inputProjects && previewProjects && previewProjectsSection) {
+      const val = inputProjects.value.trim();
+      if (val) {
+        updateTextNode(previewProjects, val);
+        if (previewProjectsSection.style.display !== 'block') previewProjectsSection.style.display = 'block';
+      } else {
+        if (previewProjectsSection.style.display !== 'none') previewProjectsSection.style.display = 'none';
+      }
+    }
+
+    if (inputAchievements && previewAchievements && previewAchievementsSection) {
+      const val = inputAchievements.value.trim();
+      if (val) {
+        updateTextNode(previewAchievements, val);
+        if (previewAchievementsSection.style.display !== 'block') previewAchievementsSection.style.display = 'block';
+      } else {
+        if (previewAchievementsSection.style.display !== 'none') previewAchievementsSection.style.display = 'none';
+      }
+    }
+
+    renderCustomSectionsPreview();
 
     if (bulletPoints && previewBullets) {
       const lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
@@ -2292,8 +2414,11 @@ document.addEventListener('DOMContentLoaded', () => {
           summary:        inputSummary        ? inputSummary.value.trim()        : '',
           education:      inputEducation      ? inputEducation.value.trim()      : '',
           certifications: inputCertifications ? inputCertifications.value.trim() : '',
+          projects:       inputProjects       ? inputProjects.value.trim()       : '',
+          achievements:   inputAchievements   ? inputAchievements.value.trim()   : '',
         },
         skills,
+        customSections: customSectionsList,
         experience: bulletPoints ? bulletPoints.value.trim() : '',
         preview: {
           name:           previewName           ? previewName.textContent           : '',
@@ -2303,6 +2428,8 @@ document.addEventListener('DOMContentLoaded', () => {
           education:      previewEducation      ? previewEducation.textContent      : '',
           skills:         previewSkills         ? previewSkills.textContent         : '',
           certifications: previewCertifications ? previewCertifications.textContent : '',
+          projects:       previewProjects       ? previewProjects.textContent       : '',
+          achievements:   previewAchievements   ? previewAchievements.textContent   : '',
         }
       };
 
@@ -2318,6 +2445,71 @@ document.addEventListener('DOMContentLoaded', () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    });
+  }
+
+  // Import JSON File Handler
+  if (btnImportJson && jsonFileInput) {
+    btnImportJson.addEventListener('click', () => jsonFileInput.click());
+
+    jsonFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        const info = data.personalInfo || data;
+
+        if (info.fullName && inputFullName) inputFullName.value = info.fullName;
+        if (info.jobTitle && inputJobTitle) inputJobTitle.value = info.jobTitle;
+        if (info.email && inputEmail) inputEmail.value = info.email;
+        if (info.phone && inputPhone) inputPhone.value = info.phone;
+        if (info.location && inputLocation) inputLocation.value = info.location;
+        if (info.github && inputGithub) inputGithub.value = info.github;
+        if (info.linkedin && inputLinkedin) inputLinkedin.value = info.linkedin;
+        if (info.portfolio && inputPortfolio) inputPortfolio.value = info.portfolio;
+        if (info.summary && inputSummary) inputSummary.value = info.summary;
+        if (info.education && inputEducation) inputEducation.value = info.education;
+        if (info.certifications && inputCertifications) inputCertifications.value = info.certifications;
+        if (info.projects && inputProjects) inputProjects.value = info.projects;
+        if (info.achievements && inputAchievements) inputAchievements.value = info.achievements;
+
+        if (data.experience && bulletPoints) {
+          bulletPoints.value = typeof data.experience === 'string' ? data.experience : JSON.stringify(data.experience, null, 2);
+        }
+
+        if (Array.isArray(data.skills)) {
+          const tagsContainer = document.getElementById('skillsTagsContainer');
+          if (tagsContainer) {
+            tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
+            data.skills.forEach(skillName => addSkillTag(skillName));
+          }
+        }
+
+        if (Array.isArray(data.customSections)) {
+          customSectionsList = data.customSections;
+          renderCustomSectionInputs();
+        }
+
+        syncLivePreview();
+        autoSaveFormFields();
+        if (typeof showToast === 'function') {
+          showToast('Resume JSON imported successfully!', 'success');
+        } else {
+          alert('Resume JSON imported successfully!');
+        }
+      } catch (err) {
+        console.error('Failed to parse imported JSON:', err);
+        if (typeof showToast === 'function') {
+          showToast('Invalid JSON file format.', 'error');
+        } else {
+          alert('Invalid JSON file format.');
+        }
+      } finally {
+        jsonFileInput.value = '';
+      }
     });
   }
 
@@ -2796,6 +2988,8 @@ Key Requirements:
         if (inputFullName) candidateResumeText += " " + inputFullName.value;
         if (inputJobTitle) candidateResumeText += " " + inputJobTitle.value;
         if (bulletPoints) candidateResumeText += " " + bulletPoints.value;
+        if (inputProjects) candidateResumeText += " " + inputProjects.value;
+        if (inputAchievements) candidateResumeText += " " + inputAchievements.value;
         document.querySelectorAll('#skillsTagsContainer .tag').forEach(tag => {
           candidateResumeText += " " + tag.textContent;
         });

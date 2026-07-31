@@ -354,6 +354,8 @@
               <textarea id="bulletPoints"    class="form-textarea live-sync" rows="6"></textarea>
               <input type="text"  id="inputEducation"      class="form-input live-sync" value="" />
               <input type="text"  id="inputCertifications" class="form-input live-sync" value="" />
+              <textarea id="inputProjects"      class="form-textarea live-sync" rows="4"></textarea>
+              <textarea id="inputAchievements"  class="form-textarea live-sync" rows="4"></textarea>
               <!-- Skills system (must remain intact for JS) -->
               <div class="tags-input-container" id="skillsTagsContainer" style="position:relative;">
                 <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill" autocomplete="off" />
@@ -438,7 +440,11 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 AI Optimize
               </button>
-              <div class="topbar-divider"></div>
+              <button class="topbar-action-btn" id="btnImportJson" title="Import Resume JSON">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import JSON
+              </button>
+              <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
               <button class="topbar-action-btn" id="btnExportJson" title="Export JSON">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 JSON
@@ -721,15 +727,57 @@
                     <div class="doc-section-block" id="docSection-certs" data-section="certs">
                       <div class="doc-section-label">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-                        <span>Certifications &amp; Honors</span>
+                        <span>Certifications &amp; Credentials</span>
                       </div>
                       <div class="doc-field"
                            contenteditable="true"
                            spellcheck="true"
-                           data-placeholder="e.g. AWS Solutions Architect (2023) · Google Cloud Professional (2024) · CKA Kubernetes · Hackathon Winner"
+                           data-placeholder="e.g. AWS Solutions Architect (2023) · Google Cloud Professional (2024) · CKA Kubernetes"
                            data-syncs="inputCertifications"
                            id="docFieldCerts"
                            aria-label="Certifications"></div>
+                    </div>
+
+                    <!-- §7 PROJECTS -->
+                    <div class="doc-section-block" id="docSection-projects" data-section="projects">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span>Key Projects &amp; Initiatives</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="e.g. ResuAI — Real-time AI Resume Builder (React, Node.js, Gemini API) · Built automated ATS optimization pipeline."
+                           data-syncs="inputProjects"
+                           id="docFieldProjects"
+                           aria-label="Projects"></div>
+                    </div>
+
+                    <!-- §8 ACHIEVEMENTS -->
+                    <div class="doc-section-block" id="docSection-achievements" data-section="achievements">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>Key Achievements &amp; Honors</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="e.g. National Hackathon Winner (2024) · Published research paper on Distributed Systems · Reduced infra costs by 40%."
+                           data-syncs="inputAchievements"
+                           id="docFieldAchievements"
+                           aria-label="Achievements"></div>
+                    </div>
+
+                    <!-- §9 DYNAMIC CUSTOM SECTIONS -->
+                    <div class="doc-section-block" id="docSection-custom" data-section="custom">
+                      <div class="doc-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          <span>Custom Sections</span>
+                        </div>
+                        <button type="button" class="btn-outline-action" id="btnAddCustomSection" style="font-size:0.75rem; padding:2px 8px;">+ Add Custom Section</button>
+                      </div>
+                      <div id="customSectionsContainer" style="margin-top:8px;"></div>
                     </div>
 
                   </div><!-- /doc-editor-body -->
@@ -877,6 +925,15 @@
                               <div class="paper-section-title"><span class="section-accent-bar"></span>CERTIFICATIONS &amp; HONORS</div>
                               <p class="section-content" id="previewCertifications"></p>
                             </div>
+                            <div class="paper-section" id="previewProjectsSection" style="display:none;">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>KEY PROJECTS &amp; INITIATIVES</div>
+                              <p class="section-content" id="previewProjects"></p>
+                            </div>
+                            <div class="paper-section" id="previewAchievementsSection" style="display:none;">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>KEY ACHIEVEMENTS &amp; HONORS</div>
+                              <p class="section-content" id="previewAchievements"></p>
+                            </div>
+                            <div id="previewCustomSectionsContainer"></div>
                           </div>
                         </div>
                       </div>
