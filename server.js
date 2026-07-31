@@ -635,24 +635,27 @@ const server = http.createServer((req, res) => {
   const extname = path.extname(filePath);
   const contentType = MIME_TYPES[extname] || 'text/html';
 
+  const isStaticAsset = ['.css', '.js', '.png', '.jpg', '.jpeg', '.svg', '.ico'].includes(extname.toLowerCase());
+  const cacheControlHeader = isStaticAsset ? 'public, max-age=31536000, immutable' : 'no-cache, must-revalidate';
+
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
         if (extname && extname !== '.html') {
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.writeHead(404, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-cache' });
           res.end(`404 Not Found: ${safePath}`);
           return;
         }
         fs.readFile(path.join(__dirname, 'index.html'), (err2, htmlContent) => {
-          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, must-revalidate' });
           res.end(htmlContent, 'utf-8');
         });
       } else {
-        res.writeHead(500);
+        res.writeHead(500, { 'Cache-Control': 'no-cache' });
         res.end(`Server Error: ${err.code}`);
       }
     } else {
-      res.writeHead(200, { 'Content-Type': contentType });
+      res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': cacheControlHeader });
       res.end(content, 'utf-8');
     }
   });

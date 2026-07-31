@@ -1500,12 +1500,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Performance Optimization Utilities ---
+  function debounce(fn, waitMs = 150) {
+    let timeoutId = null;
+    return function (...args) {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        fn.apply(this, args);
+      }, waitMs);
+    };
+  }
+
+  function updateTextNode(el, newText) {
+    if (!el) return;
+    if (el.textContent !== newText) {
+      el.textContent = newText;
+    }
+  }
+
   function syncLivePreview() {
     if (inputFullName && previewName) {
-      previewName.textContent = inputFullName.value.trim().toUpperCase() || 'YOUR NAME';
+      updateTextNode(previewName, inputFullName.value.trim().toUpperCase() || 'YOUR NAME');
     }
     if (inputJobTitle && previewRole) {
-      previewRole.textContent = inputJobTitle.value.trim().toUpperCase() || '';
+      updateTextNode(previewRole, inputJobTitle.value.trim().toUpperCase() || '');
     }
     if (previewMeta) {
       const chips = [];
@@ -1523,60 +1541,72 @@ document.addEventListener('DOMContentLoaded', () => {
       if (li)   chips.push(`<span class="contact-chip"><i data-feather="linkedin"></i>${li}</span>`);
       if (port) chips.push(`<span class="contact-chip"><i data-feather="globe"></i>${port}</span>`);
 
-      previewMeta.innerHTML = chips.join('<span class="contact-divider">·</span>');
-      if (window.feather) feather.replace();
+      const newHtml = chips.join('<span class="contact-divider">·</span>');
+      if (previewMeta.innerHTML !== newHtml) {
+        previewMeta.innerHTML = newHtml;
+        if (window.feather) feather.replace();
+      }
     }
 
     if (inputSummary && previewSummary && previewSummarySection) {
       const val = inputSummary.value.trim();
       if (val) {
-        previewSummary.textContent = val;
-        previewSummarySection.style.display = 'block';
+        updateTextNode(previewSummary, val);
+        if (previewSummarySection.style.display !== 'block') previewSummarySection.style.display = 'block';
       } else {
-        previewSummarySection.style.display = 'none';
+        if (previewSummarySection.style.display !== 'none') previewSummarySection.style.display = 'none';
       }
     }
 
     if (inputEducation && previewEducation) {
       const val = inputEducation.value.trim();
-      previewEducation.innerHTML = val ? formatEducationHTML(val) : '';
+      const newHtml = val ? formatEducationHTML(val) : '';
+      if (previewEducation.innerHTML !== newHtml) previewEducation.innerHTML = newHtml;
     }
 
     if (inputCertifications && previewCertifications && previewCertificationsSection) {
       const val = inputCertifications.value.trim();
       if (val) {
-        previewCertifications.textContent = val;
-        previewCertificationsSection.style.display = 'block';
+        updateTextNode(previewCertifications, val);
+        if (previewCertificationsSection.style.display !== 'block') previewCertificationsSection.style.display = 'block';
       } else {
-        previewCertificationsSection.style.display = 'none';
+        if (previewCertificationsSection.style.display !== 'none') previewCertificationsSection.style.display = 'none';
       }
     }
 
     if (bulletPoints && previewBullets) {
       const lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
-      if (lines.length > 0) {
-        previewBullets.innerHTML = lines.map(line => `<li>${escapeHTML(line.trim().replace(/^[-•*]\s*/, ''))}</li>`).join('');
-      } else {
-        previewBullets.innerHTML = '';
-      }
+      const newHtml = lines.length > 0 ? lines.map(line => `<li>${escapeHTML(line.trim().replace(/^[-•*]\s*/, ''))}</li>`).join('') : '';
+      if (previewBullets.innerHTML !== newHtml) previewBullets.innerHTML = newHtml;
     }
     updateCharCounter();
     calculateProfileStrength();
     updateTopUserProfile();
-    autoSaveFormFields();
+    debouncedAutoSave();
   }
 
-  // Bind input events for live preview sync & automatic localStorage saving
+  const debouncedSyncLivePreview = debounce(syncLivePreview, 150);
+  const debouncedAutoSave = debounce(autoSaveFormFields, 500);
+
+  // Bind input events for debounced live preview sync & automatic localStorage saving
   const liveSyncInputs = document.querySelectorAll('.live-sync');
   liveSyncInputs.forEach(input => {
     input.addEventListener('input', () => {
+      debouncedSyncLivePreview();
+      debouncedAutoSave();
+    });
+    input.addEventListener('change', () => {
+      syncLivePreview();
+      autoSaveFormFields();
+    });
+    input.addEventListener('blur', () => {
       syncLivePreview();
       autoSaveFormFields();
     });
   });
 
   if (atsJdInput) {
-    atsJdInput.addEventListener('input', autoSaveFormFields);
+    atsJdInput.addEventListener('input', debouncedAutoSave);
   }
 
   // Tag removal & addition
@@ -2341,10 +2371,15 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {File} file 
    */
   async function extractPdfText(file) {
+    let arrayBuffer = null;
     try {
-      const arrayBuffer = await file.arrayBuffer();
+      arrayBuffer = await file.arrayBuffer();
       if (!window.pdfjsLib) return "";
-      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const loadingTask = pdfjsLib.getDocument({
+        data: arrayBuffer,
+        disableFontFace: true,
+        nativeImageDecoderSupport: 'none'
+      });
       const pdf = await loadingTask.promise;
       let fullText = "";
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -2367,8 +2402,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         fullText += pageText + "\n\n";
       }
+      arrayBuffer = null;
       return fullText;
     } catch (err) {
+      arrayBuffer = null;
       console.warn("PDF.js parsing error:", err);
       if (err && (err.name === 'PasswordException' || (err.message && err.message.toLowerCase().includes('password')))) {
         if (typeof showToast === 'function') {
