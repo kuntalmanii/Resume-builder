@@ -2737,46 +2737,6 @@ i[data-feather] svg { width: 1em; height: 1em; }
     margin-top: 8px !important;
   }
 }
-
-/* Quick Guide Onboarding Modal Styles */
-.guide-slide-card {
-  padding: 18px;
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.8);
-  border: 1px solid #E2E8F0;
-  transition: all 0.22s ease-in-out;
-}
-.guide-icon-badge {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 19px;
-  margin-bottom: 12px;
-}
-.guide-slide-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0F172A;
-  margin-bottom: 6px;
-  font-family: var(--font-heading);
-}
-.guide-slide-desc {
-  font-size: 13px;
-  line-height: 1.65;
-  color: #475569;
-  margin: 0;
-}
-.guide-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #CBD5E1;
-  transition: all 0.2s ease-in-out;
-}
-.guide-dot.active {
-  width: 22px;
-  border-radius: 9999px;
-  background: #2563EB;
-}
 .doc-sha-btn svg { width: 11px; height: 11px; stroke: #2563EB; }
 
 /* ────────────────────────────────────

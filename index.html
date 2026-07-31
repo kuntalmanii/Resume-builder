@@ -446,10 +446,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 AI Optimize
               </button>
-              <button class="topbar-action-btn" id="btnQuickGuide" title="Open AI Studio Quick Guide" onclick="openQuickGuide()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Quick Guide
-              </button>
               <button class="topbar-action-btn" id="btnImportJson" title="Import Resume JSON">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Import JSON
@@ -2645,77 +2641,6 @@ Key Requirements:
           <span id="profileSaveText">Save Changes</span>
         </button>
         <p id="profileFeedback" style="margin-top:0.75rem; font-size:0.85rem; text-align:center; min-height:1.2em;"></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════
-       QUICK GUIDE & ONBOARDING TOUR MODAL
-       ══════════════════════════════════════════════ -->
-  <div class="modal-overlay" id="quickGuideModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="quickGuideTitle">
-    <div class="modal-card glass-card" style="max-width: 540px; padding: 28px;">
-      <div class="modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 14px; margin-bottom: 20px; display:flex; align-items:center; justify-content:space-between;">
-        <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
-          <div style="width:32px;height:32px;border-radius:8px;background:rgba(37,99,235,0.1);display:flex;align-items:center;justify-content:center;color:#2563EB;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <div>
-            <h3 id="quickGuideTitle" style="font-size:16px;font-weight:700;color:#0F172A;margin:0;">AI Studio Quick Guide</h3>
-            <span style="font-size:12px;color:#64748B;">Master the resume document editor in 60 seconds</span>
-          </div>
-        </div>
-        <button class="modal-close-btn" id="btnCloseQuickGuide" aria-label="Close Quick Guide" onclick="closeQuickGuide()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      <!-- Slide Container -->
-      <div class="guide-slides-container" id="guideSlidesContainer">
-        <!-- Slide 1 -->
-        <div class="guide-slide-card active" data-slide="1">
-          <div class="guide-icon-badge" style="background:#EFF6FF;color:#2563EB;">📄</div>
-          <h4 class="guide-slide-title">1. Real Floating Paper Document</h4>
-          <p class="guide-slide-desc">Your resume is displayed as a physical floating white paper sheet (`#FFFFFF`) over a warm studio canvas. Edit text inline directly on the paper — no clunky form fields.</p>
-        </div>
-        <!-- Slide 2 -->
-        <div class="guide-slide-card" data-slide="2" style="display:none;">
-          <div class="guide-icon-badge" style="background:#F0FDF4;color:#16A34A;">🎛️</div>
-          <h4 class="guide-slide-title">2. Sticky Glass Formatting Toolbar</h4>
-          <p class="guide-slide-desc">The formatting bar floats at the top of the editor. Use it for instant Bold, Italic, Bullet lists, Undo/Redo, and 1-Click AI Auto-Optimize without losing your place.</p>
-        </div>
-        <!-- Slide 3 -->
-        <div class="guide-slide-card" data-slide="3" style="display:none;">
-          <div class="guide-icon-badge" style="background:#FAF5FF;color:#9333EA;">🎯</div>
-          <h4 class="guide-slide-title">3. Section Focus Mode</h4>
-          <p class="guide-slide-desc">Clicking into any section highlights it with a blue focus accent and ambiently dims surrounding sections to 42% opacity for a distraction-free experience.</p>
-        </div>
-        <!-- Slide 4 -->
-        <div class="guide-slide-card" data-slide="4" style="display:none;">
-          <div class="guide-icon-badge" style="background:#FFF7ED;color:#EA580C;">✦</div>
-          <h4 class="guide-slide-title">4. Contextual AI Action Bars</h4>
-          <p class="guide-slide-desc">Hover over any section to reveal custom AI tools: Executive Summary, XYZ Experience Bullets, AI Skill Suggestions, and ATS Formatting.</p>
-        </div>
-        <!-- Slide 5 -->
-        <div class="guide-slide-card" data-slide="5" style="display:none;">
-          <div class="guide-icon-badge" style="background:#FEF2F2;color:#DC2626;">⚡</div>
-          <h4 class="guide-slide-title">5. Google XYZ Impact & ATS Diagnostics</h4>
-          <p class="guide-slide-desc">Format experience bullets into high-impact `[Action Verb] + [Metric] + [Outcome]` formulas and track your live ATS score in real-time.</p>
-        </div>
-      </div>
-
-      <!-- Step Indicator Dots & Navigation -->
-      <div class="guide-footer-row" style="display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.06);">
-        <div class="guide-dots-wrapper" style="display:flex;gap:6px;" id="guideDotsWrapper">
-          <span class="guide-dot active" data-dot="1"></span>
-          <span class="guide-dot" data-dot="2"></span>
-          <span class="guide-dot" data-dot="3"></span>
-          <span class="guide-dot" data-dot="4"></span>
-          <span class="guide-dot" data-dot="5"></span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="topbar-action-btn" id="btnGuidePrev" style="display:none;">Back</button>
-          <button class="topbar-action-btn btn-primary" id="btnGuideNext">Next →</button>
-        </div>
       </div>
     </div>
   </div>
