@@ -4333,7 +4333,29 @@ Key Requirements:
     tableBody.innerHTML = '';
 
     if (filteredList.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No job applications found matching filter criteria.</td></tr>`;
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="padding: 1.5rem 0;">
+            <div class="studio-empty-state">
+              <div class="empty-state-illustration">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+              </div>
+              <h3 class="empty-state-headline">No job applications tracked yet</h3>
+              <p class="empty-state-desc">Organize your job search across Wishlist, Applied, Interviewing, and Offer stages with real-time application pipelines.</p>
+              <div class="empty-state-actions">
+                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddAppModal')?.click()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Add First Application</span>
+                </button>
+                <button class="empty-cta-btn empty-cta-secondary" onclick="window.onboardingManager ? window.onboardingManager.startProductTour() : null">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                  <span>View Demo Guide</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
       return;
     }
 
