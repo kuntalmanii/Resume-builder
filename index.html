@@ -52,6 +52,7 @@
   <!-- PDF.js library for in-browser PDF parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="onboarding.css" />
   <!-- Supabase Browser Client (ES Module — must load before script.js) -->
   <script type="module" src="supabase-client.js"></script>
 </head>
@@ -445,6 +446,10 @@
               <button class="topbar-action-btn btn-amber" id="topbarOptimizeBtn" title="AI Auto-Optimize" onclick="document.getElementById('btnAutoOptimize')?.click()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 AI Optimize
+              </button>
+              <button class="topbar-action-btn" id="btnQuickGuide" title="Open AI Studio Quick Guide" onclick="window.onboardingManager ? window.onboardingManager.reset() : null">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Quick Guide
               </button>
               <button class="topbar-action-btn" id="btnImportJson" title="Import Resume JSON">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2646,6 +2651,7 @@ Key Requirements:
   </div>
 
   <script src="script.js"></script>
+  <script src="onboarding.js"></script>
 </body>
 </html>
 
