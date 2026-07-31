@@ -50,22 +50,11 @@ class GettingStartedChecklistManager {
   }
 
   injectWidgetDom() {
-    let container = document.querySelector('.editor-center-panel') || document.querySelector('.main-content-area');
-    if (!container) return;
-
-    if (document.getElementById('gettingStartedWidget')) {
-      this.widgetEl = document.getElementById('gettingStartedWidget');
-      this.renderWidget();
-      return;
+    const existing = document.getElementById('gettingStartedWidget');
+    if (existing) {
+      existing.remove();
     }
-
-    const widget = document.createElement('div');
-    widget.className = 'getting-started-widget';
-    widget.id = 'gettingStartedWidget';
-
-    container.insertBefore(widget, container.firstChild);
-    this.widgetEl = widget;
-    this.renderWidget();
+    this.widgetEl = null;
   }
 
   renderWidget() {
