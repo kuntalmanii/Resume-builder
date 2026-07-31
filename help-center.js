@@ -20,6 +20,99 @@ class HelpCenter {
     this.initialized = true;
   }
 
+  static getKnowledgeBase() {
+    return [
+      {
+        id: 'getting-started',
+        title: '🚀 Getting Started',
+        articles: [
+          { q: 'What is ResuAI Studio?', a: 'ResuAI Studio is an AI-powered developer resume builder and ATS diagnostic engine built to help software engineers format high-impact resumes and beat corporate ATS parsers with 98%+ keyword accuracy.' },
+          { q: 'How do I complete setup?', a: 'Fill out your document details on the floating paper canvas, verify your target role keywords, and run a 1-Click ATS scan to achieve 90%+ recruiter pass readiness.' }
+        ]
+      },
+      {
+        id: 'resume-builder',
+        title: '📄 Resume Builder',
+        articles: [
+          { q: 'How does paper inline editing work?', a: 'Your resume is rendered as a physical white floating paper sheet (#FFFFFF). Click any text element directly on the document paper sheet to edit text, experience bullets, and skills without clunky form inputs.' },
+          { q: 'What is Section Focus Mode?', a: 'Clicking inside any section highlights it with a blue focus accent line and ambiently dims surrounding sections to 42% opacity for a distraction-free editing experience.' }
+        ]
+      },
+      {
+        id: 'ats-analyzer',
+        title: '📊 ATS Analyzer',
+        articles: [
+          { q: 'How does real-time ATS scoring work?', a: 'Our Gemini 2.5 AI engine analyzes your candidate resume against target job description requirements, highlighting missing tech stack skills and computing an overall ATS pass score.' },
+          { q: 'What is a good ATS score?', a: 'Target an ATS match score of 85%+ for corporate applications and 92%+ for FAANG tier software engineering roles.' }
+        ]
+      },
+      {
+        id: 'templates',
+        title: '🎨 Templates',
+        articles: [
+          { q: 'Which resume templates pass ATS parsers?', a: 'All ResuAI templates (FAANG Executive, Modern Minimalist, and Engineering Classic) follow strict 1-column single-flow typography rules guaranteed to parse perfectly in Taleo, Workday, and Greenhouse.' },
+          { q: 'Can I switch templates dynamically?', a: 'Yes! Select any template design token from the top bar or settings panel to reformat your document instantaneously.' }
+        ]
+      },
+      {
+        id: 'job-tracker',
+        title: '💼 Job Tracker',
+        articles: [
+          { q: 'How do I organize application stages?', a: 'Drag and drop application cards across Wishlist, Applied, Interviewing, Offer, and Rejected Kanban columns to track your job search pipeline.' },
+          { q: 'Can I link ATS scores to job cards?', a: 'Yes! Run an ATS scan on any job card to attach target JD keywords and match percentage directly to the application.' }
+        ]
+      },
+      {
+        id: 'analytics',
+        title: '📈 Analytics',
+        articles: [
+          { q: 'What metrics are tracked in Analytics?', a: 'Score progression line charts, keyword density percentages, gap resolution rates, and FAANG competitive benchmark scores over time.' },
+          { q: 'How is keyword density calculated?', a: 'We measure exact skill frequency against industry standards for your selected software engineering domain.' }
+        ]
+      },
+      {
+        id: 'export-pdf',
+        title: '📥 Export PDF',
+        articles: [
+          { q: 'How do I generate an ATS-compliant PDF?', a: 'Click "Export PDF" in the topbar or Command Palette (⌘P). ResuAI generates crisp, text-selectable vector PDFs without rasterization artifacts.' },
+          { q: 'Why is my PDF page count splitting?', a: 'ResuAI automatically applies print page-break boundaries to prevent trailing single lines at page breaks.' }
+        ]
+      },
+      {
+        id: 'settings',
+        title: '⚙️ Settings',
+        articles: [
+          { q: 'Where are my AI API keys stored?', a: 'All API keys are encrypted locally inside your browser storage (localStorage). Keys are never transmitted to unverified servers.' },
+          { q: 'How do I toggle color themes?', a: 'Open Command Palette (⌘K) and select "Cycle Studio Color Theme" or toggle themes in System Settings.' }
+        ]
+      },
+      {
+        id: 'faq',
+        title: '❓ Frequently Asked Questions',
+        articles: [
+          { q: 'Is ResuAI free to use?', a: 'Yes! ResuAI provides complete local document creation, ATS analysis, and PDF exporting free of charge.' },
+          { q: 'Does ResuAI support custom sections?', a: 'Yes! Add custom sections for Open Source Contributions, Patents, Publications, and Speaking Engagements.' }
+        ]
+      },
+      {
+        id: 'shortcuts',
+        title: '⌨️ Keyboard Shortcuts',
+        articles: [
+          { q: 'What is the Command Palette shortcut?', a: 'Press ⌘ + K (macOS) or Ctrl + K (Windows) to open the Command Palette.' },
+          { q: 'What formatting shortcuts are supported?', a: '⌘B for Bold, ⌘I for Italic, ⌘U for Underline, ⌘Z for Undo, and ESC to close overlays.' }
+        ]
+      },
+      {
+        id: 'support',
+        title: '💬 Contact & Support',
+        articles: [
+          { q: 'How do I get human developer support?', a: 'Email support@resuai.dev or launch the AI Copilot for live assistance with resume structuring.' },
+          { q: 'How do I report a bug?', a: 'Open System Settings $\\rightarrow$ Platform Diagnostics to submit logs directly to our core engineering team.' }
+        ]
+      }
+    ];
+  }
+
   createDomElements() {
     if (document.getElementById('helpCenterFab')) return;
 
@@ -42,7 +135,7 @@ class HelpCenter {
         <div class="help-header-top">
           <div class="help-header-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span>ResuAI Help Center</span>
+            <span>ResuAI Knowledge Base</span>
           </div>
           <button class="help-close-btn" id="btnHelpClose" aria-label="Close Help Drawer">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -50,77 +143,17 @@ class HelpCenter {
         </div>
         <div class="help-search-wrapper">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="help-search-input" id="helpSearchInput" placeholder="Search guides, FAQs & shortcuts..." autocomplete="off" />
+          <input type="text" class="help-search-input" id="helpSearchInput" placeholder="Search 11 documentation sections & FAQs..." autocomplete="off" />
         </div>
       </div>
 
+      <div class="help-category-pills" id="helpCategoryPills">
+        <span class="help-pill is-active" data-cat="all">All Sections</span>
+        ${HelpCenter.getKnowledgeBase().map(sec => `<span class="help-pill" data-cat="${sec.id}">${sec.title.split(' ')[1] || sec.title}</span>`).join('')}
+      </div>
+
       <div class="help-drawer-body" id="helpDrawerBody">
-        <!-- Quick Start -->
-        <div class="help-section-label">Quick Start</div>
-        <div class="help-topics-grid">
-          <div class="help-topic-card" onclick="window.helpCenter.triggerTour()">
-            <div class="help-topic-icon">🚀</div>
-            <div class="help-topic-title">Interactive Tour</div>
-          </div>
-          <div class="help-topic-card" onclick="window.helpCenter.showShortcutsModal()">
-            <div class="help-topic-icon">⌨️</div>
-            <div class="help-topic-title">Shortcuts</div>
-          </div>
-        </div>
-
-        <!-- Documentation Guides -->
-        <div class="help-section-label">Feature Guides</div>
-        <div class="help-topics-grid">
-          <div class="help-topic-card" onclick="window.helpCenter.scrollToSection('.doc-editor-body')">
-            <div class="help-topic-icon">📄</div>
-            <div class="help-topic-title">Paper Builder</div>
-          </div>
-          <div class="help-topic-card" onclick="window.helpCenter.scrollToSection('.editor-right-panel')">
-            <div class="help-topic-icon">📊</div>
-            <div class="help-topic-title">ATS Analyzer</div>
-          </div>
-          <div class="help-topic-card" onclick="window.helpCenter.triggerExportPdf()">
-            <div class="help-topic-icon">📥</div>
-            <div class="help-topic-title">Export PDF</div>
-          </div>
-          <div class="help-topic-card" onclick="window.helpCenter.scrollToSection('[data-tab=\\'analytics\\']')">
-            <div class="help-topic-icon">📈</div>
-            <div class="help-topic-title">Analytics</div>
-          </div>
-        </div>
-
-        <!-- Frequently Asked Questions -->
-        <div class="help-section-label">Frequently Asked Questions</div>
-        <div class="help-faq-list" id="helpFaqList">
-          <div class="help-faq-item">
-            <button class="help-faq-question">
-              <span>How does Section Focus Mode work?</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="help-faq-answer">Clicking inside any section block highlights it with a blue focus accent and ambiently dims surrounding sections to 42% opacity for a distraction-free experience.</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-question">
-              <span>How do I transform bullets to Google XYZ?</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="help-faq-answer">Hover over Work Experience and click '✦ Convert to XYZ' or click any preset chip to structure your bullet into [Action Verb] + [Metric] + [Outcome].</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-question">
-              <span>Is my resume data private?</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="help-faq-answer">Yes! All edits are isolate-stored in your local browser storage. No candidate personal data is sent to external servers without consent.</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-question">
-              <span>How do I export 100% ATS-friendly PDF?</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="help-faq-answer">Click 'Download PDF' in the topbar. ResuAI generates pure text-selectable PDFs that pass ATS parsers with 98%+ keyword accuracy.</div>
-          </div>
-        </div>
+        ${this.renderKnowledgeBaseHtml()}
       </div>
 
       <div class="help-drawer-footer">
@@ -128,7 +161,7 @@ class HelpCenter {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Contact Support
         </button>
-        <span style="font-size:11px;color:#94A3B8;">ResuAI v2.5</span>
+        <span style="font-size:11px;color:#94A3B8;">ResuAI v2.5 Docs</span>
       </div>
     `;
 
@@ -137,40 +170,52 @@ class HelpCenter {
 
     this.fabEl = fab;
     this.drawerEl = drawer;
+
+    // Restore persistent search query if present
+    const savedQuery = localStorage.getItem('resuai_help_search');
+    if (savedQuery) {
+      const searchInput = drawer.querySelector('#helpSearchInput');
+      if (searchInput) {
+        searchInput.value = savedQuery;
+        setTimeout(() => this.search(savedQuery), 100);
+      }
+    }
   }
 
-  createShortcutsModalDom() {
-    if (document.getElementById('helpShortcutsModal')) return;
+  renderKnowledgeBaseHtml(filterQuery = '', activeCat = 'all') {
+    const kb = HelpCenter.getKnowledgeBase();
+    const q = filterQuery.trim().toLowerCase();
 
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.id = 'helpShortcutsModal';
-    overlay.style.display = 'none';
+    let html = '';
 
-    overlay.innerHTML = `
-      <div class="modal-card glass-card shortcuts-modal-card">
-        <div class="modal-header">
-          <div class="modal-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg>
-            <h3>Keyboard Shortcuts</h3>
-          </div>
-          <button class="modal-close-btn" onclick="document.getElementById('helpShortcutsModal').style.display='none'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <div class="shortcuts-grid">
-          <div class="shortcut-row"><span class="shortcut-label">Bold Selection</span><span class="kbd-badge"><kbd>⌘</kbd> + <kbd>B</kbd></span></div>
-          <div class="shortcut-row"><span class="shortcut-label">Italicize Selection</span><span class="kbd-badge"><kbd>⌘</kbd> + <kbd>I</kbd></span></div>
-          <div class="shortcut-row"><span class="shortcut-label">Underline Selection</span><span class="kbd-badge"><kbd>⌘</kbd> + <kbd>U</kbd></span></div>
-          <div class="shortcut-row"><span class="shortcut-label">Undo Edit</span><span class="kbd-badge"><kbd>⌘</kbd> + <kbd>Z</kbd></span></div>
-          <div class="shortcut-row"><span class="shortcut-label">AI Bullet Optimization</span><span class="kbd-badge"><kbd>✦</kbd> Hover Action</span></div>
-          <div class="shortcut-row"><span class="shortcut-label">Close Modal / Drawer</span><span class="kbd-badge"><kbd>ESC</kbd></span></div>
-        </div>
-      </div>
-    `;
+    kb.forEach(section => {
+      if (activeCat !== 'all' && section.id !== activeCat) return;
 
-    document.body.appendChild(overlay);
-    this.shortcutsModalEl = overlay;
+      const matchingArticles = section.articles.filter(art =>
+        !q || art.q.toLowerCase().includes(q) || art.a.toLowerCase().includes(q) || section.title.toLowerCase().includes(q)
+      );
+
+      if (matchingArticles.length > 0) {
+        html += `<div class="help-section-label" data-cat-section="${section.id}">${section.title}</div>`;
+        html += `<div class="help-accordion-wrapper" data-cat-section="${section.id}">`;
+        matchingArticles.forEach(art => {
+          html += `
+            <div class="help-accordion-item">
+              <button class="help-accordion-header">
+                <span>${art.q}</span>
+                <svg class="help-accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="help-accordion-content">
+                ${art.a}
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+    });
+
+    return html || `<div class="command-empty-state">No documentation articles found matching "${filterQuery}".</div>`;
   }
 
   bindEvents() {
@@ -185,21 +230,30 @@ class HelpCenter {
 
     const searchInput = this.drawerEl.querySelector('#helpSearchInput');
     if (searchInput) {
-      searchInput.addEventListener('input', (e) => this.search(e.target.value));
+      searchInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        localStorage.setItem('resuai_help_search', val);
+        this.search(val);
+      });
     }
 
-    // FAQ Accordion Toggles
-    const faqItems = this.drawerEl.querySelectorAll('.help-faq-item');
-    faqItems.forEach(item => {
-      const q = item.querySelector('.help-faq-question');
-      if (q) {
-        q.addEventListener('click', () => {
-          const isOpen = item.classList.contains('is-open');
-          faqItems.forEach(i => i.classList.remove('is-open'));
-          if (!isOpen) item.classList.add('is-open');
-        });
-      }
+    // Category pills listener
+    const pills = this.drawerEl.querySelectorAll('.help-pill');
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        pills.forEach(p => p.classList.remove('is-active'));
+        pill.classList.add('is-active');
+        const cat = pill.getAttribute('data-cat');
+        const searchVal = this.drawerEl.querySelector('#helpSearchInput')?.value || '';
+        const bodyEl = this.drawerEl.querySelector('#helpDrawerBody');
+        if (bodyEl) {
+          bodyEl.innerHTML = this.renderKnowledgeBaseHtml(searchVal, cat);
+          this.bindAccordionToggles();
+        }
+      });
     });
+
+    this.bindAccordionToggles();
 
     // ESC Key listener to close drawer
     document.addEventListener('keydown', (e) => {
@@ -209,30 +263,28 @@ class HelpCenter {
     });
   }
 
-  toggle(forceState) {
-    this.isOpen = (forceState !== undefined) ? forceState : !this.isOpen;
-    if (this.drawerEl) {
-      this.drawerEl.classList.toggle('is-active', this.isOpen);
-    }
-    if (this.fabEl) {
-      this.fabEl.classList.toggle('is-active', this.isOpen);
-    }
+  bindAccordionToggles() {
+    const items = this.drawerEl.querySelectorAll('.help-accordion-item');
+    items.forEach(item => {
+      const btn = item.querySelector('.help-accordion-header');
+      if (btn) {
+        btn.onclick = () => {
+          const isOpen = item.classList.contains('is-open');
+          items.forEach(i => i.classList.remove('is-open'));
+          if (!isOpen) item.classList.add('is-open');
+        };
+      }
+    });
   }
 
   search(query) {
-    const q = query.trim().toLowerCase();
-    const topicCards = this.drawerEl.querySelectorAll('.help-topic-card');
-    const faqItems = this.drawerEl.querySelectorAll('.help-faq-item');
-
-    topicCards.forEach(card => {
-      const text = card.textContent.toLowerCase();
-      card.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
-    });
-
-    faqItems.forEach(item => {
-      const text = item.textContent.toLowerCase();
-      item.style.display = (!q || text.includes(q)) ? 'block' : 'none';
-    });
+    const bodyEl = this.drawerEl.querySelector('#helpDrawerBody');
+    const activePill = this.drawerEl.querySelector('.help-pill.is-active');
+    const activeCat = activePill ? activePill.getAttribute('data-cat') : 'all';
+    if (bodyEl) {
+      bodyEl.innerHTML = this.renderKnowledgeBaseHtml(query, activeCat);
+      this.bindAccordionToggles();
+    }
   }
 
   triggerTour() {
