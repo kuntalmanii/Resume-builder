@@ -258,10 +258,15 @@ p  { line-height: 1.65; }
   padding: var(--sp-6) var(--sp-8) var(--sp-16);
   background: var(--bg-app);
 }
-.main-content:has(#tab-resume-builder.active),
-.main-content:has(#tab-ats-analyzer.active) {
+.main-content:has(#tab-resume-builder.active) {
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.main-content:has(#tab-ats-analyzer.active) {
+  padding: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -3105,7 +3110,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
   flex: 1;
   min-height: 0;
   background: #F5F4F0;
-  overflow: hidden;
+  overflow-y: auto;
   position: relative;
   z-index: 1;
 }

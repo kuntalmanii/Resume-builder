@@ -3369,7 +3369,7 @@ Key Requirements:
           renderAtsReportUI(aiData);
 
           if (atsResults) {
-            atsResults.style.display = 'block';
+            atsResults.style.display = 'flex';
             atsResults.scrollIntoView({ behavior: 'smooth' });
           }
 
@@ -3403,7 +3403,7 @@ Key Requirements:
         runClientAtsDiagnostic();
 
         if (atsResults) {
-          atsResults.style.display = 'block';
+          atsResults.style.display = 'flex';
           atsResults.scrollIntoView({ behavior: 'smooth' });
         }
 
