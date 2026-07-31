@@ -1394,6 +1394,203 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ==========================================================================
+     OFFLINE-FIRST SYNCHRONIZATION ENGINE (ResuAI.SyncEngine)
+     ========================================================================== */
+  const SYNC_QUEUE_KEY = 'resuai_offline_sync_queue';
+  let isSyncing = false;
+  let syncRetryTimeout = null;
+
+  function updateSyncStatusUI(status, message) {
+    const docAutosaveStatus = document.getElementById('docAutosaveStatus');
+    const docSaveStatusText = document.getElementById('docSaveStatusText');
+    const docSaveStatusIcon = document.getElementById('docSaveStatusIcon');
+    if (!docAutosaveStatus || !docSaveStatusText) return;
+
+    docAutosaveStatus.className = 'doc-autosave-status';
+
+    switch (status) {
+      case 'synced':
+        docAutosaveStatus.classList.add('saved');
+        docAutosaveStatus.style.background = '';
+        docAutosaveStatus.style.color = '';
+        docSaveStatusText.textContent = message || 'Synced to Cloud';
+        if (docSaveStatusIcon) docSaveStatusIcon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+        break;
+      case 'offline':
+        docAutosaveStatus.classList.add('offline');
+        docAutosaveStatus.style.background = 'rgba(234, 179, 8, 0.15)';
+        docAutosaveStatus.style.color = '#eab308';
+        docSaveStatusText.textContent = message || 'Offline (Saved Locally)';
+        if (docSaveStatusIcon) docSaveStatusIcon.innerHTML = '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>';
+        break;
+      case 'syncing':
+        docAutosaveStatus.classList.add('saving');
+        docAutosaveStatus.style.background = '';
+        docAutosaveStatus.style.color = '';
+        docSaveStatusText.textContent = message || 'Syncing...';
+        if (docSaveStatusIcon) docSaveStatusIcon.innerHTML = '<line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line>';
+        break;
+      case 'error':
+        docAutosaveStatus.classList.add('error');
+        docAutosaveStatus.style.background = 'rgba(239, 68, 68, 0.15)';
+        docAutosaveStatus.style.color = '#ef4444';
+        docSaveStatusText.textContent = message || 'Sync Error (Retrying)';
+        if (docSaveStatusIcon) docSaveStatusIcon.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+        break;
+    }
+  }
+
+  function getOfflineQueue() {
+    try {
+      const stored = localStorage.getItem(SYNC_QUEUE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveOfflineQueue(queue) {
+    try {
+      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+    } catch (e) {
+      console.warn('Could not save offline queue:', e);
+    }
+  }
+
+  function queueOfflineTask(entityType, action, payload) {
+    const queue = getOfflineQueue();
+    const task = {
+      id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      entityType,
+      action,
+      payload,
+      timestamp: new Date().toISOString(),
+      attempts: 0
+    };
+    queue.push(task);
+    saveOfflineQueue(queue);
+
+    if (!navigator.onLine) {
+      updateSyncStatusUI('offline', 'Offline (Saved Locally)');
+    } else {
+      processOfflineSyncQueue();
+    }
+  }
+
+  async function processOfflineSyncQueue() {
+    if (isSyncing) return;
+    if (!navigator.onLine) {
+      updateSyncStatusUI('offline', 'Offline (Saved Locally)');
+      return;
+    }
+
+    const queue = getOfflineQueue();
+    if (queue.length === 0) {
+      updateSyncStatusUI('synced', 'Synced to Cloud');
+      return;
+    }
+
+    const sb = getSupabase();
+    if (!sb) {
+      saveOfflineQueue([]);
+      updateSyncStatusUI('synced', 'Saved Locally');
+      return;
+    }
+
+    const { data: { user } } = await sb.auth.getUser().catch(() => ({ data: {} }));
+    if (!user) {
+      saveOfflineQueue([]);
+      updateSyncStatusUI('synced', 'Saved Locally');
+      return;
+    }
+
+    isSyncing = true;
+    updateSyncStatusUI('syncing', `Syncing (${queue.length})...`);
+
+    const remainingQueue = [];
+    let hasError = false;
+    let maxAttemptCount = 0;
+
+    for (const task of queue) {
+      try {
+        if (task.entityType === 'resume') {
+          const { data: remoteData } = await sb.from('user_resumes')
+            .select('updated_at')
+            .eq('user_id', user.id)
+            .single();
+
+          if (remoteData && remoteData.updated_at) {
+            const remoteTime = new Date(remoteData.updated_at).getTime();
+            const localTime = new Date(task.timestamp).getTime();
+
+            // Conflict Resolution: Never overwrite newer server data
+            if (remoteTime > localTime) {
+              console.log('SyncEngine: Server has newer resume data. Fetching remote resume...');
+              await loadUserProfileFromSupabase(user.id);
+              continue;
+            }
+          }
+
+          const { error } = await sb.from('user_resumes').upsert({
+            user_id: user.id,
+            resume_data: task.payload,
+            updated_at: task.timestamp
+          });
+
+          if (error) throw error;
+        } else if (task.entityType === 'job') {
+          if (task.action === 'UPSERT') {
+            const { error } = await sb.from('job_applications').upsert({
+              ...task.payload,
+              user_id: user.id,
+              updated_at: task.timestamp
+            });
+            if (error) throw error;
+          } else if (task.action === 'DELETE') {
+            const { error } = await sb.from('job_applications')
+              .delete()
+              .eq('id', task.payload.id)
+              .eq('user_id', user.id);
+            if (error) throw error;
+          }
+        }
+      } catch (err) {
+        console.warn(`SyncEngine task error (${task.id}):`, err);
+        task.attempts = (task.attempts || 0) + 1;
+        maxAttemptCount = Math.max(maxAttemptCount, task.attempts);
+        remainingQueue.push(task);
+        hasError = true;
+      }
+    }
+
+    saveOfflineQueue(remainingQueue);
+    isSyncing = false;
+
+    if (hasError && remainingQueue.length > 0) {
+      updateSyncStatusUI('error', `Sync Error (${remainingQueue.length} pending)`);
+      // Exponential Backoff Retry Strategy: min(30s, 1000 * 2^attempt)
+      const delayMs = Math.min(30000, 1000 * Math.pow(2, maxAttemptCount));
+      console.log(`SyncEngine: Retrying in ${delayMs}ms (attempt ${maxAttemptCount})...`);
+      if (syncRetryTimeout) clearTimeout(syncRetryTimeout);
+      syncRetryTimeout = setTimeout(processOfflineSyncQueue, delayMs);
+    } else {
+      updateSyncStatusUI('synced', 'Synced to Cloud');
+    }
+  }
+
+  // Network Reconnection Listeners
+  window.addEventListener('online', () => {
+    updateSyncStatusUI('syncing', 'Reconnected! Syncing...');
+    if (typeof showToast === 'function') showToast('Internet connection restored. Syncing data...', 'info');
+    processOfflineSyncQueue();
+  });
+
+  window.addEventListener('offline', () => {
+    updateSyncStatusUI('offline', 'Offline (Saved Locally)');
+    if (typeof showToast === 'function') showToast('You are currently offline. Changes are saved locally.', 'warning');
+  });
+
   /**
    * Saves all current form fields and skill tags to localStorage automatically.
    */
@@ -1420,6 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+      queueOfflineTask('resume', 'UPSERT', draftData);
     } catch (e) {
       console.warn('Could not auto-save form fields to LocalStorage:', e);
     }
@@ -3977,6 +4175,9 @@ Key Requirements:
   function saveJobApplications() {
     try {
       localStorage.setItem(JOB_APPS_STORAGE_KEY, JSON.stringify(jobApplicationsList));
+      jobApplicationsList.forEach(job => {
+        queueOfflineTask('job', 'UPSERT', job);
+      });
     } catch (e) {
       console.warn('Error saving job applications:', e);
     }

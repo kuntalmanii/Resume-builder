@@ -425,9 +425,9 @@
               <!-- Resume name -->
               <input class="doc-resume-name-input" id="docResumeName" type="text" value="My Resume" spellcheck="false" title="Click to rename" />
               <!-- Save status -->
-              <div class="doc-autosave-status saved" id="docAutosaveStatus">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span id="docSaveStatusText">Saved</span>
+              <div class="doc-autosave-status saved" id="docAutosaveStatus" role="status" aria-live="polite" title="Sync status">
+                <svg id="docSaveStatusIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="docSaveStatusText">Synced</span>
               </div>
               <div class="topbar-divider"></div>
               <!-- Profile strength -->
