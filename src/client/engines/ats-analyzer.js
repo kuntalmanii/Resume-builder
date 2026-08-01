@@ -56,7 +56,7 @@ class AtsAnalyzer {
   async runAtsScan() {
     const btnScan = document.getElementById('btnRunAtsAnalysis');
     const scoreBadge = document.getElementById('atsScoreBadge');
-    const jdInput = document.getElementById('atsTargetJdInput');
+    const jdInput = document.getElementById('atsJdInput') || document.getElementById('atsTargetJdInput');
 
     const resumeContent = document.querySelector('.doc-editor-body')?.innerText || '';
     const jdText = jdInput?.value || '';

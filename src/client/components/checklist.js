@@ -50,11 +50,20 @@ class GettingStartedChecklistManager {
   }
 
   injectWidgetDom() {
-    const existing = document.getElementById('gettingStartedWidget');
-    if (existing) {
-      existing.remove();
+    let existing = document.getElementById('gettingStartedWidget');
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'gettingStartedWidget';
+      existing.className = 'getting-started-checklist-card';
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        mainContent.prepend(existing);
+      } else {
+        document.body.appendChild(existing);
+      }
     }
-    this.widgetEl = null;
+    this.widgetEl = existing;
+    this.renderWidget();
   }
 
   renderWidget() {
