@@ -37,10 +37,16 @@ class ContextualTipManager {
     this.bindTabClickListeners();
     this.initialized = true;
 
-    // Show tip for default tab after render
+    // Show tip for default tab after render — only if the user is already logged in.
+    // Fixes: Pro Tip card rendering over the auth/login screen on first load.
     setTimeout(() => {
-      this.showTipForTab('resume-builder');
+      const authContainer = document.getElementById('authContainer');
+      const isAuthVisible = authContainer && authContainer.style.display !== 'none';
+      if (!isAuthVisible) {
+        this.showTipForTab('resume-builder');
+      }
     }, 1200);
+
   }
 
   bindTabClickListeners() {

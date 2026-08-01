@@ -182,6 +182,97 @@ class HelpCenter {
     }
   }
 
+  /**
+   * Builds the keyboard shortcuts modal DOM and appends it to <body>.
+   * Called once during init(). Fixes: TypeError this.createShortcutsModalDom is not a function.
+   */
+  createShortcutsModalDom() {
+    if (document.getElementById('shortcutsModal')) {
+      this.shortcutsModalEl = document.getElementById('shortcutsModal');
+      return;
+    }
+
+    const shortcuts = [
+      { keys: ['⌘', 'K'],        label: 'Open Command Palette' },
+      { keys: ['⌘', 'P'],        label: 'Export PDF' },
+      { keys: ['⌘', 'S'],        label: 'Save Draft' },
+      { keys: ['⌘', 'Z'],        label: 'Undo' },
+      { keys: ['⌘', '⇧', 'Z'],   label: 'Redo' },
+      { keys: ['⌘', 'B'],        label: 'Bold' },
+      { keys: ['⌘', 'I'],        label: 'Italic' },
+      { keys: ['⌘', 'U'],        label: 'Underline' },
+      { keys: ['ESC'],           label: 'Close overlay / drawer' },
+      { keys: ['?'],             label: 'Open Help Center' },
+    ];
+
+    const rows = shortcuts.map(s => {
+      const keysHtml = s.keys.map(k => `<kbd>${k}</kbd>`).join('<span style="margin:0 3px;color:#94A3B8;">+</span>');
+      return `
+        <div class="shortcuts-modal-row">
+          <span class="shortcuts-modal-label">${s.label}</span>
+          <span class="shortcuts-modal-keys">${keysHtml}</span>
+        </div>`;
+    }).join('');
+
+    const modal = document.createElement('div');
+    modal.id = 'shortcutsModal';
+    modal.className = 'shortcuts-modal-overlay';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div class="shortcuts-modal-card" style="background:var(--surface-card,#1E293B);border:1px solid var(--border-subtle,rgba(255,255,255,0.08));border-radius:16px;padding:28px 32px;min-width:380px;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,0.4);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="font-family:var(--font-heading,'Inter');font-size:16px;font-weight:700;color:var(--text-primary,'#F8FAFC');margin:0;">⌨️ Keyboard Shortcuts</h3>
+          <button id="btnShortcutsClose" aria-label="Close shortcuts" style="background:none;border:none;cursor:pointer;color:var(--text-muted,'#94A3B8');padding:4px;line-height:1;font-size:18px;">✕</button>
+        </div>
+        <div class="shortcuts-modal-body" style="display:flex;flex-direction:column;gap:10px;">
+          ${rows}
+        </div>
+        <p style="margin:16px 0 0;font-size:11px;color:var(--text-muted,'#94A3B8');text-align:center;">Press <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:1px 5px;font-size:10px;">ESC</kbd> to close</p>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this.shortcutsModalEl = modal;
+
+    // Close on overlay click or close button
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) this.shortcutsModalEl.style.display = 'none';
+    });
+    const closeBtn = modal.querySelector('#btnShortcutsClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => { this.shortcutsModalEl.style.display = 'none'; });
+    }
+
+    // Inject minimal inline styles for rows/keys (avoids needing a new CSS file)
+    if (!document.getElementById('shortcutsModalStyle')) {
+      const style = document.createElement('style');
+      style.id = 'shortcutsModalStyle';
+      style.textContent = `
+        .shortcuts-modal-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+        .shortcuts-modal-row:last-child { border-bottom:none; }
+        .shortcuts-modal-label { font-size:13px; color:var(--text-secondary,#CBD5E1); }
+        .shortcuts-modal-keys { display:flex; align-items:center; gap:2px; }
+        .shortcuts-modal-keys kbd { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:5px; padding:2px 7px; font-size:11px; color:var(--text-primary,#F8FAFC); font-family:monospace; }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  /**
+   * Toggles the help drawer open/closed.
+   * @param {boolean|undefined} forceState - If boolean, forces open (true) or closed (false).
+   */
+  toggle(forceState) {
+    const shouldOpen = typeof forceState === 'boolean' ? forceState : !this.isOpen;
+    this.isOpen = shouldOpen;
+    if (this.drawerEl) {
+      this.drawerEl.classList.toggle('is-open', shouldOpen);
+    }
+    if (this.fabEl) {
+      this.fabEl.classList.toggle('is-active', shouldOpen);
+    }
+  }
+
   renderKnowledgeBaseHtml(filterQuery = '', activeCat = 'all') {
     const kb = HelpCenter.getKnowledgeBase();
     const q = filterQuery.trim().toLowerCase();

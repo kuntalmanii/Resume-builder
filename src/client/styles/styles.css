@@ -3350,7 +3350,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 24px 32px;
+  padding: 24px 32px 64px 32px;
   display: flex;
   flex-direction: column;
   gap: 24px;
