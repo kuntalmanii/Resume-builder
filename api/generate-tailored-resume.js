@@ -28,6 +28,7 @@ function extractResumeDetails(resumeText) {
     if (line.includes('//') || line.includes('|')) {
       candidatePart = line.split(/\/\/|\|/)[0].trim();
     }
+    candidatePart = candidatePart.replace(/^(name|candidate name|full name|nombre|nome)\s*:\s*/i, '').trim();
     const lower = candidatePart.toLowerCase();
     if (!lower.includes('@') && !/\d{4,}/.test(lower) && !ignoreWords.some(w => lower.includes(w))) {
       if (candidatePart.length >= 2 && candidatePart.length <= 40 && !/[;{}]/.test(candidatePart)) {
@@ -119,7 +120,28 @@ function makeGeminiRequest(model, promptText, apiKey) {
             const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
               const analysisObj = JSON.parse(jsonMatch[0]);
-              resolve(analysisObj);
+              const contact = analysisObj.contact_info || {};
+              const normalized = {
+                name: analysisObj.name || contact.full_name || analysisObj.full_name || 'Not provided',
+                jobTitle: analysisObj.jobTitle || analysisObj.job_title || 'Target Role',
+                email: analysisObj.email || contact.email || 'Not provided',
+                phone: analysisObj.phone || contact.phone || 'Not provided',
+                location: analysisObj.location || contact.location || 'Not provided',
+                summary: analysisObj.summary || analysisObj.professional_summary || '',
+                skills: Array.isArray(analysisObj.skills) ? analysisObj.skills : (analysisObj.skills ? [...(analysisObj.skills.technical || []), ...(analysisObj.skills.soft || []), ...(analysisObj.skills.tools || [])] : []),
+                experience: (analysisObj.experience || analysisObj.work_experience || []).map(exp => ({
+                  title: exp.title || exp.job_title || 'Role',
+                  company: exp.company || 'Organization',
+                  period: exp.period || exp.dates || 'Dates',
+                  bullets: exp.bullets || exp.bullet_points || []
+                })),
+                education: (analysisObj.education || []).map(edu => ({
+                  degree: edu.degree || 'Degree',
+                  institution: edu.institution || edu.school || 'University',
+                  year: edu.year || edu.graduation_year || 'Dates'
+                }))
+              };
+              resolve(normalized);
             } else {
               reject(new Error("Failed to parse JSON response from Gemini API"));
             }
