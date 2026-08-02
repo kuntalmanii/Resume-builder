@@ -2265,18 +2265,22 @@ Key Requirements:
               
               <!-- LEFT COLUMN: PRIVACY & DATA CONTROL -->
               <div class="settings-column">
-                <div class="dashboard-card">
-                  <div class="card-header">
+                <div class="dashboard-card settings-card">
+                  <div class="card-header settings-card-header">
                     <div class="card-title">
-                      <i data-feather="shield"></i>
-                      <h3>Privacy &amp; Data Control</h3>
+                      <div class="settings-icon-box shadow-sm"><i data-feather="shield"></i></div>
+                      <div>
+                        <h3>Privacy &amp; Data Control</h3>
+                        <span class="settings-card-sub">Browser storage &amp; backup preferences</span>
+                      </div>
                     </div>
+                    <span class="settings-status-pill green-pill"><span class="status-dot-pulse"></span> Auto-Saving</span>
                   </div>
                   <div class="card-body">
                     <div class="setting-toggle-row">
-                      <div>
-                        <strong>LocalStorage Draft Auto-Save</strong>
-                        <p class="help-text">Instantly saves document changes locally inside your browser.</p>
+                      <div class="toggle-meta">
+                        <strong class="toggle-title">LocalStorage Draft Auto-Save</strong>
+                        <p class="help-text">Instantly persists document edits locally in your browser storage.</p>
                       </div>
                       <label class="toggle-switch">
                         <input type="checkbox" id="settingAutoSaveToggle" checked />
@@ -2284,47 +2288,57 @@ Key Requirements:
                       </label>
                     </div>
 
-                    <div class="setting-danger-zone margin-top-md">
-                      <button class="btn-secondary btn-sm block-btn" id="btnExportAllData">
-                        <i data-feather="download"></i>
-                        <span>Backup Workspace (JSON)</span>
-                      </button>
-                      <button class="btn-danger-sm block-btn" id="btnResetAllData">
-                        <i data-feather="trash-2"></i>
-                        <span>Wipe Local Data</span>
-                      </button>
+                    <div class="setting-data-actions margin-top-lg">
+                      <span class="settings-section-label">Workspace Data Actions</span>
+                      <div class="data-action-buttons">
+                        <button type="button" class="btn-secondary btn-sm block-btn data-btn" id="btnExportAllData">
+                          <i data-feather="download"></i>
+                          <span>Backup Workspace (JSON)</span>
+                        </button>
+                        <button type="button" class="btn-danger-sm block-btn data-btn" id="btnResetAllData">
+                          <i data-feather="trash-2"></i>
+                          <span>Wipe Local Data</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- RIGHT COLUMN: AI & MATCHING PREFERENCES -->
+              <!-- RIGHT COLUMN: AI ENGINE & TARGET PROFILE -->
               <div class="settings-column">
-                <div class="dashboard-card">
-                  <div class="card-header">
+                <div class="dashboard-card settings-card">
+                  <div class="card-header settings-card-header">
                     <div class="card-title">
-                      <i data-feather="sliders"></i>
-                      <h3>AI Engine &amp; Target Profile</h3>
+                      <div class="settings-icon-box amber-box shadow-sm"><i data-feather="cpu"></i></div>
+                      <div>
+                        <h3>AI Engine &amp; Target Profile</h3>
+                        <span class="settings-card-sub">Real-time model &amp; ATS parser settings</span>
+                      </div>
                     </div>
+                    <span class="settings-status-pill blue-pill"><span class="status-dot-pulse blue"></span> Gemini 2.5 Active</span>
                   </div>
                   <div class="card-body">
                     <form id="aiEngineSettingsForm">
                       <div class="form-group">
-                        <label for="settingGeminiModel">AI Model Engine</label>
-                        <div class="input-icon-wrapper">
-                          <i data-feather="box"></i>
-                          <select id="settingGeminiModel" class="form-input">
-                            <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Fast, Recommended for Real-time ATS)</option>
-                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning &amp; Executive Resumes)</option>
-                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy Model)</option>
+                        <label for="settingGeminiModel" class="settings-label">AI Model Engine</label>
+                        <div class="input-icon-wrapper settings-input-wrapper">
+                          <i data-feather="box" class="input-icon"></i>
+                          <select id="settingGeminiModel" class="form-input settings-select">
+                            <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Fast, Recommended for Real-time ATS)</option>
+                            <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Deep Reasoning &amp; Executive Resumes)</option>
+                            <option value="gemini-1.5-flash">⚡ Gemini 1.5 Flash (Legacy Model)</option>
                           </select>
                         </div>
                         <span class="help-text">Controls which Google Gemini model processes your ATS diagnostic reports &amp; bullet rewrites.</span>
                       </div>
 
-                      <div class="form-group">
-                        <label for="settingOptimizationSensitivity">AI Rewrite Creativity Level: <strong id="sensitivityVal">Balanced (0.7)</strong></label>
-                        <input type="range" id="settingOptimizationSensitivity" min="0.1" max="1.0" step="0.1" value="0.7" class="form-range" />
+                      <div class="form-group margin-top-md">
+                        <div class="range-header-row">
+                          <label for="settingOptimizationSensitivity" class="settings-label">AI Rewrite Creativity Level</label>
+                          <span class="range-badge-pill" id="sensitivityVal">Balanced (0.7)</span>
+                        </div>
+                        <input type="range" id="settingOptimizationSensitivity" min="0.1" max="1.0" step="0.1" value="0.7" class="form-range settings-range" />
                         <div class="range-labels">
                           <span>Strict ATS Keywords</span>
                           <span>Balanced</span>
@@ -2332,23 +2346,23 @@ Key Requirements:
                         </div>
                       </div>
 
-                      <div class="form-group">
-                        <label for="settingAtsEngine">Target ATS Parser Profile</label>
-                        <div class="input-icon-wrapper">
-                          <i data-feather="layers"></i>
-                          <select id="settingAtsEngine" class="form-input">
-                            <option value="greenhouse-lever" selected>Greenhouse &amp; Lever (Modern Tech &amp; SaaS)</option>
-                            <option value="workday">Workday ATS (Enterprise Corporate)</option>
-                            <option value="taleo">Taleo / iCIMS (Legacy System Parser)</option>
-                            <option value="faang">FAANG &amp; Big Tech Direct Referral</option>
+                      <div class="form-group margin-top-md">
+                        <label for="settingAtsEngine" class="settings-label">Target ATS Parser Profile</label>
+                        <div class="input-icon-wrapper settings-input-wrapper">
+                          <i data-feather="layers" class="input-icon"></i>
+                          <select id="settingAtsEngine" class="form-input settings-select">
+                            <option value="greenhouse-lever" selected>🎯 Greenhouse &amp; Lever (Modern Tech &amp; SaaS)</option>
+                            <option value="workday">🏢 Workday ATS (Enterprise Corporate)</option>
+                            <option value="taleo">📄 Taleo / iCIMS (Legacy System Parser)</option>
+                            <option value="faang">⚡ FAANG &amp; Big Tech Direct Referral</option>
                           </select>
                         </div>
                       </div>
 
-                      <div class="settings-card-actions" style="display:flex;justify-content:flex-end;">
-                        <button type="submit" class="btn-primary btn-sm" id="btnSaveAiSettings">
+                      <div class="settings-card-actions">
+                        <button type="submit" class="btn-primary btn-sm btn-glow-effect" id="btnSaveAiSettings">
                           <i data-feather="check"></i>
-                          <span>Save Preferences</span>
+                          <span>Save AI Preferences</span>
                         </button>
                       </div>
                     </form>
@@ -2358,14 +2372,6 @@ Key Requirements:
 
             </div>
           </div>
-
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </main>
     </div>
   </div>
 
