@@ -282,9 +282,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  let isSigningOut = false;
+
   // Subscribe to Supabase auth state changes if Supabase is active
-  const sbClient = getSupabase();
-  if (sbClient && sbClient.auth) {
+  function initSupabaseAuthListener() {
+    const sbClient = getSupabase();
+    if (!sbClient || !sbClient.auth || sbClient._authListenerAttached) return;
+    sbClient._authListenerAttached = true;
+
     sbClient.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session && session.user) {
@@ -293,7 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (event === 'PASSWORD_RECOVERY') {
         showResetPasswordModal();
       } else if (event === 'SIGNED_OUT') {
-        handleSignOut();
+        if (!isSigningOut && authContainer && authContainer.style.display === 'none') {
+          handleSignOut();
+        }
       } else if (event === 'USER_UPDATED') {
         if (session && session.user) {
           loadUserProfileFromSupabase(session.user.id);
@@ -302,21 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  initSupabaseAuthListener();
+
   window.addEventListener('supabaseReady', () => {
-    const sb = getSupabase();
-    if (sb && sb.auth) {
-      sb.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          if (session && session.user) {
-            showAppScreen(session.user);
-          }
-        } else if (event === 'PASSWORD_RECOVERY') {
-          showResetPasswordModal();
-        } else if (event === 'SIGNED_OUT') {
-          handleSignOut();
-        }
-      });
-    }
+    initSupabaseAuthListener();
     checkAuthState();
     if (window.location.search.includes('reset=1') || window.location.hash.includes('type=recovery')) {
       showResetPasswordModal();
@@ -830,51 +826,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Sign Out
   async function handleSignOut(e) {
-    if (e) e.preventDefault();
-    const sb = getSupabase();
-    if (sb) {
-      try { await sb.auth.signOut(); } catch(err) {}
-    }
+    if (e && e.preventDefault) e.preventDefault();
+    if (isSigningOut) return;
+    isSigningOut = true;
 
-    // Clear local authentication tokens & caches
     try {
-      localStorage.removeItem(DRAFT_STORAGE_KEY);
-      localStorage.removeItem(ANALYTICS_HISTORY_KEY);
-      localStorage.removeItem('resuai-active-tab');
-      localStorage.removeItem('resuai-user-profile');
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    } catch(err) {}
+      // Close any open modals
+      const openModals = document.querySelectorAll('.modal-overlay');
+      openModals.forEach(m => { m.style.display = 'none'; });
 
-    // Reset in-memory application state
-    jobApplicationsList = [];
+      const sb = getSupabase();
+      if (sb && sb.auth) {
+        try { await sb.auth.signOut(); } catch(err) { console.warn('Supabase signOut notice:', err); }
+      }
 
-    // Reset top user header elements
-    const topUserName = document.getElementById('topUserName');
-    const topUserAvatar = document.getElementById('topUserAvatar');
-    if (topUserName) topUserName.textContent = 'Developer';
-    if (topUserAvatar) topUserAvatar.textContent = 'DV';
+      // Clear local authentication tokens & caches
+      try {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        localStorage.removeItem(ANALYTICS_HISTORY_KEY);
+        localStorage.removeItem('resuai-active-tab');
+        localStorage.removeItem('resuai-user-profile');
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
 
-    // Reset form fields
-    const formIds = ['inputFullName','inputJobTitle','inputEmail','inputPhone','inputLocation',
-                     'inputGithub','inputLinkedin','inputPortfolio','inputSummary','inputCertifications'];
-    formIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    const bp = document.getElementById('bulletPoints');
-    if (bp) bp.value = '';
-    const skillsContainer = document.getElementById('skillsTagsContainer');
-    if (skillsContainer) skillsContainer.querySelectorAll('.tag').forEach(t => t.remove());
+        // Sweep and remove any lingering Supabase auth keys
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth'))) {
+            localStorage.removeItem(key);
+          }
+        }
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const key = sessionStorage.key(i);
+          if (key && (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth'))) {
+            sessionStorage.removeItem(key);
+          }
+        }
+      } catch(err) {}
 
-    if (typeof renderJobTrackerTable === 'function') renderJobTrackerTable();
-    if (typeof updateAnalyticsDashboard === 'function') updateAnalyticsDashboard();
+      // Reset in-memory application state
+      jobApplicationsList = [];
 
-    showAuthScreen();
-    if (typeof syncLivePreview === 'function') syncLivePreview();
-    if (typeof syncLiveSkills === 'function') syncLiveSkills();
-    showToast('Signed out successfully.', 'success');
+      // Reset top user header elements
+      const topUserName = document.getElementById('topUserName');
+      const topUserAvatar = document.getElementById('topUserAvatar');
+      if (topUserName) topUserName.textContent = 'Developer';
+      if (topUserAvatar) topUserAvatar.textContent = 'DV';
+
+      // Reset form fields
+      const formIds = ['inputFullName','inputJobTitle','inputEmail','inputPhone','inputLocation',
+                       'inputGithub','inputLinkedin','inputPortfolio','inputSummary','inputCertifications'];
+      formIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const bp = document.getElementById('bulletPoints');
+      if (bp) bp.value = '';
+      const skillsContainer = document.getElementById('skillsTagsContainer');
+      if (skillsContainer) skillsContainer.querySelectorAll('.tag').forEach(t => t.remove());
+
+      if (typeof renderJobTrackerTable === 'function') renderJobTrackerTable();
+      if (typeof updateAnalyticsDashboard === 'function') updateAnalyticsDashboard();
+
+      showAuthScreen();
+      if (typeof syncLivePreview === 'function') syncLivePreview();
+      if (typeof syncLiveSkills === 'function') syncLiveSkills();
+      showToast('Signed out successfully.', 'success');
+    } finally {
+      isSigningOut = false;
+    }
   }
 
-  if (logoutBtn)     logoutBtn.addEventListener('click', handleSignOut);
+  // Direct element listeners
+  if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
   if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
+
+  // Global delegation for any signout button across the DOM
+  document.addEventListener('click', function(e) {
+    const targetBtn = e.target.closest('.btn-signout, .sidebar-signout-btn, #topSignoutBtn, #logoutBtn, #profileModalSignoutBtn, .btn-logout, [data-action="signout"]');
+    if (targetBtn) {
+      e.preventDefault();
+      handleSignOut(e);
+    }
+  });
 
   // ---- User Profile Modal ----
   const sidebarUserPill   = document.getElementById('sidebarUserPill');

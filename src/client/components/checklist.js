@@ -63,8 +63,7 @@ class GettingStartedChecklistManager {
       existing.remove();
     }
     this.widgetEl = null;
-    return;
-  }
+    if (!this.widgetEl) return;
 
     const completedCount = this.tasks.filter(t => t.completed).length;
     const totalCount = this.tasks.length;

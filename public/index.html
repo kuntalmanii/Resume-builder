@@ -636,9 +636,9 @@
                   <div class="rtt-separator"></div>
                   <span class="rtt-label" id="rttSectionLabel">Personal Info</span>
                   <div class="rtt-spacer"></div>
-                  <button class="rtt-optimize-btn" id="rttOptimizeBtn" onclick="document.getElementById('btnAutoOptimize')?.click()">
+                  <button class="rtt-optimize-btn" id="rttOptimizeBtn" title="AI Auto-Optimize" onclick="document.getElementById('btnAutoOptimize')?.click()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    AI Auto-Optimize
+                    <span class="rtt-opt-text">AI Auto-Optimize</span>
                   </button>
                 </div>
 
@@ -2678,10 +2678,16 @@ Key Requirements:
 
         <p id="profileFeedback" class="account-feedback-msg"></p>
 
-        <button type="button" class="btn-primary btn-full btn-glow-effect" id="profileSaveBtn">
-          <i data-feather="save"></i>
-          <span id="profileSaveText">Save Changes</span>
-        </button>
+        <div style="display: flex; gap: 12px; margin-top: 1rem;">
+          <button type="button" class="btn-secondary btn-full btn-signout" id="profileModalSignoutBtn" style="color: var(--danger);">
+            <i data-feather="log-out"></i>
+            <span>Sign Out</span>
+          </button>
+          <button type="button" class="btn-primary btn-full btn-glow-effect" id="profileSaveBtn">
+            <i data-feather="save"></i>
+            <span id="profileSaveText">Save Changes</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
