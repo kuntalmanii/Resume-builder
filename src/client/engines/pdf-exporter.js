@@ -18,9 +18,18 @@ class PdfExporter {
   bindExportButtons() {
     const btnPrint = document.getElementById('btnPrintPdf');
     const btnExportTop = document.getElementById('topbarExportPdf');
+    const btnExportPdf = document.getElementById('btnExportPdf');
+    const btnExportPdfPreview = document.getElementById('btnExportPdfPreview');
 
-    if (btnPrint) btnPrint.addEventListener('click', () => this.generatePrintPdf());
-    if (btnExportTop) btnExportTop.addEventListener('click', () => this.generatePrintPdf());
+    const triggerPrint = (e) => {
+      if (e) e.preventDefault();
+      this.generatePrintPdf();
+    };
+
+    if (btnPrint) btnPrint.addEventListener('click', triggerPrint);
+    if (btnExportTop) btnExportTop.addEventListener('click', triggerPrint);
+    if (btnExportPdf) btnExportPdf.addEventListener('click', triggerPrint);
+    if (btnExportPdfPreview) btnExportPdfPreview.addEventListener('click', triggerPrint);
   }
 
   generatePrintPdf() {
