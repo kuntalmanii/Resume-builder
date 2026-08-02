@@ -2,6 +2,14 @@ const https = require('https');
 
 const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
+function sanitizeInputText(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/<script\b[^<]*>(?:[\s\S]*?)<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+}
+
 function runServerFallbackOptimization(jobTitle, experienceText) {
   return {
     optimizedBulletPoints: `• Architected high-performance UI component library serving 2M+ active monthly users.\n• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.\n• Spearheaded frontend migration to TypeScript and Next.js, boosting team release velocity by 35%.\n• Implemented client-side GraphQL caching layer, decreasing server payload size by 60%.`,
@@ -71,7 +79,10 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const { jobTitle = '', experienceText = '', skills = [], geminiModel = '', sensitivity = '' } = body;
+    const jobTitle = sanitizeInputText(body.jobTitle || '');
+    const experienceText = sanitizeInputText(body.experienceText || '');
+    const skills = Array.isArray(body.skills) ? body.skills.map(s => sanitizeInputText(s)) : sanitizeInputText(body.skills || '');
+    const { geminiModel = '', sensitivity = '' } = body;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
