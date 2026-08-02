@@ -3149,29 +3149,56 @@ i[data-feather] svg { width: 1em; height: 1em; }
 .ats-meta-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ats-meta-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  border-radius: 8px;
+  padding: 5px 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  transition: all 0.15s ease-in-out;
+}
+.ats-meta-field:hover {
+  border-color: #C98B4A;
+  background: #FDFCFB;
+  box-shadow: 0 2px 6px rgba(201,139,74,0.08);
+}
+.ats-meta-field:focus-within {
+  border-color: #B9824A;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(201,139,74,0.15);
+}
+.meta-field-icon {
+  color: #C98B4A;
+  flex-shrink: 0;
 }
 .ats-meta-input {
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #111111;
-  border: 1px solid transparent;
+  border: none;
   background: transparent;
-  border-radius: 6px;
-  padding: 4px 8px;
+  padding: 0;
   outline: none;
-  transition: all 0.12s;
   field-sizing: content;
-  min-width: 220px;
-  max-width: 440px;
+  min-width: 180px;
+  max-width: 320px;
 }
-.ats-meta-input:hover { background: #F2EEE8; border-color: #ECE8E1; }
-.ats-meta-input:focus { background: #FFFFFF; border-color: #B9824A; box-shadow: 0 0 0 2px rgba(201,139,74,0.15); }
-.ats-meta-subinput {
-  font-size: 13px;
-  color: #5E5E5E;
-  font-weight: 500;
+.ats-meta-divider {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8C827A;
+  text-transform: lowercase;
+  background: #F2EEE8;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid #EDE9E3;
 }
 
 .ats-chip-label {
