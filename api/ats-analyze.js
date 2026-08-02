@@ -7,7 +7,10 @@ const SHARED_TAXONOMY_KEYWORDS = [
   'Node.js', 'Express', 'Python', 'Django', 'FastAPI', 'Go', 'Rust', 'Java',
   'Spring Boot', 'C++', 'GraphQL', 'REST API', 'PostgreSQL', 'MySQL', 'MongoDB',
   'Redis', 'Supabase', 'Firebase', 'AWS', 'Docker', 'Kubernetes', 'CI/CD',
-  'Git', 'Jest', 'TailwindCSS', 'Microservices', 'System Design'
+  'Git', 'Jest', 'TailwindCSS', 'Microservices', 'System Design',
+  'Machine Learning', 'PyTorch', 'TensorFlow', 'NLP', 'Data Science', 'Pandas',
+  'NumPy', 'Scikit-Learn', 'Deep Learning', 'Photoshop', 'Illustrator', 'Figma',
+  'Graphic Design', 'UI/UX Design', 'InDesign', 'Typography', 'Vector Graphics'
 ];
 
 function sanitizeInputText(str) {
@@ -37,34 +40,53 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
   const resumeKeywords = extractKeywords(cleanResume);
   const jdKeywords = extractKeywords(cleanJd);
 
+  // Fallback word extraction if taxonomy items are sparse in JD
+  if (jdKeywords.size === 0 && cleanJd.length > 20) {
+    const words = cleanJd.match(/\b[A-Za-z]{4,}\b/g) || [];
+    const stopWords = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team']);
+    const wordFreq = {};
+    words.forEach(w => {
+      if (!stopWords.has(w.toLowerCase())) {
+        wordFreq[w] = (wordFreq[w] || 0) + 1;
+      }
+    });
+    const topWords = Object.keys(wordFreq).sort((a,b) => wordFreq[b] - wordFreq[a]).slice(0, 8);
+    topWords.forEach(w => jdKeywords.add(w));
+  }
+
   const matched = [];
   const missing = [];
 
   jdKeywords.forEach(kw => {
-    if (resumeKeywords.has(kw)) {
+    if (resumeKeywords.has(kw) || cleanResume.toLowerCase().includes(kw.toLowerCase())) {
       matched.push(kw);
     } else {
       missing.push(kw);
     }
   });
 
-  const totalJd = jdKeywords.size || 1;
-  const matchPct = Math.min(100, Math.max(35, Math.round((matched.length / totalJd) * 100)));
+  const matchedCount = matched.length;
+  const totalCount = jdKeywords.size || 1;
+  const matchPct = Math.min(100, Math.round((matchedCount / totalCount) * 100));
 
   return {
     score: matchPct,
-    matchedKeywords: matched.length > 0 ? matched : ['Software Engineering', 'Problem Solving'],
-    missingKeywords: missing.length > 0 ? missing : ['System Design', 'Cloud Architecture'],
-    recommendations: [
+    matchedKeywords: matched,
+    missingKeywords: missing,
+    recommendations: missing.length > 0 ? [
+      `Critical Skill Gap: The uploaded resume lacks required core technical competencies for this role (missing: ${missing.slice(0, 4).join(', ')}).`,
+      'Incorporate target technical keywords directly into your experience section headings for ATS compliance.',
+      'Maintain standard single-column structure for maximum parser readability.'
+    ] : [
+      'Excellent alignment! Your resume matches all core technical requirements.',
       'Quantify experience bullets using metric-driven outcome formulas ([Action Verb] + [Metric] + [Outcome]).',
-      'Incorporate target technical keywords directly into job title section headings for higher ATS priority.',
       'Maintain standard single-column structure for maximum parser readability.'
     ],
     sectionScores: {
       keywordMatch: matchPct,
-      skillsAlignment: Math.min(100, matchPct + 5),
+      skillsAlignment: Math.min(100, Math.round(matchPct * 0.95)),
       formattingATS: 95,
-      experienceImpact: 88
+      experienceImpact: matchPct < 20 ? 30 : 88
     }
   };
 }
