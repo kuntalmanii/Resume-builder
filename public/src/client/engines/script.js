@@ -3278,13 +3278,13 @@ Key Requirements:
   }
 
   /**
-   * Calls secure Node.js backend endpoint /api/analyze (which communicates with Gemini API server-side).
+   * Calls secure Node.js backend endpoint /api/ats-analyze (which communicates with Gemini API server-side).
    * @param {string} jdText 
    * @param {string} resumeText 
    */
   async function fetchBackendAtsAnalysis(jdText, resumeText) {
     const activeSettings = getActiveSettings();
-    const response = await fetch('/api/analyze', {
+    const response = await fetch('/api/ats-analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jdText, resumeText, geminiModel: activeSettings.geminiModel, atsEngine: activeSettings.atsEngine })
@@ -3847,14 +3847,6 @@ Key Requirements:
   const btnSaveAiSettings               = document.getElementById('btnSaveAiSettings');
 
   const settingAtsEngine                = document.getElementById('settingAtsEngine');
-  const settingSeniority                = document.getElementById('settingSeniority');
-  const settingKeywordMatchStrategy     = document.getElementById('settingKeywordMatchStrategy');
-  const btnSaveAtsSettings              = document.getElementById('btnSaveAtsSettings');
-
-  const settingPaperSize                = document.getElementById('settingPaperSize');
-  const settingTypography               = document.getElementById('settingTypography');
-  const btnSavePdfSettings              = document.getElementById('btnSavePdfSettings');
-
   const settingAutoSaveToggle           = document.getElementById('settingAutoSaveToggle');
   const btnExportAllData                = document.getElementById('btnExportAllData');
   const btnResetAllData                 = document.getElementById('btnResetAllData');
@@ -3876,10 +3868,6 @@ Key Requirements:
       geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.5-flash',
       sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever',
-      seniority: settingSeniority ? settingSeniority.value : 'senior',
-      matchStrategy: settingKeywordMatchStrategy ? settingKeywordMatchStrategy.value : 'semantic',
-      paperSize: settingPaperSize ? settingPaperSize.value : 'letter',
-      typography: settingTypography ? settingTypography.value : 'inter-jakarta',
       autoSave: settingAutoSaveToggle ? settingAutoSaveToggle.checked : true,
       savedAt: new Date().toISOString()
     };
@@ -3914,10 +3902,6 @@ Key Requirements:
         }
       }
       if (s.atsEngine && settingAtsEngine) settingAtsEngine.value = s.atsEngine;
-      if (s.seniority && settingSeniority) settingSeniority.value = s.seniority;
-      if (s.matchStrategy && settingKeywordMatchStrategy) settingKeywordMatchStrategy.value = s.matchStrategy;
-      if (s.paperSize && settingPaperSize) settingPaperSize.value = s.paperSize;
-      if (s.typography && settingTypography) settingTypography.value = s.typography;
       if (typeof s.autoSave === 'boolean' && settingAutoSaveToggle) settingAutoSaveToggle.checked = s.autoSave;
       
       applyTypographyToLivePreview();
@@ -3941,16 +3925,16 @@ Key Requirements:
     } catch(e) {}
 
     const sizeInKB = (sizeInBytes / 1024).toFixed(2);
-    const diagPayloadSize = document.getElementById('diagPayloadSize');
-    if (diagPayloadSize) diagPayloadSize.textContent = `${sizeInKB} KB`;
-
     const percentUsed = Math.min(100, Math.max(0.01, (parseFloat(sizeInKB) / 5120) * 100));
     
-    const storagePercentText = document.getElementById('storagePercentText');
-    const storageProgressFill = document.getElementById('storageProgressFill');
-    
-    if (storagePercentText) storagePercentText.textContent = `${percentUsed.toFixed(3)}% of 5MB limit`;
-    if (storageProgressFill) storageProgressFill.style.width = `${percentUsed}%`;
+    // Optional UI diagnostic widgets (if present in DOM)
+    ['diagPayloadSize', 'storagePercentText', 'storageProgressFill'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === 'diagPayloadSize') el.textContent = `${sizeInKB} KB`;
+      else if (id === 'storagePercentText') el.textContent = `${percentUsed.toFixed(3)}% of 5MB limit`;
+      else if (id === 'storageProgressFill') el.style.width = `${percentUsed}%`;
+    });
   }
 
   // --- Toast Notifications Engine ---
@@ -4003,19 +3987,11 @@ Key Requirements:
   }
 
   const aiEngineSettingsForm = document.getElementById('aiEngineSettingsForm');
-  const pdfExportSettingsForm = document.getElementById('pdfExportSettingsForm');
 
   if (aiEngineSettingsForm) {
     aiEngineSettingsForm.addEventListener('submit', (e) => {
       e.preventDefault();
       handleSettingsSaveFeedback(btnSaveAiSettings, 'AI Engine & Target Profile Saved!');
-    });
-  }
-
-  if (pdfExportSettingsForm) {
-    pdfExportSettingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      handleSettingsSaveFeedback(btnSavePdfSettings, 'Typography & Export Formats Saved!');
     });
   }
 
@@ -4397,7 +4373,7 @@ Key Requirements:
               <h3 class="empty-state-headline">No job applications tracked yet</h3>
               <p class="empty-state-desc">Organize your job search across Wishlist, Applied, Interviewing, and Offer stages with real-time application pipelines.</p>
               <div class="empty-state-actions">
-                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddAppModal')?.click()">
+                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddNewJob')?.click()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Add First Application</span>
                 </button>

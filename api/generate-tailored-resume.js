@@ -251,7 +251,9 @@ Instructions:
 
     return res.status(200).json(result);
   } catch (err) {
-    const fallback = runFallbackTailoredResume('', '');
+    console.error('Tailored Resume API catch error:', err);
+    const body = req.body || {};
+    const fallback = runFallbackTailoredResume(body.jdText || '', body.resumeText || '');
     return res.status(200).json(fallback);
   }
 };

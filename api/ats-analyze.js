@@ -259,7 +259,9 @@ Respond STRICTLY with a valid JSON object following this exact JSON schema:
 
     return res.status(200).json(result);
   } catch (err) {
-    const fallback = runServerFallbackAnalysis('', '');
+    console.error('ATS API catch error:', err);
+    const body = req.body || {};
+    const fallback = runServerFallbackAnalysis(body.resumeText || '', body.jobDescription || '');
     return res.status(200).json(fallback);
   }
 };

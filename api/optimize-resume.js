@@ -123,7 +123,9 @@ Instructions:
 
     return res.status(200).json(result);
   } catch (err) {
-    const fallback = runServerFallbackOptimization('', '');
+    console.error('Optimize Resume API catch error:', err);
+    const body = req.body || {};
+    const fallback = runServerFallbackOptimization(body.jobTitle || '', body.experienceText || '');
     return res.status(200).json(fallback);
   }
 };

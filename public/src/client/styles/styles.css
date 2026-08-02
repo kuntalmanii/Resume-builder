@@ -3292,6 +3292,14 @@ i[data-feather] svg { width: 1em; height: 1em; }
   transition: all 0.2s;
 }
 
+/* Dynamic State & Interaction Utilities */
+.fade-out { opacity: 0; transition: opacity 0.3s ease; }
+.offline { filter: grayscale(0.6); opacity: 0.7; }
+.saving { opacity: 0.8; cursor: wait; }
+.completed { border-color: var(--success) !important; }
+.dragging { opacity: 0.5; transform: scale(0.98); }
+.drag-over { border-color: var(--accent) !important; background: var(--accent-light) !important; }
+
 /* ─────────────────────────────────────────────────────────────
    30. PRINT STYLES
    ───────────────────────────────────────────────────────────── */
