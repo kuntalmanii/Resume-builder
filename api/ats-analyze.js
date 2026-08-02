@@ -12,7 +12,9 @@ const SHARED_TAXONOMY_KEYWORDS = [
   'NumPy', 'Scikit-Learn', 'Deep Learning', 'Photoshop', 'Illustrator', 'Figma',
   'Graphic Design', 'UI/UX Design', 'InDesign', 'Typography', 'Vector Graphics',
   'Agile', 'Scrum', 'Jira', 'Budget Management', 'Project Management', 'Sprint Planning',
-  'Risk Mitigation', 'Resource Allocation'
+  'Risk Mitigation', 'Resource Allocation', 'Communication', 'Problem-Solving', 'Problem Solving',
+  'Conflict Resolution', 'Client Retention', 'Customer Success', 'Customer Satisfaction',
+  'Stakeholder Engagement', 'Presentation', 'Relationship Management', 'Cross-Functional Leadership'
 ];
 
 function sanitizeInputText(str) {
