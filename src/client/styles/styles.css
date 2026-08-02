@@ -3126,10 +3126,25 @@ i[data-feather] svg { width: 1em; height: 1em; }
   border-bottom: 1px solid #EDE9E3;
   padding: 14px 24px;
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
   flex-shrink: 0;
+}
+.ats-header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
+}
+.ats-header-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(237, 233, 227, 0.8);
 }
 .ats-meta-group {
   display: flex;
@@ -3138,7 +3153,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
 }
 .ats-meta-input {
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: #111111;
   border: 1px solid transparent;
@@ -3148,7 +3163,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
   outline: none;
   transition: all 0.12s;
   field-sizing: content;
-  min-width: 260px;
+  min-width: 220px;
   max-width: 440px;
 }
 .ats-meta-input:hover { background: #F2EEE8; border-color: #ECE8E1; }
@@ -3159,12 +3174,21 @@ i[data-feather] svg { width: 1em; height: 1em; }
   font-weight: 500;
 }
 
+.ats-chip-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8C827A;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+
 .ats-engine-chip-group {
   display: flex;
   align-items: center;
   gap: 4px;
   background: #F2EEE8;
-  padding: 3px;
+  padding: 3px 6px;
   border-radius: 8px;
   border: 1px solid #EDE9E3;
 }
@@ -3186,8 +3210,38 @@ i[data-feather] svg { width: 1em; height: 1em; }
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
+.sample-jd-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sample-jd-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8C827A;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sample-jd-select {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: #2D2D2D;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid #DFD9D1;
+  background: #FFFFFF;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.sample-jd-select:hover {
+  border-color: #C98B4A;
+  background: #FDFCFB;
+}
+
 .ats-top-actions {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;

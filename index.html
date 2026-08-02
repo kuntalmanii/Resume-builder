@@ -1502,47 +1502,53 @@
                  1. ATS AUDIT TOP CONTROLS & META BAR
                  ══════════════════════════════════════════════ -->
             <div class="ats-audit-header-bar">
-              <div class="ats-meta-group">
-                <input class="ats-meta-input" id="atsAuditJobTitle" type="text" value="Senior Frontend Architect" title="Click to edit job title" />
-                <span class="ats-meta-subinput">at</span>
-                <input class="ats-meta-input" id="atsAuditCompany" type="text" value="Stripe / Vercel Stack" title="Click to edit company" />
+              <div class="ats-header-top-row">
+                <div class="ats-meta-group">
+                  <input class="ats-meta-input" id="atsAuditJobTitle" type="text" value="Senior Frontend Architect" title="Click to edit job title" />
+                  <span class="ats-meta-subinput">at</span>
+                  <input class="ats-meta-input" id="atsAuditCompany" type="text" value="Stripe / Vercel Stack" title="Click to edit company" />
+                </div>
+
+                <div class="ats-top-actions">
+                  <button type="button" class="topbar-action-btn btn-primary" id="btnRunAtsAnalysis">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span id="btnRunAtsText">⚡ Re-Scan Resume</span>
+                  </button>
+                  <button type="button" class="topbar-action-btn" id="btnSelectPdfFile">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload New File
+                  </button>
+                  <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display: none;" />
+                </div>
               </div>
 
-              <!-- ATS Engine Chip Group (Preserved ID) -->
-              <div class="ats-engine-chip-group" id="atsEngineChipsContainer">
-                <button type="button" class="parser-chip active" data-engine="greenhouse">Greenhouse &amp; Lever</button>
-                <button type="button" class="parser-chip" data-engine="workday">Workday Scanner</button>
-                <button type="button" class="parser-chip" data-engine="taleo">Taleo Exact Match</button>
-                <button type="button" class="parser-chip" data-engine="faang">FAANG Executive</button>
-              </div>
+              <div class="ats-header-bottom-row">
+                <!-- ATS Engine Chip Group (Preserved ID) -->
+                <div class="ats-engine-chip-group" id="atsEngineChipsContainer">
+                  <span class="ats-chip-label">Parser Benchmark:</span>
+                  <button type="button" class="parser-chip active" data-engine="greenhouse">Greenhouse &amp; Lever</button>
+                  <button type="button" class="parser-chip" data-engine="workday">Workday Scanner</button>
+                  <button type="button" class="parser-chip" data-engine="taleo">Taleo Exact Match</button>
+                  <button type="button" class="parser-chip" data-engine="faang">FAANG Executive</button>
+                </div>
 
-              <!-- Sample JD Template Selector (Preserved ID) -->
-              <div class="sample-jd-wrapper" style="margin-left:8px;">
-                <select id="sampleJdSelect" class="form-select-sm" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #EDE9E3;background:#FDFCFB;">
-                  <option value="">-- Load Sample JD Template --</option>
-                  <option value="frontend" selected>Senior Frontend Architect</option>
-                  <option value="fullstack">Senior Full Stack Engineer</option>
-                  <option value="backend">Lead Backend &amp; Systems Engineer</option>
-                  <option value="devops">DevOps &amp; Cloud Infrastructure Lead</option>
-                  <option value="ai">AI / Machine Learning Engineer</option>
-                  <option value="mobile">Senior Mobile Engineer (iOS / Android)</option>
-                  <option value="data">Data Engineer &amp; Analytics Architect</option>
-                  <option value="cybersecurity">Cloud Security Specialist</option>
-                  <option value="qa_automation">Principal SDET &amp; QA Engineer</option>
-                  <option value="product_manager">Technical Product Manager (APIs)</option>
-                </select>
-              </div>
-
-              <div class="ats-top-actions">
-                <button type="button" class="topbar-action-btn btn-primary" id="btnRunAtsAnalysis">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span id="btnRunAtsText">Re-Scan Resume</span>
-                </button>
-                <button type="button" class="topbar-action-btn" id="btnSelectPdfFile">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  Upload New File
-                </button>
-                <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display: none;" />
+                <!-- Sample JD Template Selector (Preserved ID) -->
+                <div class="sample-jd-wrapper">
+                  <label for="sampleJdSelect" class="sample-jd-label">Preset JD:</label>
+                  <select id="sampleJdSelect" class="sample-jd-select">
+                    <option value="" selected>📋 Select Sample Job Description...</option>
+                    <option value="frontend">Senior Frontend Architect</option>
+                    <option value="fullstack">Senior Full Stack Engineer</option>
+                    <option value="backend">Lead Backend &amp; Systems Engineer</option>
+                    <option value="devops">DevOps &amp; Cloud Infrastructure Lead</option>
+                    <option value="ai">AI / Machine Learning Engineer</option>
+                    <option value="mobile">Senior Mobile Engineer (iOS / Android)</option>
+                    <option value="data">Data Engineer &amp; Analytics Architect</option>
+                    <option value="cybersecurity">Cloud Security Specialist</option>
+                    <option value="qa_automation">Principal SDET &amp; QA Engineer</option>
+                    <option value="product_manager">Technical Product Manager (APIs)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
