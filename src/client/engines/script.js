@@ -863,6 +863,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  // Password Visibility Eye Toggle for My Account Modal
+  document.querySelectorAll('.btn-toggle-password').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (input) {
+        const isPass = input.type === 'password';
+        input.type = isPass ? 'text' : 'password';
+        btn.innerHTML = isPass ? '<i data-feather="eye-off"></i>' : '<i data-feather="eye"></i>';
+        if (window.feather) feather.replace();
+      }
+    });
+  });
 
 
 

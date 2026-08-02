@@ -2512,48 +2512,75 @@ Key Requirements:
 
   <!-- User Profile Modal -->
   <div class="modal-overlay" id="userProfileModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
-    <div class="modal-panel glass-card" style="max-width:480px;">
+    <div class="modal-panel glass-card account-modal-panel">
       <div class="modal-header">
         <div class="modal-title-group">
-          <i data-feather="user"></i>
-          <h3 id="profileModalTitle">My Account</h3>
-        </div>
-        <button class="modal-close-btn" id="profileModalClose"><i data-feather="x"></i></button>
-      </div>
-      <div style="padding:1.5rem 2rem 2rem;">
-        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
-          <div class="user-avatar" id="profileModalAvatar" style="width:56px;height:56px;font-size:1.25rem;">DV</div>
+          <i data-feather="user-check"></i>
           <div>
-            <div class="user-name" id="profileModalName" style="font-size:1.1rem; font-weight:600;"></div>
-            <div class="user-role" id="profileModalEmail" style="font-size:0.85rem; color:var(--text-secondary);"></div>
+            <h3 id="profileModalTitle">My Account</h3>
+            <span class="modal-subtitle">Manage profile details &amp; authentication</span>
           </div>
+        </div>
+        <button class="modal-close-btn" id="profileModalClose" title="Close"><i data-feather="x"></i></button>
+      </div>
+      <div class="account-modal-body">
+        <!-- Account Card Banner -->
+        <div class="account-profile-banner">
+          <div class="user-avatar account-avatar" id="profileModalAvatar">DV</div>
+          <div class="account-user-meta">
+            <div class="account-user-name-row">
+              <span class="user-name" id="profileModalName">Demo Developer</span>
+              <span class="account-badge"><i data-feather="check-circle"></i> Pro Member</span>
+            </div>
+            <div class="user-role" id="profileModalEmail">demo@resuai.dev</div>
+          </div>
+        </div>
+
+        <!-- Section 1: Personal Details -->
+        <div class="account-section-divider">
+          <span>Personal Details</span>
         </div>
         <div class="form-group">
           <label for="profileDisplayName">Display Name</label>
           <div class="input-icon-wrapper">
-            <i data-feather="user"></i>
+            <i data-feather="user" class="input-icon"></i>
             <input type="text" id="profileDisplayName" class="form-input" placeholder="Your full name" />
           </div>
+          <span class="help-text">Name displayed on exports and your developer workspace.</span>
         </div>
-        <div class="form-group" style="margin-top:1rem;">
-          <label for="profileCurrentPassword">Current Password <span style="font-size:0.78rem;color:var(--text-muted);">(required to change password)</span></label>
+
+        <!-- Section 2: Security & Credentials -->
+        <div class="account-section-divider margin-top-md">
+          <span>Security &amp; Credentials</span>
+        </div>
+        <div class="form-group">
+          <label for="profileCurrentPassword">Current Password <span class="label-optional">(required to change password)</span></label>
           <div class="input-icon-wrapper">
-            <i data-feather="lock"></i>
+            <i data-feather="lock" class="input-icon"></i>
             <input type="password" id="profileCurrentPassword" class="form-input" placeholder="••••••••" />
+            <button type="button" class="btn-toggle-password" data-target="profileCurrentPassword" title="Toggle password visibility">
+              <i data-feather="eye"></i>
+            </button>
           </div>
         </div>
-        <div class="form-group" style="margin-top:1rem;">
-          <label for="profileNewPassword">New Password <span style="font-size:0.78rem;color:var(--text-muted);">(leave blank to keep current)</span></label>
+        <div class="form-group margin-top-sm">
+          <label for="profileNewPassword">New Password <span class="label-optional">(leave blank to keep current)</span></label>
           <div class="input-icon-wrapper">
-            <i data-feather="key"></i>
+            <i data-feather="key" class="input-icon"></i>
             <input type="password" id="profileNewPassword" class="form-input" placeholder="••••••••" />
+            <button type="button" class="btn-toggle-password" data-target="profileNewPassword" title="Toggle password visibility">
+              <i data-feather="eye"></i>
+            </button>
           </div>
+          <span class="help-text">Minimum 6 characters.</span>
         </div>
-        <button type="button" class="btn-primary btn-full" id="profileSaveBtn" style="margin-top:1.25rem;">
+
+        <p id="profileFeedback" class="account-feedback-msg"></p>
+
+        <button type="button" class="btn-primary btn-full btn-glow-effect" id="profileSaveBtn">
           <i data-feather="save"></i>
           <span id="profileSaveText">Save Changes</span>
         </button>
-        <p id="profileFeedback" style="margin-top:0.75rem; font-size:0.85rem; text-align:center; min-height:1.2em;"></p>
       </div>
     </div>
   </div>
