@@ -79,10 +79,10 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
   const uniqueWords = new Set(resumeWords.map(w => w.toLowerCase())).size;
   const lexicalDiversity = totalWords > 0 ? (uniqueWords / totalWords) : 1;
 
-  const hasActionVerbs = /(managed|led|directed|architected|engineered|built|scaled|delivered|budgeted|optimized|spearheaded|implemented)\b/i.test(cleanResume);
-  const hasWorkDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(cleanResume);
+  const hasActionVerbs = /(managed|led|directed|architected|engineered|built|building|scaled|delivered|budgeted|optimized|spearheaded|implemented|developed|developing|designed|designing)\b/i.test(cleanResume);
+  const hasWorkDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|years|yrs)\b/i.test(cleanResume);
 
-  const isKeywordStuffed = (totalWords > 15 && lexicalDiversity < 0.35) || (!hasActionVerbs && !hasWorkDates);
+  const isKeywordStuffed = (totalWords > 15 && lexicalDiversity < 0.35) || (totalWords > 10 && !hasActionVerbs && !hasWorkDates);
 
   let finalScore = matchPct;
   let formattingScore = 95;
@@ -205,7 +205,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const { resumeText = '', jobDescription = '', preferredModel = '' } = body;
+    const resumeText = body.resumeText || body.resume_text || '';
+    const jobDescription = body.jobDescription || body.jdText || body.job_description || '';
+    const preferredModel = body.preferredModel || body.geminiModel || '';
     const cleanResume = sanitizeInputText(resumeText);
     const cleanJd = sanitizeInputText(jobDescription);
 
