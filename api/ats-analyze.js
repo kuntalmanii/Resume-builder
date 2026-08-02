@@ -103,10 +103,11 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
     recommendations.push('Excellent alignment! Your resume matches all core technical requirements.');
     recommendations.push('Quantify experience bullets using metric-driven outcome formulas ([Action Verb] + [Metric] + [Outcome]).');
   }
-  recommendations.push('Maintain standard single-column structure for maximum parser readability.');
+  const verdict = finalScore >= 85 ? 'SHORTLIST' : (finalScore >= 70 ? 'HOLD' : 'REJECT');
 
   return {
     score: finalScore,
+    verdict,
     matchedKeywords: matched,
     missingKeywords: missing,
     recommendations,
@@ -147,16 +148,27 @@ function makeGeminiRequest(model, promptText, apiKey) {
             const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
               const analysisObj = JSON.parse(jsonMatch[0]);
+              const rawScore = analysisObj.score ?? analysisObj.match_score ?? 75;
+              const missingMustHave = analysisObj.missing_must_have_skills || [];
+              const missingNiceToHave = analysisObj.missing_nice_to_have_skills || [];
+              const allMissing = analysisObj.missingKeywords || [...missingMustHave, ...missingNiceToHave];
+
+              const recommendations = analysisObj.actionable_fixes || analysisObj.recommendations ||
+                (analysisObj.gaps_and_recommendations ? analysisObj.gaps_and_recommendations.map(g => typeof g === 'object' ? `${g.issue}: ${g.actionable_fix}` : String(g)) : []);
+
               const normalized = {
-                score: analysisObj.score ?? analysisObj.match_score ?? 75,
+                score: rawScore,
+                verdict: analysisObj.verdict || (rawScore >= 85 ? 'SHORTLIST' : (rawScore >= 70 ? 'HOLD' : 'REJECT')),
                 matchedKeywords: analysisObj.matchedKeywords || analysisObj.matching_keywords || [],
-                missingKeywords: analysisObj.missingKeywords || analysisObj.missing_keywords || [],
-                recommendations: analysisObj.recommendations || (analysisObj.gaps_and_recommendations ? analysisObj.gaps_and_recommendations.map(g => typeof g === 'object' ? `${g.issue}: ${g.actionable_fix}` : String(g)) : []),
+                missingKeywords: allMissing,
+                recommendations: recommendations,
+                deductionsBreakdown: analysisObj.deductions_breakdown || [],
+                criticalGapsSummary: analysisObj.critical_gaps_summary || '',
                 sectionScores: analysisObj.sectionScores || {
-                  keywordMatch: analysisObj.score ?? analysisObj.match_score ?? 75,
-                  skillsAlignment: Math.min(100, Math.round((analysisObj.score ?? analysisObj.match_score ?? 75) * 0.95)),
-                  formattingATS: 95,
-                  experienceImpact: 88
+                  keywordMatch: rawScore,
+                  skillsAlignment: Math.min(100, Math.round(rawScore * 0.95)),
+                  formattingATS: analysisObj.quantified_metrics_present === false ? 60 : 95,
+                  experienceImpact: rawScore < 50 ? 35 : 88
                 }
               };
               resolve(normalized);
