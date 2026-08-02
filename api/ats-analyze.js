@@ -10,7 +10,9 @@ const SHARED_TAXONOMY_KEYWORDS = [
   'Git', 'Jest', 'TailwindCSS', 'Microservices', 'System Design',
   'Machine Learning', 'PyTorch', 'TensorFlow', 'NLP', 'Data Science', 'Pandas',
   'NumPy', 'Scikit-Learn', 'Deep Learning', 'Photoshop', 'Illustrator', 'Figma',
-  'Graphic Design', 'UI/UX Design', 'InDesign', 'Typography', 'Vector Graphics'
+  'Graphic Design', 'UI/UX Design', 'InDesign', 'Typography', 'Vector Graphics',
+  'Agile', 'Scrum', 'Jira', 'Budget Management', 'Project Management', 'Sprint Planning',
+  'Risk Mitigation', 'Resource Allocation'
 ];
 
 function sanitizeInputText(str) {
@@ -69,24 +71,48 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
   const totalCount = jdKeywords.size || 1;
   const matchPct = Math.min(100, Math.round((matchedCount / totalCount) * 100));
 
+  // Contextual Integrity & Keyword Stuffing Detector
+  const resumeWords = cleanResume.match(/\b[A-Za-z]{3,}\b/g) || [];
+  const totalWords = resumeWords.length;
+  const uniqueWords = new Set(resumeWords.map(w => w.toLowerCase())).size;
+  const lexicalDiversity = totalWords > 0 ? (uniqueWords / totalWords) : 1;
+
+  const hasActionVerbs = /(managed|led|directed|architected|engineered|built|scaled|delivered|budgeted|optimized|spearheaded|implemented)\b/i.test(cleanResume);
+  const hasWorkDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(cleanResume);
+
+  const isKeywordStuffed = (totalWords > 15 && lexicalDiversity < 0.35) || (!hasActionVerbs && !hasWorkDates);
+
+  let finalScore = matchPct;
+  let formattingScore = 95;
+  let experienceScore = 88;
+  const recommendations = [];
+
+  if (isKeywordStuffed) {
+    // Cap score and penalize experience/formatting due to lack of contextual experience
+    finalScore = Math.min(20, Math.round(matchPct * 0.20));
+    formattingScore = 30;
+    experienceScore = 15;
+    recommendations.push('⚠️ Keyword Stuffing Warning: Your resume contains repeated keywords without contextual work experience, action verbs, or quantifiable metrics. Modern ATS parsers penalize un-anchored keyword lists.');
+    recommendations.push('Rewrite experience items using structured bullet points: [Action Verb] + [Context/Project] + [Quantified Metric].');
+  } else if (missing.length > 0) {
+    recommendations.push(`Critical Skill Gap: The uploaded resume lacks required core technical competencies for this role (missing: ${missing.slice(0, 4).join(', ')}).`);
+    recommendations.push('Incorporate target technical keywords directly into your experience section headings for ATS compliance.');
+  } else {
+    recommendations.push('Excellent alignment! Your resume matches all core technical requirements.');
+    recommendations.push('Quantify experience bullets using metric-driven outcome formulas ([Action Verb] + [Metric] + [Outcome]).');
+  }
+  recommendations.push('Maintain standard single-column structure for maximum parser readability.');
+
   return {
-    score: matchPct,
+    score: finalScore,
     matchedKeywords: matched,
     missingKeywords: missing,
-    recommendations: missing.length > 0 ? [
-      `Critical Skill Gap: The uploaded resume lacks required core technical competencies for this role (missing: ${missing.slice(0, 4).join(', ')}).`,
-      'Incorporate target technical keywords directly into your experience section headings for ATS compliance.',
-      'Maintain standard single-column structure for maximum parser readability.'
-    ] : [
-      'Excellent alignment! Your resume matches all core technical requirements.',
-      'Quantify experience bullets using metric-driven outcome formulas ([Action Verb] + [Metric] + [Outcome]).',
-      'Maintain standard single-column structure for maximum parser readability.'
-    ],
+    recommendations,
     sectionScores: {
-      keywordMatch: matchPct,
-      skillsAlignment: Math.min(100, Math.round(matchPct * 0.95)),
-      formattingATS: 95,
-      experienceImpact: matchPct < 20 ? 30 : 88
+      keywordMatch: finalScore,
+      skillsAlignment: Math.min(100, Math.round(finalScore * 0.95)),
+      formattingATS: formattingScore,
+      experienceImpact: experienceScore
     }
   };
 }
