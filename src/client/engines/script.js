@@ -329,10 +329,49 @@ document.addEventListener('DOMContentLoaded', () => {
     showResetPasswordModal();
   }
 
+  /* ------ Helper: Show Inline Auth Error with Shake Effect ------ */
+  function showAuthError(msg) {
+    const alertEl = document.getElementById('authErrorAlert');
+    const errorMsgEl = document.getElementById('authErrorMsg');
+    const authCard = document.querySelector('.auth-card');
+
+    if (alertEl && errorMsgEl) {
+      errorMsgEl.textContent = msg;
+      alertEl.style.display = 'flex';
+      if (window.feather) feather.replace();
+    }
+    if (authCard) {
+      authCard.classList.remove('auth-card-shake');
+      void authCard.offsetWidth; // force reflow
+      authCard.classList.add('auth-card-shake');
+      setTimeout(() => authCard.classList.remove('auth-card-shake'), 500);
+    }
+    showToast(msg, 'error');
+  }
+
+  function clearAuthError() {
+    const alertEl = document.getElementById('authErrorAlert');
+    if (alertEl) alertEl.style.display = 'none';
+  }
+
+  /* ------ Pre-fill remembered email on load ------ */
+  const authEmailInput    = document.getElementById('authEmail');
+  const authPasswordInput = document.getElementById('authPassword');
+  const authRememberMe    = document.getElementById('authRememberMe');
+  const passwordStrengthWrapper = document.getElementById('passwordStrengthWrapper');
+
+  try {
+    const rememberedEmail = localStorage.getItem('resuai_remember_email');
+    if (rememberedEmail && authEmailInput) {
+      authEmailInput.value = rememberedEmail;
+    }
+  } catch(e) {}
+
   /* ------ Toggle Sign In / Sign Up form mode ------ */
   if (authToggleBtn) {
     authToggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      clearAuthError();
       isSignUpMode = !isSignUpMode;
 
       if (isSignUpMode) {
@@ -342,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nameField.style.display   = 'flex';
         authToggleQuestion.textContent = 'Already have an account?';
         authToggleBtn.textContent      = 'Sign In';
+        if (passwordStrengthWrapper) passwordStrengthWrapper.style.display = 'flex';
       } else {
         authTitle.textContent     = 'Welcome back';
         authSubtitle.textContent  = 'Sign in to your ResuAI workspace to access your resumes & ATS metrics.';
@@ -349,15 +389,14 @@ document.addEventListener('DOMContentLoaded', () => {
         nameField.style.display   = 'none';
         authToggleQuestion.textContent = "Don't have an account?";
         authToggleBtn.textContent      = 'Sign Up';
+        if (passwordStrengthWrapper) passwordStrengthWrapper.style.display = 'none';
       }
       if (window.feather) feather.replace();
     });
   }
 
-  const btnAuthPasswordEye  = document.getElementById('btnAuthPasswordEye');
-  const btnQuickDemoLogin   = document.getElementById('btnQuickDemoLogin');
-  const authPasswordInput   = document.getElementById('authPassword');
-  const authEmailInput      = document.getElementById('authEmail');
+  const btnAuthPasswordEye = document.getElementById('btnAuthPasswordEye');
+  const btnQuickDemoLogin  = document.getElementById('btnQuickDemoLogin');
 
   // Password visibility eye toggle
   if (btnAuthPasswordEye && authPasswordInput) {
@@ -378,6 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const text    = document.getElementById('authStrengthText');
       const scoreEl = document.getElementById('authStrengthScore');
       if (!fill || !text || !scoreEl) return;
+
+      if (isSignUpMode && val && passwordStrengthWrapper) {
+        passwordStrengthWrapper.style.display = 'flex';
+      }
 
       if (!val) {
         fill.style.width  = '0%';
@@ -411,6 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1-Click Quick Demo Sign In
   if (btnQuickDemoLogin) {
     btnQuickDemoLogin.addEventListener('click', async () => {
+      clearAuthError();
       const origHTML = btnQuickDemoLogin.innerHTML;
       btnQuickDemoLogin.innerHTML = `<i data-feather="loader"></i> <span>Authenticating Workspace…</span>`;
       btnQuickDemoLogin.disabled = true;
@@ -450,15 +494,38 @@ document.addEventListener('DOMContentLoaded', () => {
   if (authForm) {
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearAuthError();
+
       const email    = authEmailInput?.value.trim() || '';
       const password = authPasswordInput?.value || '';
       const authNameInput = document.getElementById('authName');
       const fullName = authNameInput?.value.trim() || '';
 
-      if (!email || !password) {
-        showToast('Please enter your email and password.', 'error');
+      if (!email) {
+        showAuthError('Please enter your email address.');
         return;
       }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showAuthError('Please enter a valid email address.');
+        return;
+      }
+      if (!password) {
+        showAuthError('Please enter your password.');
+        return;
+      }
+      if (isSignUpMode && password.length < 6) {
+        showAuthError('Password must be at least 6 characters long.');
+        return;
+      }
+
+      try {
+        if (authRememberMe?.checked) {
+          localStorage.setItem('resuai_remember_email', email);
+        } else {
+          localStorage.removeItem('resuai_remember_email');
+        }
+      } catch(e) {}
 
       const label = isSignUpMode ? 'Create Account & Launch' : 'Sign In to Dashboard';
       setAuthBtnLoading(true, label);
@@ -476,14 +543,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) {
               let msg = error.message || 'Registration failed.';
               if (msg.includes('User already registered')) msg = 'Account exists — please sign in instead.';
-              showToast(msg, 'error');
+              showAuthError(msg);
               setAuthBtnLoading(false, label);
               return;
             }
             if (data?.user && !data.session) {
               showToast('Account created! Please check your email to confirm before signing in.', 'success');
               setAuthBtnLoading(false, label);
-              // Switch form view to Sign In mode
               if (authToggleBtn) authToggleBtn.click();
               return;
             }
@@ -500,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
               let msg = error.message || 'Authentication failed.';
               if (msg.includes('Invalid login credentials')) msg = 'Incorrect email or password.';
               if (msg.includes('Email not confirmed')) msg = 'Email not confirmed yet. Please verify your email inbox before logging in.';
-              showToast(msg, 'error');
+              showAuthError(msg);
               setAuthBtnLoading(false, label);
               return;
             }
@@ -513,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } catch (sbErr) {
           console.warn('ResuAI: Supabase authentication exception:', sbErr);
-          showToast(sbErr.message || 'Authentication error.', 'error');
+          showAuthError(sbErr.message || 'Authentication error.');
           setAuthBtnLoading(false, label);
           return;
         }
@@ -544,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       setAuthBtnLoading(false, label);
-      showToast('Unable to sign in. Please verify your credentials or server connection.', 'error');
+      showAuthError('Unable to sign in. Please verify your credentials.');
     });
   }
 
