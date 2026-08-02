@@ -10,13 +10,13 @@
   <meta name="keywords" content="Developer Resume Builder, ATS Resume Scanner, Tech Job Application Tracker, Senior Engineer Resume, Gemini AI Resume Optimizer" />
   <meta name="author" content="ResuAI Dev Team" />
   <meta name="theme-color" content="#C98B4A" />
-  <link rel="canonical" href="" />
+  <link rel="canonical" id="canonicalTag" href="" />
 
   <!-- OpenGraph Social Meta Tags -->
   <meta property="og:title" content="ResuAI // Developer Resume Studio & ATS Diagnostic Engine" />
   <meta property="og:description" content="Architect executive developer resumes and beat corporate ATS parsers with real-time AI keyword scoring." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="" />
+  <meta property="og:url" id="ogUrlTag" content="" />
   <meta property="og:site_name" content="ResuAI Studio" />
 
   <!-- Twitter Card Meta Tags -->
@@ -135,7 +135,7 @@
                 </button>
               </div>
               <!-- Real-time Password Security Strength Meter -->
-              <div class="password-strength-container">
+              <div class="password-strength-container" id="passwordStrengthWrapper">
                 <div class="strength-bar-track">
                   <div class="strength-bar-fill" id="authStrengthFill"></div>
                 </div>
@@ -148,7 +148,7 @@
 
             <div class="auth-options-row">
               <label class="remember-label">
-                <input type="checkbox" checked />
+                <input type="checkbox" id="authRememberMe" checked />
                 <span>Remember me on this device</span>
               </label>
             </div>
@@ -319,7 +319,7 @@
           <nav class="breadcrumb" aria-label="Breadcrumb">
             <span class="breadcrumb-item">Workspace</span>
             <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-item">ResuAI</span>
+            <span class="breadcrumb-item" id="breadcrumbCategory">ResuAI</span>
             <span class="breadcrumb-separator">/</span>
             <span class="breadcrumb-item active" id="breadcrumbActive">Resume Builder</span>
           </nav>
@@ -372,7 +372,7 @@
                  LEGACY INPUTS — Hidden but DOM-present for JS
                  All IDs preserved for script.js compatibility
                  ══════════════════════════════════════════════ -->
-            <div style="display:none;position:absolute;pointer-events:none;opacity:0;z-index:-1;" aria-hidden="true">
+            <div id="legacyResumeInputs" style="display:none;position:absolute;pointer-events:none;opacity:0;z-index:-1;" aria-hidden="true">
               <input type="text"  id="inputFullName"       class="form-input live-sync" value="" />
               <input type="text"  id="inputJobTitle"       class="form-input live-sync" value="" />
               <input type="email" id="inputEmail"          class="form-input live-sync" value="" />
@@ -435,9 +435,9 @@
             <!-- ══════════════════════════════════════════════
                  EDITOR TOPBAR
                  ══════════════════════════════════════════════ -->
-            <div class="doc-editor-topbar">
+            <div class="doc-editor-topbar" id="docEditorTopbar">
               <!-- Resume name -->
-              <input class="doc-resume-name-input" type="text" value="My Resume" spellcheck="false" title="Click to rename" />
+              <input class="doc-resume-name-input" id="docResumeName" type="text" value="My Resume" spellcheck="false" title="Click to rename" />
               <!-- Save status -->
               <div class="doc-autosave-status saved" id="docAutosaveStatus" role="status" aria-live="polite" title="Sync status">
                 <svg id="docSaveStatusIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -445,18 +445,18 @@
               </div>
               <div class="topbar-divider"></div>
               <!-- Profile strength -->
-              <div class="topbar-strength-pill" title="Resume completion score">
+              <div class="topbar-strength-pill" id="topbarStrengthPill" title="Resume completion score">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span class="topbar-strength-val">85%</span>
+                <span class="topbar-strength-val" id="topbarStrengthPct">85%</span>
                 <span>Complete</span>
               </div>
               <div class="topbar-spacer"></div>
               <!-- Action buttons -->
-              <button class="topbar-action-btn" title="Save Draft" onclick="document.getElementById('btnDraftSaveFooter')?.click()">
+              <button class="topbar-action-btn" id="topbarSaveDraftBtn" title="Save Draft" onclick="document.getElementById('btnDraftSaveFooter')?.click()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Save Draft
               </button>
-              <button class="topbar-action-btn btn-amber" title="AI Auto-Optimize" onclick="document.getElementById('btnAutoOptimize')?.click()">
+              <button class="topbar-action-btn btn-amber" id="topbarOptimizeBtn" title="AI Auto-Optimize" onclick="document.getElementById('btnAutoOptimize')?.click()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 AI Optimize
               </button>
@@ -495,7 +495,7 @@
                 <!-- FAANG Level Strip -->
                 <div class="faang-strip">
                   <div class="faang-strip-label">Seniority Level</div>
-                  <div class="faang-strip-chips">
+                  <div class="faang-strip-chips" id="faangStripChips">
                     <button type="button" class="level-chip" data-level="L4" onclick="syncFaangChip(this)"><span class="level-code">L4</span><span class="level-name">SWE II</span><span class="level-yoe">2-4 yrs</span></button>
                     <button type="button" class="level-chip active" data-level="L5" onclick="syncFaangChip(this)"><span class="level-code">L5</span><span class="level-name">Senior</span><span class="level-yoe">5-8 yrs</span></button>
                     <button type="button" class="level-chip" data-level="L6" onclick="syncFaangChip(this)"><span class="level-code">L6</span><span class="level-name">Staff</span><span class="level-yoe">8-12 yrs</span></button>
@@ -504,41 +504,41 @@
                 </div>
 
                 <!-- Section Nav -->
-                <nav class="section-nav">
+                <nav class="section-nav" id="sectionNav">
                   <div class="section-nav-item active" data-target="docSection-personal" onclick="editorNavTo('docSection-personal', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Personal Info</span>
-                    <span class="section-nav-pct">—</span>
+                    <span class="section-nav-pct" id="navPct-personal">—</span>
                   </div>
                   <div class="section-nav-item" data-target="docSection-summary" onclick="editorNavTo('docSection-summary', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Summary</span>
-                    <span class="section-nav-pct">—</span>
+                    <span class="section-nav-pct" id="navPct-summary">—</span>
                   </div>
                   <div class="section-nav-item" data-target="docSection-experience" onclick="editorNavTo('docSection-experience', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Experience</span>
-                    <span class="section-nav-pct">—</span>
+                    <span class="section-nav-pct" id="navPct-experience">—</span>
                   </div>
                   <div class="section-nav-item" data-target="docSection-skills" onclick="editorNavTo('docSection-skills', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Skills</span>
-                    <span class="section-nav-pct">—</span>
+                    <span class="section-nav-pct" id="navPct-skills">—</span>
                   </div>
                   <div class="section-nav-item" data-target="docSection-education" onclick="editorNavTo('docSection-education', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Education</span>
-                    <span class="section-nav-pct">—</span>
+                    <span class="section-nav-pct" id="navPct-education">—</span>
                   </div>
                   <div class="section-nav-item" data-target="docSection-certs" onclick="editorNavTo('docSection-certs', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Certifications</span>
-                    <span class="section-nav-pct">—</span>
+                    <span class="section-nav-pct" id="navPct-certs">—</span>
                   </div>
                 </nav>
 
                 <div class="editor-left-footer">
-                  <button class="editor-new-section-btn" onclick="document.getElementById('btnNewResume')?.click()">
+                  <button class="editor-new-section-btn" id="btnNewResumeSidebar" onclick="document.getElementById('btnNewResume')?.click()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     New Resume
                   </button>
@@ -552,9 +552,9 @@
 
                 <!-- Formatting Toolbar -->
                 <div class="rich-text-toolbar">
-                  <button class="rtt-btn"      title="Bold (⌘B)"      onclick="execFmt('bold')"><b>B</b></button>
-                  <button class="rtt-btn"    title="Italic (⌘I)"    onclick="execFmt('italic')"><i>I</i></button>
-                  <button class="rtt-btn" title="Underline (⌘U)" onclick="execFmt('underline')"><u>U</u></button>
+                  <button class="rtt-btn" id="rttBold"      title="Bold (⌘B)"      onclick="execFmt('bold')"><b>B</b></button>
+                  <button class="rtt-btn" id="rttItalic"    title="Italic (⌘I)"    onclick="execFmt('italic')"><i>I</i></button>
+                  <button class="rtt-btn" id="rttUnderline" title="Underline (⌘U)" onclick="execFmt('underline')"><u>U</u></button>
                   <div class="rtt-separator"></div>
                   <button class="rtt-btn" title="Undo (⌘Z)" onclick="document.execCommand('undo')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
@@ -567,16 +567,16 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                   </button>
                   <div class="rtt-separator"></div>
-                  <span class="rtt-label">Personal Info</span>
+                  <span class="rtt-label" id="rttSectionLabel">Personal Info</span>
                   <div class="rtt-spacer"></div>
-                  <button class="rtt-optimize-btn" onclick="document.getElementById('btnAutoOptimize')?.click()">
+                  <button class="rtt-optimize-btn" id="rttOptimizeBtn" onclick="document.getElementById('btnAutoOptimize')?.click()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     AI Auto-Optimize
                   </button>
                 </div>
 
                 <!-- Document Scroll Area -->
-                <div class="doc-editor-scroll">
+                <div class="doc-editor-scroll" id="docEditorScroll">
                   <div class="doc-editor-body" id="docEditorBody">
 
                     <!-- §1 PERSONAL INFORMATION -->
@@ -679,12 +679,12 @@
                       <!-- XYZ meter strip -->
                       <div class="doc-xyz-strip">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-                        <span class="doc-xyz-score-text">Google XYZ Impact: <span>Add bullets below</span></span>
+                        <span class="doc-xyz-score-text">Google XYZ Impact: <span id="xyzMeterScoreDisplay">Add bullets below</span></span>
                         <button class="doc-xyz-transform-btn" onclick="document.getElementById('btnXyzTransform')?.click()">Transform to XYZ</button>
                       </div>
                       <!-- Bullet list -->
                       <ul class="doc-bullets-list" id="docBulletsList"></ul>
-                      <button class="doc-add-bullet-btn">
+                      <button class="doc-add-bullet-btn" id="docAddBulletBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Add bullet point
                       </button>
@@ -725,7 +725,7 @@
                       </div>
                       <div class="doc-skill-suggestions">
                         <div class="doc-skill-suggestion-label">Quick add:</div>
-                        <div class="doc-skill-suggestion-chips">
+                        <div class="doc-skill-suggestion-chips" id="docSkillSuggestionChips">
                           <button class="doc-skill-suggestion-chip" onclick="addDocSkill('TypeScript')">TypeScript</button>
                           <button class="doc-skill-suggestion-chip" onclick="addDocSkill('React')">React</button>
                           <button class="doc-skill-suggestion-chip" onclick="addDocSkill('Next.js')">Next.js</button>
@@ -799,7 +799,7 @@
                     </div>
 
                     <!-- §7 PROJECTS -->
-                    <div class="doc-section-block" data-section="projects">
+                    <div class="doc-section-block" id="docSection-projects" data-section="projects">
                       <div class="doc-section-label">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                         <span>Key Projects &amp; Initiatives</span>
@@ -822,7 +822,7 @@
                     </div>
 
                     <!-- §8 ACHIEVEMENTS -->
-                    <div class="doc-section-block" data-section="achievements">
+                    <div class="doc-section-block" id="docSection-achievements" data-section="achievements">
                       <div class="doc-section-label">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         <span>Key Achievements &amp; Honors</span>
@@ -845,7 +845,7 @@
                     </div>
 
                     <!-- §9 DYNAMIC CUSTOM SECTIONS -->
-                    <div class="doc-section-block" data-section="custom">
+                    <div class="doc-section-block" id="docSection-custom" data-section="custom">
                       <div class="doc-section-label" style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:6px;">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -927,7 +927,7 @@
                   <!-- XYZ Impact Row -->
                   <div class="ai-xyz-strip">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-                    <span class="ai-xyz-info">XYZ Score: <span class="ai-xyz-score">0%</span></span>
+                    <span class="ai-xyz-info">XYZ Score: <span class="ai-xyz-score" id="aiXyzScoreLabel">0%</span></span>
                     <button class="ai-xyz-btn" onclick="document.getElementById('btnXyzTransform')?.click()">Transform</button>
                   </div>
 
@@ -961,7 +961,7 @@
                     <!-- Zoom controls -->
                     <div class="preview-rpanel-controls">
                       <button class="preview-zoom-btn" id="previewZoomOut" onclick="adjustPreviewZoom(-10)">−</button>
-                      <span class="preview-scale-label">65%</span>
+                      <span class="preview-scale-label" id="previewScaleLabel">65%</span>
                       <button class="preview-zoom-btn" id="previewZoomIn" onclick="adjustPreviewZoom(10)">+</button>
                       <div class="preview-rpanel-spacer"></div>
                       <button class="preview-dl-btn" onclick="document.getElementById('btnPrintPdf')?.click()">
@@ -971,7 +971,7 @@
                     </div>
                     <!-- A4 Preview Paper -->
                     <div class="preview-rpanel-scroll">
-                      <div class="preview-rpanel-paper" style="transform:scale(0.65);">
+                      <div class="preview-rpanel-paper" id="previewRpanelPaper" style="transform:scale(0.65);">
                         <!-- Live preview sheet -->
                         <div class="preview-paper-workspace" id="previewCardSection">
                           <div class="preview-paper-sheet" id="printableResumeDoc">
@@ -1020,7 +1020,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Export PDF
                       </button>
-                      <button class="btn-primary-action" onclick="document.getElementById('btnPrintPdf')?.click()">
+                      <button class="btn-primary-action" id="btnPrintPdfPreview" onclick="document.getElementById('btnPrintPdf')?.click()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                         Download PDF
                       </button>
@@ -1574,7 +1574,7 @@ Key Requirements:
                   <div class="ats-score-title" id="scoreSummaryHeading">Excellent ATS Compatibility</div>
                   <div class="ats-score-subtitle" id="scoreSummaryDesc">Matches 94% of core technical qualifications for Senior Frontend Architect.</div>
                   <div class="ats-score-badge-row">
-                    <span class="badge-tag green">Passed ATS Gatekeeper</span>
+                    <span class="badge-tag green" id="analysisStatusBadge">Passed ATS Gatekeeper</span>
                     <span class="badge-tag blue">Confidence: High</span>
                   </div>
                 </div>
@@ -1837,7 +1837,7 @@ Key Requirements:
                       <p style="font-size:12.5px;color:#5E5E5E;margin:0;">Let Gemini rewrite your summary, skills, and bullets to perfectly match this job description.</p>
                     </div>
                     <button class="btn-primary" id="btnGenerateTailored" style="padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;background:#111111;color:#FFFFFF;border:none;cursor:pointer;">
-                      <span>Generate Tailored Resume</span>
+                      <span id="btnGenerateTailoredText">Generate Tailored Resume</span>
                     </button>
                   </div>
                 </div>
@@ -1875,7 +1875,7 @@ Key Requirements:
                     <span class="ats-chat-title">ATS AI Career Coach</span>
                   </div>
 
-                  <div class="ats-chat-messages">
+                  <div class="ats-chat-messages" id="atsChatMsgContainer">
                     <div class="ats-chat-msg ai">
                       Hello! I've audited your resume against this job description. Your score is <b>94%</b>. Ask me anything about improving your match rate!
                     </div>
@@ -1888,7 +1888,7 @@ Key Requirements:
                   </div>
 
                   <div class="ats-chat-input-row">
-                    <input type="text" placeholder="Ask AI coach..." onkeydown="if(event.key==='Enter') submitAtsChat()" />
+                    <input type="text" id="atsChatInputField" placeholder="Ask AI coach..." onkeydown="if(event.key==='Enter') submitAtsChat()" />
                     <button type="button" class="topbar-action-btn btn-primary" onclick="submitAtsChat()" style="padding:4px 8px;">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -2195,7 +2195,7 @@ Key Requirements:
 
               <div class="toolbar-controls-row">
                 <!-- Google Material Quick Filter Chips Bar -->
-                <div class="quick-filter-chips">
+                <div class="quick-filter-chips" id="quickFilterChips">
                   <button class="filter-chip active" data-chip="all">All Jobs</button>
                   <button class="filter-chip" data-chip="faang">⚡ FAANG &amp; Big Tech</button>
                   <button class="filter-chip" data-chip="remote">🌐 Remote Only</button>
@@ -2466,9 +2466,9 @@ Key Requirements:
 
         <div class="modal-footer">
           <button type="button" class="btn-ghost-sm" id="btnCancelJobModal">Cancel</button>
-          <button type="submit" class="btn-primary btn-sm">
+          <button type="submit" class="btn-primary btn-sm" id="btnSaveJob">
             <i data-feather="check"></i>
-            <span>Save Application</span>
+            <span id="btnSaveJobText">Save Application</span>
           </button>
         </div>
       </form>
@@ -2514,7 +2514,7 @@ Key Requirements:
         <div class="modal-title-group">
           <i data-feather="user-check"></i>
           <div>
-            <h3>My Account</h3>
+            <h3 id="profileModalTitle">My Account</h3>
             <span class="modal-subtitle">Manage profile details &amp; authentication</span>
           </div>
         </div>
