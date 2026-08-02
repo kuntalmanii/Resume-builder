@@ -61,41 +61,11 @@ class ContextualTipManager {
   }
 
   showTipForTab(tabId) {
-    const tip = this.tips[tabId];
-    if (!tip) return;
-
-    const storageKey = `resuai_tip_seen_${tabId}`;
-    if (localStorage.getItem(storageKey)) return;
-
+    // Pro Tip floating cards permanently disabled per user request
     this.dismissActiveTip();
-
-    const tipCard = document.createElement('div');
-    tipCard.className = 'contextual-tip-card';
-    tipCard.id = `contextualTipCard_${tabId}`;
-    tipCard.setAttribute('role', 'status');
-    tipCard.setAttribute('aria-live', 'polite');
-
-    tipCard.innerHTML = `
-      <div class="tip-card-header">
-        <div class="tip-icon-badge">${tip.icon}</div>
-        <span class="tip-tag">Pro Tip</span>
-        <button class="tip-close-btn" onclick="window.contextualTipManager.dismiss('${tabId}')" aria-label="Dismiss tip">✕</button>
-      </div>
-      <div class="tip-card-body">
-        <p>${tip.text}</p>
-      </div>
-      <div class="tip-card-footer">
-        <button class="tip-action-btn" onclick="window.contextualTipManager.dismiss('${tabId}')">Got it!</button>
-      </div>
-    `;
-
-    document.body.appendChild(tipCard);
-    this.activeTipEl = tipCard;
-    this.currentTabId = tabId;
-
-    setTimeout(() => {
-      if (this.activeTipEl) this.activeTipEl.classList.add('is-active');
-    }, 50);
+    const existingCards = document.querySelectorAll('.contextual-tip-card');
+    existingCards.forEach(c => c.remove());
+    return;
   }
 
   dismiss(tabId) {
