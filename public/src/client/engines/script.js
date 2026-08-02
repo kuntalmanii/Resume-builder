@@ -3393,15 +3393,16 @@ Key Requirements:
             atsResults.scrollIntoView({ behavior: 'smooth' });
           }
 
-          // Only show tailored CTA if resume was actually uploaded & parsed
+          // Show tailored CTA & enable generation from uploaded PDF or live editor canvas
           const tailoredCta = document.getElementById('tailoredResumeCta');
           const tailoredCtaDesc = tailoredCta ? tailoredCta.querySelector('.cta-text p') : null;
+          const currentDocText = (uploadedFileText || document.querySelector('.doc-editor-body')?.innerText || '').trim();
           if (tailoredCta) {
-            if (uploadedFileText && uploadedFileText.trim().length > 50) {
+            if (currentDocText.length > 30) {
               tailoredCtaDesc && (tailoredCtaDesc.textContent = 'Let Gemini 2.5 Flash rewrite your resume, optimised specifically for this job description — with matched keywords, a custom summary, and impact-driven bullets.');
               document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = false);
             } else {
-              tailoredCtaDesc && (tailoredCtaDesc.textContent = '⚠️ No resume file detected. Please upload your resume PDF in the drop zone above and re-run analysis to enable tailored generation.');
+              tailoredCtaDesc && (tailoredCtaDesc.textContent = '⚠️ Please fill out your resume details in the Builder canvas or upload a resume PDF to enable tailored generation.');
               document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = true);
             }
             tailoredCta.style.display = 'block';
@@ -3427,12 +3428,15 @@ Key Requirements:
           atsResults.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Show CTA but disable generate button if no resume was uploaded
         const tailoredCtaFallback = document.getElementById('tailoredResumeCta');
         const tailoredCtaDescFb  = tailoredCtaFallback ? tailoredCtaFallback.querySelector('.cta-text p') : null;
+        const currentDocTextFb = (uploadedFileText || document.querySelector('.doc-editor-body')?.innerText || '').trim();
         if (tailoredCtaFallback) {
-          if (!uploadedFileText || uploadedFileText.trim().length < 50) {
-            tailoredCtaDescFb && (tailoredCtaDescFb.textContent = '⚠️ No resume file detected. Please upload your resume PDF in the drop zone above and re-run analysis to enable tailored generation.');
+          if (currentDocTextFb.length > 30) {
+            tailoredCtaDescFb && (tailoredCtaDescFb.textContent = 'Let Gemini 2.5 Flash rewrite your resume, optimised specifically for this job description — with matched keywords, a custom summary, and impact-driven bullets.');
+            document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = false);
+          } else {
+            tailoredCtaDescFb && (tailoredCtaDescFb.textContent = '⚠️ Please fill out your resume details in the Builder canvas or upload a resume PDF to enable tailored generation.');
             document.getElementById('btnGenerateTailored') && (document.getElementById('btnGenerateTailored').disabled = true);
           }
           tailoredCtaFallback.style.display = 'block';
@@ -3704,11 +3708,11 @@ Key Requirements:
     btnGenerateTailored.addEventListener('click', async () => {
       const jdText = atsJdInput ? atsJdInput.value.trim() : '';
 
-      // STRICT: only use the uploaded resume — no form-field fallback
-      const resumeText = (uploadedFileText || '').trim();
+      // Use uploaded resume PDF text or fallback to live editor canvas text
+      const canvasText = document.querySelector('.doc-editor-body')?.innerText || '';
+      const resumeText = (uploadedFileText && uploadedFileText.trim().length > 30) ? uploadedFileText.trim() : canvasText.trim();
 
       if (!resumeText) {
-        // Show an inline error nudging the user to upload their resume
         const cta = document.getElementById('tailoredResumeCta');
         const existingErr = document.getElementById('tailoredUploadError');
         if (!existingErr && cta) {
@@ -3716,7 +3720,7 @@ Key Requirements:
           err.id = 'tailoredUploadError';
           err.style.cssText = 'color:#ef4444;font-size:0.82rem;margin-top:0.6rem;display:flex;align-items:center;gap:0.4rem;';
           err.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Please upload your resume PDF above before generating a tailored version.`;
+          Please fill out your resume details in the Builder canvas or upload a resume PDF above before generating a tailored version.`;
           cta.appendChild(err);
           setTimeout(() => err.remove(), 5000);
         }
