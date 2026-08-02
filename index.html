@@ -82,9 +82,9 @@
 </head>
 <body data-theme="sunset-amber">
   
-  <!-- Auth Screen Container (Centered Experience) -->
+  <!-- Auth Screen Container (Full Split Showcase Experience) -->
   <div class="auth-container" id="authContainer">
-    <!-- Ambient Noise & Glow Orbs Background -->
+    <!-- Ambient Glowing Mesh Background -->
     <div class="auth-bg-ambient">
       <div class="auth-grid-overlay"></div>
       <div class="auth-orb orb-1"></div>
@@ -92,8 +92,88 @@
       <div class="auth-orb orb-3"></div>
     </div>
 
+    <!-- Top Navigation Bar -->
+    <header class="auth-nav-bar">
+      <a href="#" class="auth-nav-logo">
+        <div class="auth-nav-logo-icon">
+          <i data-feather="cpu" style="width: 20px; height: 20px; color: #FFF;"></i>
+        </div>
+        <span>ResuAI</span>
+      </a>
+      <div class="auth-nav-status">
+        <span class="auth-status-dot"></span>
+        <span>v2.4 Engine Active • System Normal</span>
+      </div>
+    </header>
+
+    <!-- Main Split Layout Grid -->
     <div class="auth-split-layout">
-      <!-- Centered Auth Card -->
+      <!-- Left Showcase Panel (Product Value & Live Metrics) -->
+      <div class="auth-showcase-panel">
+        <div class="auth-showcase-badge">
+          <i data-feather="sparkles" style="width: 14px; height: 14px;"></i>
+          <span>Engineering Resume Intelligence</span>
+        </div>
+
+        <h1 class="auth-showcase-title">
+          AI-Powered Resume Engineering for Tech Leaders.
+        </h1>
+
+        <p class="auth-showcase-subtitle">
+          Bypass ATS filters, quantify your engineering achievements with Google-style XYZ formulas, and land top-tier developer offers.
+        </p>
+
+        <!-- Feature List -->
+        <div class="auth-feature-list">
+          <div class="auth-feature-item">
+            <div class="auth-feature-icon">
+              <i data-feather="target"></i>
+            </div>
+            <div class="auth-feature-text">
+              <h4>Real-Time ATS Benchmarking</h4>
+              <p>Score your resume against Greenhouse, Lever, and Workday keyword algorithms in seconds.</p>
+            </div>
+          </div>
+
+          <div class="auth-feature-item">
+            <div class="auth-feature-icon">
+              <i data-feather="zap"></i>
+            </div>
+            <div class="auth-feature-text">
+              <h4>Quantified Bullet Impact Generator</h4>
+              <p>Convert generic tasks into high-impact metrics (e.g. "Scaled p99 API latency by 45%").</p>
+            </div>
+          </div>
+
+          <div class="auth-feature-item">
+            <div class="auth-feature-icon">
+              <i data-feather="shield-check"></i>
+            </div>
+            <div class="auth-feature-text">
+              <h4>256-Bit Local Browser Privacy</h4>
+              <p>Zero telemetry. Your career history is encrypted & isolated strictly within your browser.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Live Stats Badge Card -->
+        <div class="auth-stats-card">
+          <div class="auth-stat-unit">
+            <span class="auth-stat-value">94.2%</span>
+            <span class="auth-stat-label">Avg ATS Match</span>
+          </div>
+          <div class="auth-stat-unit">
+            <span class="auth-stat-value">3.5x</span>
+            <span class="auth-stat-label">Callback Rate</span>
+          </div>
+          <div class="auth-stat-unit">
+            <span class="auth-stat-value">150k+</span>
+            <span class="auth-stat-label">Resumes Built</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Auth Card -->
       <div class="auth-card-wrapper">
         <div class="auth-card">
           <!-- Brand Logo Header -->
