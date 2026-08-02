@@ -266,6 +266,7 @@ class HelpCenter {
     const shouldOpen = typeof forceState === 'boolean' ? forceState : !this.isOpen;
     this.isOpen = shouldOpen;
     if (this.drawerEl) {
+      this.drawerEl.classList.toggle('is-active', shouldOpen);
       this.drawerEl.classList.toggle('is-open', shouldOpen);
     }
     if (this.fabEl) {
