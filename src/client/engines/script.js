@@ -290,6 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (session && session.user) {
           showAppScreen(session.user);
         }
+      } else if (event === 'PASSWORD_RECOVERY') {
+        showResetPasswordModal();
       } else if (event === 'SIGNED_OUT') {
         handleSignOut();
       } else if (event === 'USER_UPDATED') {
@@ -308,16 +310,24 @@ document.addEventListener('DOMContentLoaded', () => {
           if (session && session.user) {
             showAppScreen(session.user);
           }
+        } else if (event === 'PASSWORD_RECOVERY') {
+          showResetPasswordModal();
         } else if (event === 'SIGNED_OUT') {
           handleSignOut();
         }
       });
     }
     checkAuthState();
+    if (window.location.search.includes('reset=1') || window.location.hash.includes('type=recovery')) {
+      showResetPasswordModal();
+    }
   });
 
   // Initial auth check on page load
   checkAuthState();
+  if (window.location.search.includes('reset=1') || window.location.hash.includes('type=recovery')) {
+    showResetPasswordModal();
+  }
 
   /* ------ Toggle Sign In / Sign Up form mode ------ */
   if (authToggleBtn) {
@@ -582,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Forgot Password link
+  // Forgot Password link & request modal
   const forgotPasswordLink = document.getElementById('forgotPasswordLink');
   const forgotPasswordModal = document.getElementById('forgotPasswordModal');
   const forgotModalClose    = document.getElementById('forgotModalClose');
@@ -610,30 +620,145 @@ document.addEventListener('DOMContentLoaded', () => {
   if (forgotSubmitBtn) {
     forgotSubmitBtn.addEventListener('click', async () => {
       const email = forgotEmail?.value.trim();
-      if (!email) { if (forgotFeedback) { forgotFeedback.textContent = 'Please enter your email.'; forgotFeedback.style.color = '#ef4444'; } return; }
+      if (!email) {
+        if (forgotFeedback) { forgotFeedback.textContent = 'Please enter your email.'; forgotFeedback.style.color = '#ef4444'; }
+        return;
+      }
       forgotSubmitBtn.disabled = true;
       if (forgotSubmitText) forgotSubmitText.textContent = 'Sending…';
 
       const sb = getSupabase();
       let sent = false;
-      if (sb) {
+      let reqError = null;
+
+      if (sb && sb.auth) {
         try {
           const { error } = await sb.auth.resetPasswordForEmail(email, {
             redirectTo: window.location.origin + '?reset=1'
           });
-          if (!error) sent = true;
-        } catch(e) {}
+          if (!error) {
+            sent = true;
+          } else {
+            reqError = error.message;
+          }
+        } catch(e) {
+          reqError = e.message;
+        }
+      } else {
+        // Fallback demo mode
+        sent = true;
       }
 
-      if (forgotFeedback) {
-        forgotFeedback.textContent = sent ? '✓ Reset link sent! Check your inbox.' : '✓ Password reset instructions sent to ' + email;
-        forgotFeedback.style.color = '#10b981';
+      if (sent) {
+        if (forgotFeedback) {
+          forgotFeedback.textContent = '✓ Reset link sent! Check your inbox.';
+          forgotFeedback.style.color = '#10b981';
+        }
+        showToast('Password reset instructions sent!', 'success');
+        setTimeout(() => { forgotPasswordModal.style.display = 'none'; }, 2500);
+      } else {
+        if (forgotFeedback) {
+          forgotFeedback.textContent = reqError || 'Failed to send password reset email.';
+          forgotFeedback.style.color = '#ef4444';
+        }
+        showToast(reqError || 'Reset link request failed.', 'error');
       }
-      showToast('Password reset instructions sent!', 'success');
-      setTimeout(() => { forgotPasswordModal.style.display = 'none'; }, 2500);
 
       forgotSubmitBtn.disabled = false;
       if (forgotSubmitText) forgotSubmitText.textContent = 'Send Reset Link';
+    });
+  }
+
+  // Set New Password Modal (Recovery Flow)
+  const resetPasswordModal      = document.getElementById('resetPasswordModal');
+  const resetPasswordModalClose = document.getElementById('resetPasswordModalClose');
+  const resetPasswordSubmitBtn  = document.getElementById('resetPasswordSubmitBtn');
+  const resetNewPassword        = document.getElementById('resetNewPassword');
+  const resetConfirmPassword    = document.getElementById('resetConfirmPassword');
+  const resetPasswordFeedback   = document.getElementById('resetPasswordFeedback');
+  const resetPasswordSubmitText = document.getElementById('resetPasswordSubmitText');
+
+  function showResetPasswordModal() {
+    if (resetPasswordModal) {
+      resetPasswordModal.style.display = 'flex';
+      if (window.feather) feather.replace();
+    }
+  }
+
+  if (resetPasswordModalClose && resetPasswordModal) {
+    resetPasswordModalClose.addEventListener('click', () => {
+      resetPasswordModal.style.display = 'none';
+    });
+  }
+  if (resetPasswordModal) {
+    resetPasswordModal.addEventListener('click', (e) => {
+      if (e.target === resetPasswordModal) resetPasswordModal.style.display = 'none';
+    });
+  }
+
+  if (resetPasswordSubmitBtn) {
+    resetPasswordSubmitBtn.addEventListener('click', async () => {
+      const newPass = resetNewPassword?.value;
+      const confirmPass = resetConfirmPassword?.value;
+
+      if (!newPass || newPass.length < 6) {
+        if (resetPasswordFeedback) {
+          resetPasswordFeedback.textContent = 'Password must be at least 6 characters long.';
+          resetPasswordFeedback.style.color = '#ef4444';
+        }
+        return;
+      }
+      if (newPass !== confirmPass) {
+        if (resetPasswordFeedback) {
+          resetPasswordFeedback.textContent = 'Passwords do not match.';
+          resetPasswordFeedback.style.color = '#ef4444';
+        }
+        return;
+      }
+
+      resetPasswordSubmitBtn.disabled = true;
+      if (resetPasswordSubmitText) resetPasswordSubmitText.textContent = 'Updating…';
+
+      const sb = getSupabase();
+      if (sb && sb.auth) {
+        try {
+          const { error } = await sb.auth.updateUser({ password: newPass });
+          if (error) {
+            if (resetPasswordFeedback) {
+              resetPasswordFeedback.textContent = error.message;
+              resetPasswordFeedback.style.color = '#ef4444';
+            }
+            showToast('Failed to update password: ' + error.message, 'error');
+          } else {
+            if (resetPasswordFeedback) {
+              resetPasswordFeedback.textContent = '✓ Password updated successfully!';
+              resetPasswordFeedback.style.color = '#10b981';
+            }
+            showToast('Password updated successfully!', 'success');
+            setTimeout(() => {
+              resetPasswordModal.style.display = 'none';
+              if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+            }, 2000);
+          }
+        } catch(err) {
+          if (resetPasswordFeedback) {
+            resetPasswordFeedback.textContent = err.message || 'An error occurred updating password.';
+            resetPasswordFeedback.style.color = '#ef4444';
+          }
+        }
+      } else {
+        if (resetPasswordFeedback) {
+          resetPasswordFeedback.textContent = '✓ Password updated successfully!';
+          resetPasswordFeedback.style.color = '#10b981';
+        }
+        showToast('Password updated successfully!', 'success');
+        setTimeout(() => { resetPasswordModal.style.display = 'none'; }, 2000);
+      }
+
+      resetPasswordSubmitBtn.disabled = false;
+      if (resetPasswordSubmitText) resetPasswordSubmitText.textContent = 'Update Password & Sign In';
     });
   }
 
