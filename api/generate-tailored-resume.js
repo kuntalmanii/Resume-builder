@@ -21,13 +21,17 @@ function extractResumeDetails(resumeText) {
 
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
   let name = '';
-  const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone'];
+  const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone', 'experiencia', 'resumen', 'perfil', 'formación', 'educación', 'ausbildung', 'berufserfahrung', 'compétences', 'expérience'];
 
-  for (const line of lines.slice(0, 5)) {
-    const lower = line.toLowerCase();
+  for (let line of lines.slice(0, 5)) {
+    let candidatePart = line;
+    if (line.includes('//') || line.includes('|')) {
+      candidatePart = line.split(/\/\/|\|/)[0].trim();
+    }
+    const lower = candidatePart.toLowerCase();
     if (!lower.includes('@') && !/\d{4,}/.test(lower) && !ignoreWords.some(w => lower.includes(w))) {
-      if (line.length >= 2 && line.length <= 40 && !/[;{}]/.test(line)) {
-        name = line;
+      if (candidatePart.length >= 2 && candidatePart.length <= 40 && !/[;{}]/.test(candidatePart)) {
+        name = candidatePart;
         break;
       }
     }
