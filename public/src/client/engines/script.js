@@ -228,13 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
       loadUserProfileFromSupabase(user.id);
       loadJobApplicationsFromSupabase(user.id);
     }
-
-    // Auto-launch Quick Guide for first-time login without needing button click
-    setTimeout(function() {
-      if (window.onboardingManager && !localStorage.getItem('resuai_welcome_modal_seen')) {
-        window.onboardingManager.showWelcomeModal();
-      }
-    }, 500);
   }
 
   /* ------ Auth state verification engine ------ */
@@ -4598,10 +4591,6 @@ Key Requirements:
                 <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddNewJob')?.click()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Add First Application</span>
-                </button>
-                <button class="empty-cta-btn empty-cta-secondary" onclick="window.onboardingManager ? window.onboardingManager.startProductTour() : null">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                  <span>View Demo Guide</span>
                 </button>
               </div>
             </div>

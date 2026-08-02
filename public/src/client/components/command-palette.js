@@ -28,7 +28,6 @@ class CommandPalette {
       { id: 'act-pdf', group: 'Quick Actions', icon: '📥', title: 'Export ATS PDF', desc: 'Download high-resolution ATS resume PDF', action: () => CommandPalette.triggerExportPdf(), shortcut: '⌘P' },
       { id: 'act-optimize', group: 'Quick Actions', icon: '⚡', title: '1-Click AI Auto-Optimize', desc: 'AI keyword enhancement powered by Gemini 2.5', action: () => CommandPalette.triggerAutoOptimize(), shortcut: '⌘O' },
       { id: 'act-theme', group: 'Quick Actions', icon: '🎨', title: 'Cycle Studio Color Theme', desc: 'Toggle workspace theme styling', action: () => CommandPalette.cycleTheme(), shortcut: '⌘T' },
-      { id: 'act-tour', group: 'Quick Actions', icon: '🚀', title: 'Restart Interactive Quick Guide', desc: 'Launch 60-second guided product tour', action: () => CommandPalette.triggerTour(), shortcut: '⌘G' },
       { id: 'act-help', group: 'Quick Actions', icon: '❓', title: 'Open Help Center & FAQs', desc: 'Search documentation, guides & shortcuts', action: () => CommandPalette.triggerHelpCenter(), shortcut: '⌘H' }
     ];
   }
@@ -245,12 +244,6 @@ class CommandPalette {
     const currentTheme = document.body.getAttribute('data-theme') || 'sunset-amber';
     const nextIdx = (themes.indexOf(currentTheme) + 1) % themes.length;
     document.body.setAttribute('data-theme', themes[nextIdx]);
-  }
-
-  static triggerTour() {
-    if (window.onboardingManager) {
-      window.onboardingManager.startProductTour();
-    }
   }
 
   static triggerHelpCenter() {

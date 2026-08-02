@@ -379,13 +379,6 @@ class HelpCenter {
     }
   }
 
-  triggerTour() {
-    this.toggle(false);
-    if (window.onboardingManager) {
-      window.onboardingManager.startProductTour();
-    }
-  }
-
   showShortcutsModal() {
     this.toggle(false);
     if (this.shortcutsModalEl) {
