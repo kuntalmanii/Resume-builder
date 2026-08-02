@@ -908,8 +908,8 @@ document.addEventListener('DOMContentLoaded', () => {
       breadcrumb: 'Score Analytics'
     },
     'settings': {
-      title: 'Platform & API Settings',
-      description: 'Configure your AI model preferences, custom domains, and team workspace settings.',
+      title: 'Workspace & AI Settings',
+      description: 'Configure your AI engine preferences, ATS diagnostic defaults, and local browser data.',
       breadcrumb: 'Settings'
     }
   };
