@@ -4410,9 +4410,20 @@ Key Requirements:
         <td class="text-center">${job.atsScore ? `<span class="ats-score-pill ${atsClass}">${job.atsScore}%</span>` : 'N/A'}</td>
         <td class="text-right">
           <div class="table-actions-cell">
-            <button class="btn-edit-job" data-id="${job.id}" title="Edit"><i data-feather="edit-2"></i> Edit</button>
-            ${job.jdText ? `<button class="btn-scan-ats" data-id="${job.id}" title="Run ATS Scan" style="color:var(--primary);"><i data-feather="sparkles"></i> Scan</button>` : ''}
-            <button class="btn-delete-job" data-id="${job.id}" title="Delete" style="color:#ef4444;"><i data-feather="trash-2"></i> Delete</button>
+            <button type="button" class="btn-edit-job" data-id="${job.id}" title="Edit Job Application">
+              <i data-feather="edit-2"></i>
+              <span>Edit</span>
+            </button>
+            ${job.jdText ? `
+              <button type="button" class="btn-scan-ats" data-id="${job.id}" title="Run ATS Scan">
+                <i data-feather="sparkles"></i>
+                <span>Scan</span>
+              </button>
+            ` : ''}
+            <button type="button" class="btn-delete-job" data-id="${job.id}" title="Delete Application">
+              <i data-feather="trash-2"></i>
+              <span>Delete</span>
+            </button>
           </div>
         </td>
       `;
