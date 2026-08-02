@@ -50,24 +50,21 @@ class GettingStartedChecklistManager {
   }
 
   injectWidgetDom() {
-    let existing = document.getElementById('gettingStartedWidget');
-    if (!existing) {
-      existing = document.createElement('div');
-      existing.id = 'gettingStartedWidget';
-      existing.className = 'getting-started-checklist-card';
-      const mainContent = document.querySelector('.main-content');
-      if (mainContent) {
-        mainContent.prepend(existing);
-      } else {
-        document.body.appendChild(existing);
-      }
+    const existing = document.getElementById('gettingStartedWidget');
+    if (existing) {
+      existing.remove();
     }
-    this.widgetEl = existing;
-    this.renderWidget();
+    this.widgetEl = null;
   }
 
   renderWidget() {
-    if (!this.widgetEl) return;
+    const existing = document.getElementById('gettingStartedWidget');
+    if (existing) {
+      existing.remove();
+    }
+    this.widgetEl = null;
+    return;
+  }
 
     const completedCount = this.tasks.filter(t => t.completed).length;
     const totalCount = this.tasks.length;
