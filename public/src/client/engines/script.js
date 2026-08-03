@@ -3987,6 +3987,12 @@ Key Requirements:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ jdText, resumeText, geminiModel: activeSettings.geminiModel })
         });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server error (${res.status})`);
+        }
+
         const data = await res.json();
 
         clearInterval(progInterval);
@@ -4008,7 +4014,7 @@ Key Requirements:
         clearInterval(progInterval);
         if (tailoredLoadingState) tailoredLoadingState.style.display = 'none';
         if (tailoredCta) tailoredCta.style.display = 'block';
-        alert('Could not generate tailored resume. Please check your API key or try again.');
+        alert(`Could not generate tailored resume: ${err.message || 'Please ensure local dev server is running on http://localhost:8080 and try again.'}`);
       }
     });
   }

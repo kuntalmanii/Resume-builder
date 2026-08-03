@@ -257,11 +257,8 @@ async function callGeminiWithModelFallback(promptText, preferredModel) {
       return await makeGeminiRequest(model, promptText);
     } catch (err) {
       lastErr = err;
-      if (err.message.includes('404') || err.message.includes('no longer available')) {
-        log('WARN', `Gemini model ${model} not available, retrying next model...`);
-        continue;
-      }
-      throw err;
+      log('WARN', `Gemini model ${model} failed (${err.message}), trying next fallback model...`);
+      continue;
     }
   }
   throw lastErr || new Error("All Gemini models failed");
@@ -597,15 +594,17 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const { jdText, resumeText, geminiModel } = await readJsonBody(req, res);
+        const { jdText = '', resumeText = '', geminiModel = '' } = await readJsonBody(req, res);
         log('INFO', `Received /api/generate-tailored-resume request from IP ${clientIp}`);
 
         if (GEMINI_API_KEY) {
           try {
             const result = await callGeminiTailoredResume(jdText, resumeText, geminiModel);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(result));
-            return;
+            if (result) {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(result));
+              return;
+            }
           } catch (err) {
             log('WARN', `Gemini tailored resume error, using fallback: ${err.message}`);
           }
@@ -614,7 +613,12 @@ const server = http.createServer((req, res) => {
         const fallback = runFallbackTailoredResume(jdText, resumeText);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
-      } catch (err) {}
+      } catch (err) {
+        log('ERROR', `Tailored resume handler catch error: ${err.message}`);
+        const fallback = runFallbackTailoredResume('', '');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(fallback));
+      }
     })();
     return;
   }
