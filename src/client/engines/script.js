@@ -4532,7 +4532,7 @@ Key Requirements:
         const card = document.createElement('div');
         card.className = 'kanban-card';
         card.setAttribute('draggable', 'true');
-        card.setAttribute('data-id', job.id);
+        card.setAttribute('data-id', String(job.id));
 
         const atsClass = (job.atsScore >= 90) ? 'ats-high' : (job.atsScore >= 75) ? 'ats-med' : 'ats-low';
         const nextStageInfo = NEXT_STAGE_LABEL_MAP[job.stage];
@@ -4554,19 +4554,22 @@ Key Requirements:
           </div>
           <div class="card-actions-bar">
             <div style="display:flex; gap:0.3rem;">
-              <button class="card-action-btn btn-edit-job" data-id="${job.id}" title="Edit Application">
+              <button type="button" class="card-action-btn btn-edit-job" data-id="${job.id}" title="Edit Application">
                 <i data-feather="edit-2"></i> Edit
               </button>
-              ${job.jdText ? `<button class="card-action-btn btn-scan-ats" data-id="${job.id}" title="Scan JD in ATS Analyzer" style="color:var(--primary); font-weight:700;"><i data-feather="sparkles"></i> ATS Scan</button>` : ''}
+              ${job.jdText ? `<button type="button" class="card-action-btn btn-scan-ats" data-id="${job.id}" title="Scan JD in ATS Analyzer" style="color:var(--primary); font-weight:700;"><i data-feather="sparkles"></i> ATS Scan</button>` : ''}
+              <button type="button" class="card-action-btn btn-delete-job" data-id="${job.id}" title="Delete Application" style="color:#ef4444;">
+                <i data-feather="trash-2"></i> Delete
+              </button>
             </div>
-            ${nextStageInfo ? `<button class="btn-stage-advance" data-id="${job.id}" data-next="${nextStageInfo.next}">${nextStageInfo.label}</button>` : ''}
+            ${nextStageInfo ? `<button type="button" class="btn-stage-advance" data-id="${job.id}" data-next="${nextStageInfo.next}">${nextStageInfo.label}</button>` : ''}
           </div>
         `;
 
         // Drag events
         card.addEventListener('dragstart', (e) => {
           card.classList.add('dragging');
-          e.dataTransfer.setData('text/plain', job.id);
+          e.dataTransfer.setData('text/plain', String(job.id));
         });
         card.addEventListener('dragend', () => {
           card.classList.remove('dragging');
@@ -4687,6 +4690,7 @@ Key Requirements:
 
     updatePipelineKPIs();
     renderTableView(filtered);
+    renderKanbanBoard(filtered);
     bindJobActionButtons();
   }
 
@@ -4710,7 +4714,7 @@ Key Requirements:
         const targetStage = col.getAttribute('data-stage');
 
         if (jobId && targetStage) {
-          const job = jobApplicationsList.find(j => j.id === jobId);
+          const job = jobApplicationsList.find(j => String(j.id) === String(jobId));
           if (job && job.stage !== targetStage) {
             job.stage = targetStage;
             saveJobApplications();
@@ -4726,9 +4730,9 @@ Key Requirements:
 
   // Event Delegation for Edit, Delete, ATS Scan, Stage Advance
   function bindJobActionButtons() {
-    const tableBody = document.getElementById('pipelineTableBody');
-    if (tableBody) {
-      tableBody.onclick = (e) => {
+    const pipelineWrapper = document.querySelector('.pipeline-views-wrapper') || document.getElementById('jobPipelineTab');
+    if (pipelineWrapper) {
+      pipelineWrapper.onclick = (e) => {
         const btnEdit = e.target.closest('.btn-edit-job');
         if (btnEdit) {
           e.preventDefault();
@@ -4743,9 +4747,9 @@ Key Requirements:
           e.preventDefault();
           e.stopPropagation();
           const id = btnDelete.getAttribute('data-id');
-          const job = jobApplicationsList.find(j => j.id === id);
+          const job = jobApplicationsList.find(j => String(j.id) === String(id));
           if (job && window.confirm(`Delete application for ${job.company} (${job.title})?`)) {
-            jobApplicationsList = jobApplicationsList.filter(j => j.id !== id);
+            jobApplicationsList = jobApplicationsList.filter(j => String(j.id) !== String(id));
             saveJobApplications();
             renderPipelineViews();
             if (typeof showToast === 'function') {
@@ -4760,7 +4764,7 @@ Key Requirements:
           e.preventDefault();
           e.stopPropagation();
           const id = btnScan.getAttribute('data-id');
-          const job = jobApplicationsList.find(j => j.id === id);
+          const job = jobApplicationsList.find(j => String(j.id) === String(id));
           if (job && job.jdText) {
             const atsJdInput = document.getElementById('atsJdInput');
             if (atsJdInput) {
@@ -4769,6 +4773,24 @@ Key Requirements:
             switchTab('ats-analyzer');
             if (typeof showToast === 'function') {
               showToast(`Loaded ${job.company} JD into ATS Analyzer!`, 'success');
+            }
+          }
+          return;
+        }
+
+        const btnAdvance = e.target.closest('.btn-stage-advance');
+        if (btnAdvance) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = btnAdvance.getAttribute('data-id');
+          const nextStage = btnAdvance.getAttribute('data-next');
+          const job = jobApplicationsList.find(j => String(j.id) === String(id));
+          if (job && nextStage) {
+            job.stage = nextStage;
+            saveJobApplications();
+            renderPipelineViews();
+            if (typeof showToast === 'function') {
+              showToast(`Moved ${job.company} application to ${nextStage}!`, 'success');
             }
           }
           return;
@@ -4804,7 +4826,7 @@ Key Requirements:
     document.getElementById('jobId').value = '';
 
     if (jobId) {
-      const job = jobApplicationsList.find(j => j.id === jobId);
+      const job = jobApplicationsList.find(j => String(j.id) === String(jobId));
       if (job) {
         document.getElementById('jobModalTitle').textContent = 'Edit Job Application';
         document.getElementById('jobId').value = job.id;
@@ -4866,7 +4888,7 @@ Key Requirements:
       };
 
       if (id) {
-        const index = jobApplicationsList.findIndex(j => j.id === id);
+        const index = jobApplicationsList.findIndex(j => String(j.id) === String(id));
         if (index !== -1) jobApplicationsList[index] = jobData;
       } else {
         jobApplicationsList.unshift(jobData);
