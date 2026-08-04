@@ -54,7 +54,7 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp'];
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
 const SHARED_TAXONOMY_KEYWORDS = [
   'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',

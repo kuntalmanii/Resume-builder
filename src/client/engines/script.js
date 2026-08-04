@@ -4087,7 +4087,7 @@ Key Requirements:
   // Save Settings state to LocalStorage
   function savePlatformSettings() {
     const settings = {
-      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.5-flash',
+      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.0-flash',
       sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever',
       seniority: settingSeniority ? settingSeniority.value : 'senior',
