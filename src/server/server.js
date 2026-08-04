@@ -54,13 +54,22 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-8b'];
 
 const SHARED_TAXONOMY_KEYWORDS = [
   'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-  'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
-  'Node', 'Node.js', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
-  'Project Management', 'System Architecture', 'Python', 'Git', 'Agile', 'SQL', 'AWS'
+  'Node.js', 'Express', 'Python', 'Django', 'FastAPI', 'Go', 'Rust', 'Java',
+  'Spring Boot', 'C++', 'GraphQL', 'REST API', 'PostgreSQL', 'MySQL', 'MongoDB',
+  'Redis', 'Supabase', 'Firebase', 'AWS', 'Docker', 'Kubernetes', 'CI/CD',
+  'Git', 'Jest', 'TailwindCSS', 'Microservices', 'System Design',
+  'Machine Learning', 'PyTorch', 'TensorFlow', 'NLP', 'Data Science', 'Pandas',
+  'NumPy', 'Scikit-Learn', 'Deep Learning', 'Photoshop', 'Illustrator', 'Figma',
+  'Graphic Design', 'UI/UX Design', 'InDesign', 'Typography', 'Vector Graphics',
+  'Agile', 'Scrum', 'Jira', 'Budget Management', 'Project Management', 'Sprint Planning',
+  'Risk Mitigation', 'Resource Allocation', 'Communication', 'Problem-Solving', 'Problem Solving',
+  'Conflict Resolution', 'Client Retention', 'Customer Success', 'Customer Satisfaction',
+  'Stakeholder Engagement', 'Presentation', 'Relationship Management', 'Cross-Functional Leadership',
+  'Tableau', 'PowerBI', 'SQL', 'Data Analytics', 'Data Analysis'
 ];
 
 // ============================================================================
@@ -385,8 +394,17 @@ function runServerFallbackAnalysis(jdText, resumeText) {
   const jdLower = (jdText || "").toLowerCase();
   const candidateLower = (resumeText || "").toLowerCase();
 
-  const jdKeywordsPresent = SHARED_TAXONOMY_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
-  const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
+  let jdKeywordsPresent = SHARED_TAXONOMY_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
+  if (jdKeywordsPresent.length < 2 && jdText && jdText.length > 15) {
+    const words = jdText.match(/\b[A-Za-z]{4,}\b/g) || [];
+    const stopWords = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team']);
+    const unique = [...new Set(words.map(w => w.toLowerCase()))].filter(w => !stopWords.has(w));
+    if (unique.length > 0) {
+      jdKeywordsPresent = unique.slice(0, 8);
+    }
+  }
+
+  const activeJdKeywords = jdKeywordsPresent.length > 0 ? jdKeywordsPresent : 
     ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
 
   const matched = [];
@@ -402,8 +420,8 @@ function runServerFallbackAnalysis(jdText, resumeText) {
 
   const total = activeJdKeywords.length || 1;
   const matchRatio = matched.length / total;
-  const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
-  const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
+  const dynamicScore = Math.min(100, Math.max(0, Math.round((matched.length / total) * 100)));
+  const topMissing = missing.slice(0, 2).join(', ') || 'core skills';
 
   return {
     score: dynamicScore,
@@ -411,7 +429,7 @@ function runServerFallbackAnalysis(jdText, resumeText) {
     missingKeywords: missing,
     recommendations: [
       `Incorporate 1-2 instances of missing keywords (${topMissing}) under your experience bullet points.`,
-      `Quantify Web Vitals or performance metrics with explicit percentage improvements (e.g. Reduced LCP by 42%).`,
+      `Quantify impact with explicit metrics (e.g. Improved performance by 35%).`,
       `Maintain standard section headings like TECHNICAL EXPERTISE for 100% parsing accuracy in Lever & Greenhouse.`
     ]
   };
@@ -562,12 +580,16 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const { jdText, resumeText, geminiModel, atsEngine } = await readJsonBody(req, res);
+        const body = await readJsonBody(req, res);
+        const jd = body.jdText || body.targetJdText || body.jobDescription || body.job_description || '';
+        const resume = body.resumeText || body.resume_text || '';
+        const geminiModel = body.geminiModel || '';
+        const atsEngine = body.atsEngine || '';
         log('INFO', `Received ${pathname} request from IP ${clientIp}`);
 
         if (GEMINI_API_KEY) {
           try {
-            const result = await callGeminiApi(jdText, resumeText, geminiModel, atsEngine);
+            const result = await callGeminiApi(jd, resume, geminiModel, atsEngine);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
             return;
@@ -576,10 +598,15 @@ const server = http.createServer((req, res) => {
           }
         }
 
-        const fallbackResult = runServerFallbackAnalysis(jdText, resumeText);
+        const fallbackResult = runServerFallbackAnalysis(jd, resume);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallbackResult));
-      } catch (err) {}
+      } catch (err) {
+        log('ERROR', `ATS Analyze handler catch error: ${err.message}`);
+        const fallbackResult = runServerFallbackAnalysis('', '');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(fallbackResult));
+      }
     })();
     return;
   }

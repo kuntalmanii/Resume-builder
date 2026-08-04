@@ -1,6 +1,6 @@
 const https = require('https');
 
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-8b'];
 
 const SHARED_TAXONOMY_KEYWORDS = [
   'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
@@ -206,7 +206,7 @@ module.exports = async function handler(req, res) {
   try {
     const body = req.body || {};
     const resumeText = body.resumeText || body.resume_text || '';
-    const jobDescription = body.jobDescription || body.jdText || body.job_description || '';
+    const jobDescription = body.jobDescription || body.jdText || body.targetJdText || body.job_description || '';
     const preferredModel = body.preferredModel || body.geminiModel || '';
     const cleanResume = sanitizeInputText(resumeText);
     const cleanJd = sanitizeInputText(jobDescription);
