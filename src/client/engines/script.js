@@ -3461,7 +3461,79 @@ Key Requirements:
 - 3+ years of engineering management experience leading 10+ software engineers across multiple squads.
 - Strong track record of hiring, mentoring, career growth planning, and performance management.
 - Deep technical background in System Architecture, Software Engineering best practices, and CI/CD delivery.
-- Proven experience managing engineering budgets, resource allocation, and executive stakeholder alignment.`
+- Proven experience managing engineering budgets, resource allocation, and executive stakeholder alignment.`,
+
+    video_editor: `We are hiring a Senior Video Editor & Motion Graphics Designer to produce high-performing short-form and long-form video content across YouTube, TikTok, Instagram Reels, and brand campaigns.
+
+Key Requirements:
+- 4+ years of professional editing experience with Adobe Premiere Pro, After Effects, Final Cut Pro, or DaVinci Resolve.
+- Deep expertise in Motion Graphics, Keyframe Animation, Color Grading, Sound Design, and Audio Mixing.
+- Strong understanding of Storyboarding, Pacing, Hook Creation, and Multi-Camera Editing.
+- Proven track record of creating viral social media videos, YouTube thumbnails, and promotional advertisements.`,
+
+    social_media_manager: `We are hiring a Social Media & Content Marketing Manager to lead organic channel strategy, brand voice, and community engagement across Twitter/X, LinkedIn, Instagram, TikTok, and YouTube.
+
+Key Requirements:
+- 3+ years managing social media channels, content calendars, and viral growth campaigns for digital brands.
+- Deep proficiency in Social Media Analytics (Sprout Social, Buffer, Hootsuite, Google Analytics), Audience Segmentation, and Engagement Rate Optimization.
+- Experience writing compelling Social Copy, Short-Form Video Scripts, Thread Writing, and Graphic Asset Production (Canva / Figma).
+- Proven track record of scaling follower growth, community interaction, and brand partnership activations.`,
+
+    copywriter: `We are seeking a Senior Copywriter & Content Strategist to craft persuasive marketing copy, landing pages, email campaigns, and thought leadership articles.
+
+Key Requirements:
+- 4+ years of professional copywriting experience in B2B SaaS, E-Commerce, or Creative Agencies.
+- Exceptional skills in Direct Response Copywriting, Headline Writing, Email Sequence Optimization, and Brand Storytelling.
+- Deep knowledge of SEO Content Writing, Keyword Strategy, User Psychology, and A/B Copy Testing.
+- Proven track record of improving landing page conversion rates and email open/click-through metrics.`,
+
+    graphic_designer: `We are seeking a Senior Brand & Visual Graphic Designer to build visual identity, marketing assets, and brand design guidelines.
+
+Key Requirements:
+- 4+ years of experience in Graphic Design using Adobe Creative Suite (Photoshop, Illustrator, InDesign) and Figma.
+- Strong expertise in Visual Branding, Logo Design, Vector Illustration, Layout Design, and Print/Digital Media Production.
+- Deep understanding of Color Theory, Grid Systems, Typography, and Creative Direction.
+- Proven portfolio demonstrating multi-channel brand campaigns, ad creatives, and pitch deck designs.`,
+
+    growth_marketer: `We are hiring a Growth & Performance Marketing Lead to manage paid acquisition channels, funnel optimization, and customer acquisition (CAC/LTV).
+
+Key Requirements:
+- 4+ years leading performance marketing campaigns across Meta Ads (Facebook/Instagram), Google Ads (PPC/SEM), TikTok Ads, and LinkedIn Ads.
+- Hands-on expertise in Attribution Modeling, Conversion Rate Optimization (CRO), Google Analytics 4 (GA4), and A/B Testing.
+- Strong analytical skills working with CAC, LTV, ROAS, Retention Funnels, and Customer Cohort Analysis.
+- Proven track record of managing multi-million dollar ad budgets and driving profitable ROI growth.`,
+
+    seo_specialist: `We are hiring an SEO & Organic Growth Specialist to scale organic search traffic, keyword rankings, and technical site performance.
+
+Key Requirements:
+- 3+ years in Technical SEO, On-Page SEO, Content Optimization, and Link Building strategy.
+- Deep proficiency with SEO tools (Ahrefs, SEMrush, Google Search Console, Screaming Frog, Google Analytics).
+- Strong knowledge of Schema Markup, Core Web Vitals, Crawlability, Site Architecture, and Backlink Acquisition.
+- Proven track record of increasing organic traffic and ranking top-3 for high-intent competitive keywords.`,
+
+    hr_recruiter: `We are hiring a Senior Technical Recruiter & Talent Acquisition Lead to scale full-cycle hiring across engineering, product, and leadership teams.
+
+Key Requirements:
+- 4+ years of full-cycle recruiting experience sourcing technical talent (Engineering, Product, Executive).
+- Expertise in Candidate Sourcing (LinkedIn Recruiter, GitHub, Boolean search), Applicant Tracking Systems (Greenhouse, Lever), and Offer Negotiations.
+- Strong track record of building candidate pipelines, conducting structured interviews, and improving Time-to-Hire metrics.
+- Exceptional communication, relationship building, and diversity hiring practices.`,
+
+    financial_analyst: `We are seeking a Senior Financial Analyst & FP&A Lead to drive financial modeling, budgeting, forecasting, and strategic decision making.
+
+Key Requirements:
+- 4+ years of experience in Corporate FP&A, Investment Banking, or Financial Consulting.
+- Advanced proficiency in Financial Modeling, Excel / Google Sheets (VLOOKUP, INDEX/MATCH, Macros), and SQL.
+- Deep expertise in P&L Management, Cash Flow Forecasting, Variance Analysis, and Variance Reporting.
+- Hands-on experience with ERP / BI tools (NetSuite, Tableau, Power BI, Adaptive Insights).`,
+
+    customer_success: `We are hiring an Enterprise Customer Success & Key Account Manager to drive customer retention, onboarding, and revenue expansion (NRR).
+
+Key Requirements:
+- 3+ years in B2B SaaS Customer Success Management, Account Management, or Client Services.
+- Proven track record of managing high-value Enterprise Key Accounts, maintaining low Churn, and driving Upsells / Cross-sells.
+- Proficiency in CRM & CS tools (Salesforce, Gainsight, HubSpot, Zendesk) and Executive QBR Presentations.
+- Exceptional relationship management, problem-solving, and customer advocacy skills.`
   };
 
   const sampleJdSelect = document.getElementById('sampleJdSelect');
