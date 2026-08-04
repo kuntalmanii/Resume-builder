@@ -3389,7 +3389,79 @@ Key Requirements:
 - 4+ years of product management experience leading technical SaaS, API platforms, or Cloud Infrastructure products.
 - Strong technical background with ability to analyze API specs, System Architecture, and SQL telemetry data.
 - Proven track record of defining PRDs, User Stories, Backlog Grooming, and Agile / Scrum sprint execution.
-- Exceptional cross-functional leadership working closely with Engineering, UX Design, and Customer Success.`
+- Exceptional cross-functional leadership working closely with Engineering, UX Design, and Customer Success.`,
+
+    ui_ux_designer: `We are hiring a Staff UI/UX & Design Systems Lead to define design tokens, component accessibility, and user journeys.
+
+Key Requirements:
+- 5+ years of experience in UI/UX Design, Figma component architecture, and Design Systems.
+- Deep expertise in User Research, Prototyping, Wireframing, and Micro-Interactions.
+- Proficiency in WCAG Accessibility (a11y), Typography, Color Theory, and Responsive Layouts.
+- Strong cross-functional collaboration with Frontend Engineering and Product teams.`,
+
+    solutions_architect: `We are hiring a Cloud Solutions Architect to design enterprise cloud architectures and technical migration roadmaps.
+
+Key Requirements:
+- Extensive experience designing multi-tenant Cloud Architectures on AWS, Azure, or GCP.
+- Deep knowledge of System Architecture, High Availability, Disaster Recovery, and Security Compliance.
+- Hands-on experience with Microservices, Serverless, Containers (Kubernetes), and REST/gRPC APIs.
+- Proven track record of conducting technical discovery workshops and executive stakeholder presentations.`,
+
+    site_reliability: `We are seeking a Principal Site Reliability Engineer (SRE) to maintain 99.99% availability across global cloud services.
+
+Key Requirements:
+- 5+ years of SRE / Infrastructure experience with Linux administration, Go, Python, or Bash.
+- Deep expertise in Incident Response, Post-Mortems, SLO/SLA management, and Error Budgets.
+- Hands-on experience with Kubernetes, Terraform, Prometheus, Grafana, and Chaos Engineering.
+- Proven track record of reducing MTTR (Mean Time to Resolution) and optimizing cloud infrastructure costs.`,
+
+    embedded_systems: `We are hiring an Embedded Systems & Firmware Engineer to develop real-time hardware applications and IoT devices.
+
+Key Requirements:
+- Strong proficiency in C, C++, Assembly, and RTOS (FreeRTOS / Zephyr).
+- Experience with Hardware Protocols (SPI, I2C, UART, CAN bus) and Microcontrollers (ARM Cortex, ESP32, STM32).
+- Hands-on experience with Oscilloscopes, Logic Analyzers, and PCB Debugging.
+- Knowledge of Embedded Linux, Memory Management, and Low-Power Wireless Protocols (BLE / Zigbee).`,
+
+    game_developer: `We are seeking a Senior Game Developer to build real-time multiplayer game systems and graphics pipelines.
+
+Key Requirements:
+- 4+ years of professional game development experience with C++, C#, Unreal Engine, or Unity.
+- Expertise in 3D Math, Shader Programming (HLSL/GLSL), Physics engines, and Memory Optimization.
+- Experience building Multiplayer Networking frameworks, Client-Side Prediction, and Dedicated Servers.
+- Proven track record of shipping commercial PC, Console, or Mobile game titles.`,
+
+    blockchain_web3: `We are seeking a Smart Contract & Web3 Engineer to develop secure decentralized protocols and dApps.
+
+Key Requirements:
+- Deep proficiency in Solidity, Rust, Web3.js, Ethers.js, and Hardhat / Foundry framework.
+- Experience building EVM Smart Contracts, DeFi protocols, ERC-20 / ERC-721 token standards, and Layer-2 scaling.
+- Strong knowledge of Smart Contract Auditing, Security Vulnerabilities (Reentrancy, Front-running), and Gas Optimization.
+- Familiarity with Decentralized Storage (IPFS / Arweave) and Cryptographic primitives.`,
+
+    scrum_master: `We are hiring a Senior Agile Coach & Scrum Master to facilitate sprint execution and agile transformation.
+
+Key Requirements:
+- Certified Scrum Master (CSM / PSM) with 4+ years leading cross-functional software development teams.
+- Deep expertise in Scrum, Kanban, Sprint Planning, Backlog Refinement, and Retrospectives.
+- Proficiency in Jira, Confluence, Agile Metrics (Velocity, Burndown charts, Cycle Time), and Risk Mitigation.
+- Exceptional coaching, conflict resolution, and stakeholder management skills.`,
+
+    sales_engineer: `We are seeking a Senior Technical Sales Engineer / Solutions Consultant to partner with Enterprise Account Executives.
+
+Key Requirements:
+- 3+ years in Technical Pre-Sales, Solutions Engineering, or Technical Consulting for B2B SaaS / Developer APIs.
+- Ability to conduct technical product demos, POCs (Proof of Concepts), and RFP / RFI response documentation.
+- Strong technical background with REST APIs, SQL, System Integration, and Security Compliance (SOC 2).
+- Exceptional verbal and written communication skills with executive C-level presentation experience.`,
+
+    engineering_manager: `We are seeking a Director of Engineering / Engineering Manager to lead engineering teams and deliver strategic technology roadmaps.
+
+Key Requirements:
+- 3+ years of engineering management experience leading 10+ software engineers across multiple squads.
+- Strong track record of hiring, mentoring, career growth planning, and performance management.
+- Deep technical background in System Architecture, Software Engineering best practices, and CI/CD delivery.
+- Proven experience managing engineering budgets, resource allocation, and executive stakeholder alignment.`
   };
 
   const sampleJdSelect = document.getElementById('sampleJdSelect');
