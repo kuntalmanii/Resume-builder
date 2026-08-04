@@ -602,12 +602,19 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallbackResult));
       } catch (err) {
-        log('ERROR', `ATS Analyze handler catch error: ${err.message}`);
-        const fallbackResult = runServerFallbackAnalysis('', '');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(fallbackResult));
-      }
     })();
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/ats-chat') {
+    try {
+      const atsChatHandler = require('../../api/ats-chat.js');
+      atsChatHandler(req, res);
+    } catch (err) {
+      log('ERROR', `ATS Chat route error: ${err.message}`);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Server chat error' }));
+    }
     return;
   }
 
