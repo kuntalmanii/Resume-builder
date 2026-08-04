@@ -1561,12 +1561,12 @@
                 <div class="ats-meta-group">
                   <div class="ats-meta-field">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="meta-field-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    <input class="ats-meta-input" id="atsAuditJobTitle" type="text" value="Senior Frontend Architect" placeholder="Target Job Title..." title="Click to edit job title" />
+                    <input class="ats-meta-input" id="atsAuditJobTitle" type="text" value="" placeholder="Target Job Title (e.g. Senior Developer)..." title="Click to edit job title" />
                   </div>
                   <span class="ats-meta-divider">at</span>
                   <div class="ats-meta-field">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="meta-field-icon"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
-                    <input class="ats-meta-input" id="atsAuditCompany" type="text" value="Stripe / Vercel Stack" placeholder="Company Stack..." title="Click to edit target company" />
+                    <input class="ats-meta-input" id="atsAuditCompany" type="text" value="" placeholder="Target Company / Tech Stack..." title="Click to edit target company" />
                   </div>
                 </div>
 
@@ -1619,13 +1619,7 @@
 
             <!-- HIDDEN JD TEXTAREA CONTAINER (Preserved for script.js) -->
             <div style="display:none;">
-              <textarea id="atsJdInput" class="form-textarea" rows="4">We are looking for a Staff / Senior Frontend Architect to lead UI component design systems and web vitals optimization.
-
-Key Requirements:
-- 5+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
-- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management.
-- Experience with GraphQL, REST APIs, and client-side performance optimization.
-- Familiarity with CI/CD deployment pipelines, Kubernetes, and Redis caching is a plus.</textarea>
+              <textarea id="atsJdInput" class="form-textarea" rows="4" placeholder="Paste target job description here..."></textarea>
             </div>
 
             <!-- ══════════════════════════════════════════════
@@ -1633,14 +1627,14 @@ Key Requirements:
                  ══════════════════════════════════════════════ -->
             <div class="ats-executive-summary-banner">
               <div class="ats-main-score-box">
-                <div class="ats-score-ring-lg" id="scoreCircle">
-                  <span class="ats-score-ring-val" id="scoreNumber">94%</span>
+                <div class="ats-score-ring-lg" id="scoreCircle" style="background: conic-gradient(#EDE9E3 0% 100%);">
+                  <span class="ats-score-ring-val" id="scoreNumber">--</span>
                 </div>
                 <div class="ats-score-details">
-                  <div class="ats-score-title" id="scoreSummaryHeading">Excellent ATS Compatibility</div>
-                  <div class="ats-score-subtitle" id="scoreSummaryDesc">Matches 94% of core technical qualifications for Senior Frontend Architect.</div>
+                  <div class="ats-score-title" id="scoreSummaryHeading">Ready for ATS Analysis</div>
+                  <div class="ats-score-subtitle" id="scoreSummaryDesc">Select a preset role above or paste a target Job Description, then click '⚡ Re-Scan Resume' to run analysis.</div>
                   <div class="ats-score-badge-row">
-                    <span class="badge-tag green" id="analysisStatusBadge">Passed ATS Gatekeeper</span>
+                    <span class="badge-tag blue" id="analysisStatusBadge">Awaiting Scan</span>
                     <span class="badge-tag blue">Confidence: High</span>
                   </div>
                 </div>
@@ -1649,19 +1643,19 @@ Key Requirements:
               <div class="ats-kpi-metrics-grid">
                 <div class="ats-kpi-item">
                   <span class="ats-kpi-label">Est. Pass Rate</span>
-                  <span class="ats-kpi-val green">96%</span>
+                  <span class="ats-kpi-val green" id="kpiEstPassRate">--</span>
                 </div>
                 <div class="ats-kpi-item">
                   <span class="ats-kpi-label">Readability</span>
-                  <span class="ats-kpi-val green">9.8 / 10</span>
+                  <span class="ats-kpi-val green" id="kpiReadability">--</span>
                 </div>
                 <div class="ats-kpi-item">
                   <span class="ats-kpi-label">Hiring Probability</span>
-                  <span class="ats-kpi-val green">High</span>
+                  <span class="ats-kpi-val green" id="kpiHiringProb">--</span>
                 </div>
                 <div class="ats-kpi-item">
                   <span class="ats-kpi-label">Quality Score</span>
-                  <span class="ats-kpi-val amber">Top 5%</span>
+                  <span class="ats-kpi-val amber" id="kpiQualityScore">--</span>
                 </div>
               </div>
             </div>
@@ -1690,35 +1684,35 @@ Key Requirements:
                 <span class="ats-col-title">Audit Categories</span>
                 <div class="ats-cat-item active" data-target="ats-sec-overview" onclick="switchAtsCategory('ats-sec-overview', this)">
                   <span>Keyword Match</span>
-                  <span class="ats-cat-badge pass">88%</span>
+                  <span class="ats-cat-badge pass" id="catBadgeKw">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-experience" onclick="switchAtsCategory('ats-sec-experience', this)">
                   <span>Experience Level</span>
-                  <span class="ats-cat-badge pass">95%</span>
+                  <span class="ats-cat-badge pass" id="catBadgeExp">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-skills" onclick="switchAtsCategory('ats-sec-skills', this)">
                   <span>Skills Alignment</span>
-                  <span class="ats-cat-badge pass">92%</span>
+                  <span class="ats-cat-badge pass" id="catBadgeSkills">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-education" onclick="switchAtsCategory('ats-sec-education', this)">
                   <span>Education &amp; Certs</span>
-                  <span class="ats-cat-badge pass">100%</span>
+                  <span class="ats-cat-badge pass" id="catBadgeEdu">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-formatting" onclick="switchAtsCategory('ats-sec-formatting', this)">
                   <span>Formatting &amp; Parsing</span>
-                  <span class="ats-cat-badge warn">90%</span>
+                  <span class="ats-cat-badge warn" id="catBadgeFmt">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-readability" onclick="switchAtsCategory('ats-sec-readability', this)">
                   <span>Readability Score</span>
-                  <span class="ats-cat-badge pass">96%</span>
+                  <span class="ats-cat-badge pass" id="catBadgeRead">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-achievements" onclick="switchAtsCategory('ats-sec-achievements', this)">
                   <span>Metric Density</span>
-                  <span class="ats-cat-badge warn">82%</span>
+                  <span class="ats-cat-badge warn" id="catBadgeDensity">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-verbs" onclick="switchAtsCategory('ats-sec-verbs', this)">
                   <span>Action Verbs</span>
-                  <span class="ats-cat-badge pass">89%</span>
+                  <span class="ats-cat-badge pass" id="catBadgeVerbs">--</span>
                 </div>
 
                 <div style="margin-top:auto;padding-top:16px;border-top:1px solid #EDE9E3;">
@@ -1737,37 +1731,37 @@ Key Requirements:
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Keyword Match</span>
-                      <span class="ats-score-card-val">88%</span>
+                      <span class="ats-score-card-val" id="matrixScoreKw">--</span>
                     </div>
                     <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill green" style="width:88%;"></div>
+                      <div class="ats-score-bar-fill green" id="matrixFillKw" style="width:0%;"></div>
                     </div>
                   </div>
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Experience Match</span>
-                      <span class="ats-score-card-val">95%</span>
+                      <span class="ats-score-card-val" id="matrixScoreExp">--</span>
                     </div>
                     <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill green" style="width:95%;"></div>
+                      <div class="ats-score-bar-fill green" id="matrixFillExp" style="width:0%;"></div>
                     </div>
                   </div>
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Skills Alignment</span>
-                      <span class="ats-score-card-val">92%</span>
+                      <span class="ats-score-card-val" id="matrixScoreSkills">--</span>
                     </div>
                     <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill green" style="width:92%;"></div>
+                      <div class="ats-score-bar-fill green" id="matrixFillSkills" style="width:0%;"></div>
                     </div>
                   </div>
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Metric Density</span>
-                      <span class="ats-score-card-val">82%</span>
+                      <span class="ats-score-card-val" id="matrixScoreMetric">--</span>
                     </div>
                     <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill" style="width:82%;"></div>
+                      <div class="ats-score-bar-fill" id="matrixFillMetric" style="width:0%;"></div>
                     </div>
                   </div>
                 </div>
@@ -1779,36 +1773,26 @@ Key Requirements:
                       <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                       Keyword Intelligence &amp; Gap Analysis
                     </div>
-                    <span style="font-size:12px;color:#8A8A8A;">9 Matched · 3 Gaps</span>
+                    <span style="font-size:12px;color:#8A8A8A;" id="kwCountsSubtitle">0 Matched · 0 Gaps</span>
                   </div>
 
                   <!-- Matched Keywords (Preserved IDs) -->
                   <div style="margin-bottom:16px;">
                     <div style="font-size:11px;font-weight:700;color:#2E9B64;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px;" id="matchedKeywordsTitle">
-                      ✓ Matched Required Keywords (9)
+                      ✓ Matched Required Keywords (0)
                     </div>
                     <div class="ats-kw-grid" id="matchedKeywordsContainer">
-                      <span class="kw-chip matched" title="Appears 5x in Experience">TypeScript <span class="kw-count">5x</span></span>
-                      <span class="kw-chip matched" title="Appears 8x in Experience & Skills">React <span class="kw-count">8x</span></span>
-                      <span class="kw-chip matched" title="Appears 3x in Summary">Next.js <span class="kw-count">3x</span></span>
-                      <span class="kw-chip matched" title="Appears 4x in Skills">Vanilla CSS <span class="kw-count">4x</span></span>
-                      <span class="kw-chip matched" title="Appears 2x in Experience">Design Systems <span class="kw-count">2x</span></span>
-                      <span class="kw-chip matched" title="Appears 3x in Bullets">Web Vitals <span class="kw-count">3x</span></span>
-                      <span class="kw-chip matched" title="Appears 2x in Experience">GraphQL <span class="kw-count">2x</span></span>
-                      <span class="kw-chip matched" title="Appears 4x in Experience">REST APIs <span class="kw-count">4x</span></span>
-                      <span class="kw-chip matched" title="Appears 2x in Skills">Redis <span class="kw-count">2x</span></span>
+                      <span class="badge-tag amber">Run ATS scan to view matched keywords</span>
                     </div>
                   </div>
 
                   <!-- Missing Keywords (Preserved IDs) -->
                   <div>
                     <div style="font-size:11px;font-weight:700;color:#D14A4A;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px;" id="missingKeywordsTitle">
-                      ⚠ Missing / Gap Keywords (3)
+                      ⚠ Missing / Gap Keywords (0)
                     </div>
                     <div class="ats-kw-grid" id="missingKeywordsContainer">
-                      <span class="kw-chip critical" title="Recruiters look for Kubernetes in DevOps/Cloud requirements" onclick="insertKeywordSentence('Kubernetes')">Kubernetes ✦ Add</span>
-                      <span class="kw-chip missing" title="Mention CI/CD in your work experience bullet points" onclick="insertKeywordSentence('CI/CD')">CI/CD Pipelines ✦ Add</span>
-                      <span class="kw-chip missing" title="Add State Management to your skills list" onclick="insertKeywordSentence('State Management')">State Management ✦ Add</span>
+                      <span class="badge-tag amber">Run ATS scan to view missing keywords</span>
                     </div>
                   </div>
                 </div>
@@ -1824,7 +1808,13 @@ Key Requirements:
                   </div>
                   <div class="ats-report-body">
                     <div id="recommendationsGridContainer" class="recommendations-grid">
-                      <!-- Dynamically populated by script.js -->
+                      <div class="rec-card">
+                        <div class="rec-number">⚡</div>
+                        <div class="rec-content">
+                          <strong>Ready for ATS Analysis:</strong>
+                          <p>Select a preset role above or paste a target job description, then click '⚡ Re-Scan Resume' to generate AI optimization recommendations.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

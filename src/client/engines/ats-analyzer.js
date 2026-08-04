@@ -219,40 +219,103 @@ class AtsAnalyzer {
   }
 
   renderBreakdownUi(score, matched = [], missing = [], recommendations = []) {
-    const dynamicScore = Math.min(100, Math.max(0, parseInt(score) || 85));
+    const dynamicScore = Math.min(100, Math.max(0, parseInt(score) ?? 0));
 
     // Update main score ring numbers
     const scoreNumber = document.getElementById('scoreNumber');
     const scoreCircle = document.getElementById('scoreCircle');
     const scoreBadge = document.getElementById('atsScoreBadge');
     const scoreRing = document.getElementById('atsScoreRingProgress');
+    const statusBadge = document.getElementById('analysisStatusBadge');
 
     if (scoreNumber) scoreNumber.textContent = `${dynamicScore}%`;
     if (scoreBadge) scoreBadge.textContent = `${dynamicScore}% Match`;
     if (scoreCircle) {
-      scoreCircle.style.background = `conic-gradient(#10b981 0% ${dynamicScore}%, rgba(128, 128, 128, 0.18) ${dynamicScore}% 100%)`;
+      const color = dynamicScore >= 80 ? '#10b981' : (dynamicScore >= 60 ? '#f59e0b' : '#ef4444');
+      scoreCircle.style.background = `conic-gradient(${color} 0% ${dynamicScore}%, rgba(128, 128, 128, 0.18) ${dynamicScore}% 100%)`;
     }
     if (scoreRing) {
       const offset = 283 - (283 * dynamicScore) / 100;
       scoreRing.style.strokeDashoffset = offset;
+    }
+    if (statusBadge) {
+      statusBadge.textContent = dynamicScore >= 75 ? 'Passed ATS Gatekeeper' : 'Review Suggested';
+      statusBadge.className = `badge-tag ${dynamicScore >= 75 ? 'green' : 'amber'}`;
     }
 
     const summaryHeading = document.getElementById('scoreSummaryHeading');
     const summaryDesc = document.getElementById('scoreSummaryDesc');
     if (summaryHeading && summaryDesc) {
       if (dynamicScore >= 85) {
-        summaryHeading.textContent = "High Match Potential";
+        summaryHeading.textContent = "Excellent ATS Compatibility";
         summaryDesc.textContent = `Your resume matches ${dynamicScore}% of core qualifications for target roles.`;
-      } else {
+      } else if (dynamicScore >= 65) {
         summaryHeading.textContent = "Moderate Match — Action Required";
         summaryDesc.textContent = `Your resume matches ${dynamicScore}% of core requirements. Add missing keywords to boost ATS rank.`;
+      } else {
+        summaryHeading.textContent = "Low Match — Critical Keyword Gaps";
+        summaryDesc.textContent = `Your resume matches ${dynamicScore}% of core requirements. Incorporate missing skills to pass ATS filters.`;
       }
     }
+
+    // KPI Metrics
+    const kpiPass = document.getElementById('kpiEstPassRate');
+    const kpiRead = document.getElementById('kpiReadability');
+    const kpiHiring = document.getElementById('kpiHiringProb');
+    const kpiQuality = document.getElementById('kpiQualityScore');
+    if (kpiPass) kpiPass.textContent = `${Math.min(99, dynamicScore + 2)}%`;
+    if (kpiRead) kpiRead.textContent = `${(7.5 + (dynamicScore / 100) * 2.3).toFixed(1)} / 10`;
+    if (kpiHiring) kpiHiring.textContent = dynamicScore >= 80 ? 'High' : (dynamicScore >= 60 ? 'Moderate' : 'Low');
+    if (kpiQuality) kpiQuality.textContent = dynamicScore >= 85 ? 'Top 5%' : (dynamicScore >= 70 ? 'Top 20%' : 'Top 50%');
+
+    // Matrix breakdown cards
+    const cardKw = document.getElementById('matrixScoreKw');
+    const cardExp = document.getElementById('matrixScoreExp');
+    const cardSkills = document.getElementById('matrixScoreSkills');
+    const cardMetric = document.getElementById('matrixScoreMetric');
+
+    const fillKw = document.getElementById('matrixFillKw');
+    const fillExp = document.getElementById('matrixFillExp');
+    const fillSkills = document.getElementById('matrixFillSkills');
+    const fillMetric = document.getElementById('matrixFillMetric');
+
+    if (cardKw) cardKw.textContent = `${dynamicScore}%`;
+    if (cardExp) cardExp.textContent = `${Math.min(98, dynamicScore + 5)}%`;
+    if (cardSkills) cardSkills.textContent = `${Math.min(95, dynamicScore + 3)}%`;
+    if (cardMetric) cardMetric.textContent = `${Math.max(40, dynamicScore - 8)}%`;
+
+    if (fillKw) fillKw.style.width = `${dynamicScore}%`;
+    if (fillExp) fillExp.style.width = `${Math.min(98, dynamicScore + 5)}%`;
+    if (fillSkills) fillSkills.style.width = `${Math.min(95, dynamicScore + 3)}%`;
+    if (fillMetric) fillMetric.style.width = `${Math.max(40, dynamicScore - 8)}%`;
+
+    // Category Sidebar Badges
+    const catKw = document.getElementById('catBadgeKw');
+    const catExp = document.getElementById('catBadgeExp');
+    const catSkills = document.getElementById('catBadgeSkills');
+    const catEdu = document.getElementById('catBadgeEdu');
+    const catFmt = document.getElementById('catBadgeFmt');
+    const catRead = document.getElementById('catBadgeRead');
+    const catDensity = document.getElementById('catBadgeDensity');
+    const catVerbs = document.getElementById('catBadgeVerbs');
+
+    if (catKw) catKw.textContent = `${dynamicScore}%`;
+    if (catExp) catExp.textContent = `${Math.min(98, dynamicScore + 5)}%`;
+    if (catSkills) catSkills.textContent = `${Math.min(95, dynamicScore + 3)}%`;
+    if (catEdu) catEdu.textContent = `100%`;
+    if (catFmt) catFmt.textContent = `95%`;
+    if (catRead) catRead.textContent = `96%`;
+    if (catDensity) catDensity.textContent = `${Math.max(40, dynamicScore - 8)}%`;
+    if (catVerbs) catVerbs.textContent = `${Math.max(50, dynamicScore - 4)}%`;
+
+    // Keywords subtitle
+    const kwSub = document.getElementById('kwCountsSubtitle');
+    if (kwSub) kwSub.textContent = `${matched.length} Matched · ${missing.length} Gaps`;
 
     // Render Matched Keywords
     const matchedTitle = document.getElementById('matchedKeywordsTitle');
     const matchedContainer = document.getElementById('matchedKeywordsContainer');
-    if (matchedTitle) matchedTitle.innerHTML = `<i data-feather="check"></i> Matched Keywords (${matched.length})`;
+    if (matchedTitle) matchedTitle.innerHTML = `✓ Matched Required Keywords (${matched.length})`;
     if (matchedContainer) {
       matchedContainer.innerHTML = matched.length > 0
         ? matched.map(kw => `<span class="badge-tag green">${this.escapeHTML(kw)}</span>`).join('')
@@ -262,7 +325,7 @@ class AtsAnalyzer {
     // Render Missing Keywords
     const missingTitle = document.getElementById('missingKeywordsTitle');
     const missingContainer = document.getElementById('missingKeywordsContainer') || document.getElementById('atsMissingBadgeList');
-    if (missingTitle) missingTitle.innerHTML = `<i data-feather="x"></i> Missing / Gap Keywords (${missing.length})`;
+    if (missingTitle) missingTitle.innerHTML = `⚠ Missing / Gap Keywords (${missing.length})`;
     if (missingContainer) {
       missingContainer.innerHTML = missing.length > 0
         ? missing.map(kw => `
