@@ -1912,14 +1912,14 @@
 
                   <div class="ats-chat-messages" id="atsChatMsgContainer">
                     <div class="ats-chat-msg ai">
-                      Hello! I've audited your resume against this job description. Your score is <b>94%</b>. Ask me anything about improving your match rate!
+                      Hello! I am your ATS AI Career Coach. Select a role above or ask me anything about improving your match rate, positioning keywords, or passing recruiter gatekeepers!
                     </div>
                   </div>
 
                   <div class="ats-chat-prompts">
                     <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Why did I lose points?')">Why did I lose points?</span>
-                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('How do I add Kubernetes?')">How to add Kubernetes?</span>
-                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Make this Workday compatible')">Workday ATS tips</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('How to format bullet points for ATS?')">ATS bullet format</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Workday ATS scanner tips')">Workday ATS tips</span>
                   </div>
 
                   <div class="ats-chat-input-row">
@@ -1970,7 +1970,7 @@
                 setTimeout(function() {
                   var aiMsg = document.createElement('div');
                   aiMsg.className = 'ats-chat-msg ai';
-                  aiMsg.innerHTML = '<b>Suggested Bullet for ' + keyword + ':</b><br>"Spearheaded multi-region cloud deployment using <b>' + keyword + '</b> and automated CI/CD workflows, improving application uptime to 99.99%."';
+                  aiMsg.innerHTML = '<b>Suggested Bullet for ' + keyword + ':</b><br>"Spearheaded enterprise implementation of <b>' + keyword + '</b> and automated CI/CD workflows, improving application uptime to 99.99%."';
                   chatContainer.appendChild(aiMsg);
                   chatContainer.scrollTop = chatContainer.scrollHeight;
                 }, 400);
@@ -1984,7 +1984,7 @@
                 }
               };
 
-              window.submitAtsChat = function() {
+              window.submitAtsChat = async function() {
                 var input = document.getElementById('atsChatInputField');
                 var chatContainer = document.getElementById('atsChatMsgContainer');
                 if (!input || !input.value.trim() || !chatContainer) return;
@@ -1997,13 +1997,43 @@
                 userMsg.textContent = text;
                 chatContainer.appendChild(userMsg);
 
-                setTimeout(function() {
-                  var aiMsg = document.createElement('div');
-                  aiMsg.className = 'ats-chat-msg ai';
-                  aiMsg.innerHTML = 'Analyzing "' + text + '"...<br>To maximize your match rate for Senior Frontend Architect, ensure your Work Experience includes quantified metrics (e.g. % performance improvement, team size, scale) alongside core skills like React, TypeScript, and Web Vitals.';
-                  chatContainer.appendChild(aiMsg);
-                  chatContainer.scrollTop = chatContainer.scrollHeight;
-                }, 500);
+                var loadingMsg = document.createElement('div');
+                loadingMsg.className = 'ats-chat-msg ai';
+                loadingMsg.innerHTML = 'Analyzing...';
+                chatContainer.appendChild(loadingMsg);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                var resumeText = window.atsAnalyzer ? window.atsAnalyzer.getResumeText() : '';
+                var jdInput = document.getElementById('atsJdInput') || document.getElementById('atsTargetJdInput');
+                var jdText = jdInput ? jdInput.value : '';
+                var sampleSelect = document.getElementById('sampleJdSelect');
+                var jobTitle = (sampleSelect && sampleSelect.options[sampleSelect.selectedIndex]) ? sampleSelect.options[sampleSelect.selectedIndex].text : 'Target Role';
+                var currentScore = document.getElementById('scoreNumber') ? document.getElementById('scoreNumber').textContent.replace('%', '') : '';
+
+                try {
+                  var response = await fetch('/api/ats-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userMessage: text,
+                      jobTitle: jobTitle,
+                      jobDescription: jdText,
+                      resumeText: resumeText,
+                      currentScore: currentScore
+                    })
+                  });
+
+                  if (response.ok) {
+                    var data = await response.json();
+                    loadingMsg.innerHTML = data.reply || 'Here is how you can improve your resume...';
+                  } else {
+                    loadingMsg.innerHTML = '<b>ATS Career Coach Advice:</b><br>To maximize your match rate, ensure your Work Experience includes quantified metrics (e.g. % performance improvement, team size, scale) alongside core skills required for this job description.';
+                  }
+                } catch (err) {
+                  loadingMsg.innerHTML = '<b>ATS Career Coach Advice:</b><br>To maximize your match rate, ensure your Work Experience includes quantified metrics (e.g. % performance improvement, team size, scale) alongside core skills required for this job description.';
+                }
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
               };
 
             })();

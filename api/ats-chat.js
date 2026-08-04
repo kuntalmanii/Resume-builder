@@ -1,6 +1,6 @@
 const https = require('https');
 
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-8b'];
+const GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp'];
 
 function sanitizeInputText(str) {
   if (typeof str !== 'string') return '';
@@ -8,6 +8,14 @@ function sanitizeInputText(str) {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/javascript:/gi, '')
     .trim();
+}
+
+function sendResponse(res, statusCode, data) {
+  if (typeof res.status === 'function') {
+    return res.status(statusCode).json(data);
+  }
+  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
 }
 
 function callGeminiChat(apiKey, prompt, modelIndex = 0) {
@@ -96,31 +104,46 @@ function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeTe
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (typeof res.setHeader === 'function') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return sendResponse(res, 200, { status: 'OK' });
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return sendResponse(res, 405, { error: 'Method Not Allowed' });
   }
 
   try {
-    const { userMessage, jobTitle, jobDescription, resumeText, currentScore } = req.body || {};
+    let body = req.body;
+    if (!body || typeof body !== 'object') {
+      try {
+        body = await new Promise((resolve) => {
+          let data = '';
+          req.on('data', chunk => { data += chunk; });
+          req.on('end', () => {
+            try { resolve(JSON.parse(data)); } catch (e) { resolve({}); }
+          });
+        });
+      } catch (e) { body = {}; }
+    }
+
+    const { userMessage, jobTitle, jobDescription, resumeText, currentScore } = body || {};
     const cleanMsg = sanitizeInputText(userMessage);
 
     if (!cleanMsg) {
-      return res.status(400).json({ error: 'Message content is required.' });
+      return sendResponse(res, 400, { error: 'Message content is required.' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
     if (!apiKey) {
       const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText);
-      return res.status(200).json({ reply: fallbackReply, source: 'fallback' });
+      return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
     }
 
     const prompt = `You are an expert ATS (Applicant Tracking System) Career Coach and Executive Resume Auditor.
@@ -141,15 +164,15 @@ Instructions:
     try {
       const geminiReply = await callGeminiChat(apiKey, prompt);
       const cleanReply = geminiReply.replace(/```html|```/g, '').trim();
-      return res.status(200).json({ reply: cleanReply, source: 'gemini' });
+      return sendResponse(res, 200, { reply: cleanReply, source: 'gemini' });
     } catch (aiErr) {
       console.warn('Gemini chat API call failed, using fallback:', aiErr.message);
       const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText);
-      return res.status(200).json({ reply: fallbackReply, source: 'fallback' });
+      return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
     }
 
   } catch (error) {
     console.error('ATS Chat error:', error.message);
-    return res.status(500).json({ error: 'Failed to process chat request' });
+    return sendResponse(res, 500, { error: 'Failed to process chat request' });
   }
 };
