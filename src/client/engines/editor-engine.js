@@ -85,9 +85,79 @@ class EditorEngine {
     });
   }
 
-  /* ------ Paper Field Synchronization ------ */
+  /* ------ Real-Time Input Field Validation ------ */
+  validateField(el) {
+    if (!el) return true;
+
+    const val = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
+      ? el.value.trim()
+      : el.innerText.trim();
+
+    const label = (el.getAttribute('aria-label') || el.getAttribute('data-placeholder') || el.placeholder || el.id || '').toLowerCase();
+
+    let isValid = true;
+    let errorMsg = '';
+
+    if (label.includes('email')) {
+      if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        isValid = false;
+        errorMsg = 'Invalid email address format';
+      }
+    } else if (label.includes('phone')) {
+      if (val && !/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\./0-9]{6,15}$/.test(val)) {
+        isValid = false;
+        errorMsg = 'Invalid phone format (min 7 digits)';
+      }
+    } else if (label.includes('github') || label.includes('linkedin') || label.includes('portfolio') || label.includes('website')) {
+      if (val && !/^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/.test(val)) {
+        isValid = false;
+        errorMsg = 'Invalid URL or web domain format';
+      }
+    } else if (label.includes('name') || el.id === 'docFieldName' || el.id === 'inputFullName') {
+      if (val.length > 0 && val.length < 2) {
+        isValid = false;
+        errorMsg = 'Full name must be at least 2 characters';
+      }
+    } else if (label.includes('title') || el.id === 'docFieldTitle' || el.id === 'inputJobTitle') {
+      if (val.length > 0 && val.length < 2) {
+        isValid = false;
+        errorMsg = 'Job title must be at least 2 characters';
+      }
+    }
+
+    const parent = el.closest('.doc-contact-item') || el.parentNode;
+    let tooltip = parent ? parent.querySelector('.field-validation-msg') : null;
+
+    if (!isValid) {
+      el.classList.add('field-invalid');
+      el.classList.remove('field-valid');
+      if (parent) {
+        if (!tooltip) {
+          tooltip = document.createElement('span');
+          tooltip.className = 'field-validation-msg';
+          parent.appendChild(tooltip);
+        }
+        tooltip.textContent = errorMsg;
+        tooltip.style.display = 'block';
+      }
+    } else {
+      el.classList.remove('field-invalid');
+      if (val.length > 0) {
+        el.classList.add('field-valid');
+      } else {
+        el.classList.remove('field-valid');
+      }
+      if (tooltip) {
+        tooltip.style.display = 'none';
+      }
+    }
+
+    return isValid;
+  }
+
+  /* ------ Paper Field Synchronization & Validation ------ */
   bindPaperFieldSync() {
-    const fields = document.querySelectorAll('.doc-field[contenteditable="true"]');
+    const fields = document.querySelectorAll('.doc-field[contenteditable="true"], .doc-contact-field[contenteditable="true"], .form-input, .form-textarea');
     fields.forEach(field => {
       field.addEventListener('input', () => {
         const syncTargetId = field.getAttribute('data-syncs');
@@ -97,7 +167,12 @@ class EditorEngine {
             targetInput.value = field.innerHTML;
           }
         }
+        this.validateField(field);
         this.updatePreviewSilently();
+      });
+
+      field.addEventListener('blur', () => {
+        this.validateField(field);
       });
     });
   }
