@@ -2626,21 +2626,28 @@ i[data-feather] svg { width: 1em; height: 1em; }
 .doc-editor-scroll::-webkit-scrollbar-track { background: transparent; }
 .doc-editor-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
 
-/* Document surface — Real floating paper */
+/* Document surface — Real floating full-length paper */
 .doc-editor-body,
 .preview-paper-sheet {
-  width: 100%;
-  max-width: 720px;
+  width: 100% !important;
+  max-width: 820px !important;
+  min-height: 1080px !important;
+  height: auto !important;
+  max-height: none !important;
   background: #FFFFFF !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
   box-shadow:
-    0 28px 64px -12px rgba(15, 23, 42, 0.08),
-    0 12px 28px -8px rgba(15, 23, 42, 0.05),
+    0 24px 60px -12px rgba(15, 23, 42, 0.10),
+    0 8px 24px -6px rgba(15, 23, 42, 0.06),
     0 1px 3px rgba(0, 0, 0, 0.03) !important;
-  padding: 52px 64px 72px !important;
-  min-height: 920px;
+  padding: 56px 64px 88px !important;
+  margin: 0 auto 60px auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important;
   position: relative;
+  box-sizing: border-box !important;
   transition: box-shadow 0.22s ease-in-out, transform 0.22s ease-in-out;
 }
 .doc-editor-body:hover,
