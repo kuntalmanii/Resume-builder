@@ -71,8 +71,8 @@ class PdfExporter {
     return { pageSizeCss, fontLink, bodyFont, headingFont };
   }
 
-  generatePrintPdf() {
-    const resumeDoc = document.getElementById('printableResumeDoc');
+  generatePrintPdf(targetEl = null) {
+    const resumeDoc = targetEl || document.getElementById('printableResumeDoc') || document.getElementById('tailoredResumeDoc');
     if (!resumeDoc) {
       window.print();
       return;

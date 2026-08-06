@@ -3820,37 +3820,13 @@ Key Requirements:
   // Print Tailored Resume
   if (btnPrintTailored) {
     btnPrintTailored.addEventListener('click', () => {
-      if (!tailoredResumeDoc) return;
-      const printWindow = window.open('', '_blank', 'width=900,height=700');
-      if (!printWindow) return;
-
-      const styles = getPdfExportStyles();
-
-      printWindow.document.write(`
-<!DOCTYPE html><html lang="en"><head>
-  <meta charset="UTF-8" />
-  <title>Tailored Resume</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="${styles.fontLink}" rel="stylesheet" />
-  <style>
-    ${styles.pageSizeCss}
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{background:#fff;color:#111;font-family:${styles.bodyFont};font-size:11pt;line-height:1.5;padding:24pt 28pt}
-    .paper-document-card{max-width:720px;margin:0 auto;font-family:${styles.bodyFont};box-shadow:none !important;border:none !important;padding:0 !important;}
-    .paper-candidate-header{text-align:center;border-bottom:2px solid #111;padding-bottom:10pt;margin-bottom:14pt}
-    .paper-section{margin-bottom:14pt}
-    .paper-section-title{font-family:${styles.headingFont};font-size:8.5pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;border-bottom:1px solid #ccc;padding-bottom:3pt;margin-bottom:6pt}
-    .experience-block{margin-bottom:12pt}
-    .exp-header{display:flex;justify-content:space-between;align-items:baseline;font-size:10pt;font-weight:600;color:#111;margin-bottom:4pt}
-    .tailored-bullets-ul{list-style-type:disc !important;padding-left:18pt !important;margin-top:4pt !important;margin-bottom:6pt !important}
-    .tailored-bullet-item{margin-bottom:4pt !important;line-height:1.5 !important;color:#222 !important;font-size:9.5pt !important;display:list-item !important}
-    @media print{html,body{padding:0}}
-  </style>
-</head><body>
-  ${tailoredResumeDoc.outerHTML}
-  <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};}<\/script>
-</body></html>`);
-      printWindow.document.close();
+      const docEl = document.getElementById('tailoredResumeDoc');
+      if (!docEl) return;
+      if (window.pdfExporter && typeof window.pdfExporter.generatePrintPdf === 'function') {
+        window.pdfExporter.generatePrintPdf(docEl);
+      } else {
+        window.print();
+      }
     });
   }
 
@@ -4481,6 +4457,7 @@ Key Requirements:
     updatePipelineKPIs();
     renderTableView(filtered);
     renderKanbanBoard(filtered);
+    initKanbanDragAndDrop();
     bindJobActionButtons();
   }
 
