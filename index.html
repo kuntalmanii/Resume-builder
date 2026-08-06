@@ -524,6 +524,18 @@
                 <span class="topbar-strength-val" id="topbarStrengthPct">85%</span>
                 <span>Complete</span>
               </div>
+
+              <!-- Live Accent Swatches Bar -->
+              <div class="topbar-swatches-group" title="Choose Template Accent Color" style="display: flex; align-items: center; gap: 6px; margin-left: 8px; margin-right: 8px; padding: 4px 8px; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 20px;">
+                <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 2px;">Color</span>
+                <button type="button" class="swatch-btn active" data-color="#C98B4A" title="Sunset Amber" style="width: 16px; height: 16px; border-radius: 50%; background: #C98B4A; border: 2px solid #fff; cursor: pointer; padding: 0; box-shadow: 0 0 0 1px #C98B4A; transition: transform 0.15s ease;"></button>
+                <button type="button" class="swatch-btn" data-color="#2563EB" title="Modern Indigo" style="width: 16px; height: 16px; border-radius: 50%; background: #2563EB; border: 2px solid transparent; cursor: pointer; padding: 0; transition: transform 0.15s ease;"></button>
+                <button type="button" class="swatch-btn" data-color="#10B981" title="Emerald Tech" style="width: 16px; height: 16px; border-radius: 50%; background: #10B981; border: 2px solid transparent; cursor: pointer; padding: 0; transition: transform 0.15s ease;"></button>
+                <button type="button" class="swatch-btn" data-color="#334155" title="Midnight Slate" style="width: 16px; height: 16px; border-radius: 50%; background: #334155; border: 2px solid transparent; cursor: pointer; padding: 0; transition: transform 0.15s ease;"></button>
+                <button type="button" class="swatch-btn" data-color="#8B5CF6" title="Cyberpunk Violet" style="width: 16px; height: 16px; border-radius: 50%; background: #8B5CF6; border: 2px solid transparent; cursor: pointer; padding: 0; transition: transform 0.15s ease;"></button>
+                <button type="button" class="swatch-btn" data-color="#DC2626" title="Crimson Executive" style="width: 16px; height: 16px; border-radius: 50%; background: #DC2626; border: 2px solid transparent; cursor: pointer; padding: 0; transition: transform 0.15s ease;"></button>
+              </div>
+
               <div class="topbar-spacer"></div>
               <!-- Action buttons -->
               <button class="topbar-action-btn" id="topbarSaveDraftBtn" title="Save Draft" onclick="document.getElementById('btnDraftSaveFooter')?.click()">
@@ -2545,6 +2557,40 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Career Version & Profile Switcher -->
+  <div class="modal-overlay" id="versionProfilesModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="versionProfilesModalTitle">
+    <div class="modal-card glass-card" style="max-width: 640px; padding: 24px;">
+      <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 10px;">
+          <i data-feather="layers" style="color: var(--accent-primary);"></i>
+          <h3 id="versionProfilesModalTitle" style="font-size: 1.15rem; font-weight: 700; margin: 0;">Career Version Profiles</h3>
+        </div>
+        <button class="modal-close-btn" id="btnCloseVersionModal" aria-label="Close modal" style="background: transparent; border: none; cursor: pointer; color: var(--text-muted);">
+          <i data-feather="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 14px;">
+        <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+          Select a career track version profile to load target job titles, skills, and bullet points, or save your current resume as a new profile version.
+        </p>
+
+        <div id="versionProfilesGrid" class="version-profiles-grid" style="display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow-y: auto; padding-right: 4px;">
+          <!-- Rendered dynamically by script.js -->
+        </div>
+
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <button type="button" class="btn-ghost-sm" id="btnSaveCurrentAsProfile" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.82rem;">
+            <i data-feather="plus"></i> Save Current as Profile
+          </button>
+          <button type="button" class="btn-danger-action" id="btnResetToBlankResume" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.82rem; background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; cursor: pointer;">
+            <i data-feather="trash-2"></i> Start Blank Resume
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

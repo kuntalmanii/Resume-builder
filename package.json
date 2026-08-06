@@ -1,0 +1,24 @@
+{
+  "name": "resuai-resume-builder",
+  "version": "2.0.0",
+  "description": "AI-Powered Resume Builder & ATS Diagnostic Studio",
+  "main": "src/server/server.js",
+  "scripts": {
+    "start": "node src/server/server.js",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
+  },
+  "keywords": [
+    "resume-builder",
+    "ats-analyzer",
+    "ai-resume",
+    "playwright",
+    "e2e-testing"
+  ],
+  "author": "ResuAI Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  }
+}

@@ -2707,17 +2707,214 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.feather) feather.replace();
   }
 
-  const btnNewResume = document.getElementById('btnNewResume');
-  if (btnNewResume) {
-    btnNewResume.addEventListener('click', triggerNewResumeFlow);
+  /* ==========================================================================
+     MULTI-PROFILE RESUME VERSION MANAGER ENGINE
+     ========================================================================== */
+  const RESUME_PROFILES_KEY = 'resuai_resume_profiles_v1';
+  const ACTIVE_PROFILE_KEY = 'resuai_active_profile_id';
+
+  const DEFAULT_CAREER_PROFILES = {
+    'frontend-lead': {
+      id: 'frontend-lead',
+      name: 'Staff Frontend Engineer',
+      title: 'Staff Frontend Engineer & Design Systems Lead',
+      summary: 'Staff Frontend Architect with 8+ years of experience architecting high-performance web applications, design systems, and Web Vitals pipelines at scale.',
+      skills: ['React', 'TypeScript', 'Next.js', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Jest', 'CI/CD'],
+      education: 'B.S. in Computer Science — Stanford University (2018)',
+      bullets: `• Architected modular React component library serving 2M+ active monthly users across 14 micro-frontends.\n• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.\n• Spearheaded frontend migration to TypeScript and Next.js, boosting release velocity by 35% across 4 engineering pods.\n• Implemented client-side GraphQL caching layer, decreasing server network payload sizes by 60%.`
+    },
+    'fullstack-architect': {
+      id: 'fullstack-architect',
+      name: 'Full Stack Solutions Architect',
+      title: 'Senior Full Stack Solutions Architect',
+      summary: 'Versatile Full Stack Architect with 7+ years of experience engineering high-throughput Node.js microservices, Python APIs, PostgreSQL databases, and cloud infrastructure.',
+      skills: ['Node.js', 'Express', 'Python', 'PostgreSQL', 'Docker', 'Kubernetes', 'Redis', 'AWS'],
+      education: 'M.S. in Software Engineering — MIT (2019)',
+      bullets: `• Engineered distributed Node.js microservices processing 50,000+ API requests per second with 99.99% uptime.\n• Optimized PostgreSQL relational queries and added B-Tree indexes, cutting p99 database query latency from 450ms to 12ms.\n• Containerized 12 core backend services with Docker and Kubernetes, reducing AWS cloud infrastructure costs by 28%.\n• Designed Redis caching layer and pub/sub message brokers to handle peak real-time WebSocket traffic spikes.`
+    },
+    'engineering-manager': {
+      id: 'engineering-manager',
+      name: 'Engineering Manager',
+      title: 'Senior Engineering Manager',
+      summary: 'Strategic Engineering Leader with 10+ years of technical management experience growing cross-functional teams, managing $5M+ engineering budgets, and driving technical excellence.',
+      skills: ['Engineering Leadership', 'Agile/Scrum', 'Budget Management', 'System Design', 'Resource Allocation', 'Sprint Planning'],
+      education: 'M.B.A. in Technology Management — Harvard Business School (2016)',
+      bullets: `• Managed and scaled a cross-functional engineering organization of 24+ engineers and 3 engineering managers.\n• Spearheaded quarterly sprint planning and resource allocation, achieving 94% on-time feature delivery rate over 8 consecutive quarters.\n• Mentored 6 senior engineers into staff & lead engineering roles, resulting in 0% voluntary turnover in 24 months.\n• Oversaw a $4.5M annual cloud & tooling budget, optimizing AWS and third-party vendor contracts to save $650K annually.`
+    },
+    'devops-engineer': {
+      id: 'devops-engineer',
+      name: 'Lead DevOps & Cloud Engineer',
+      title: 'Lead DevOps & Site Reliability Engineer',
+      summary: 'SRE & Cloud Infrastructure Specialist with 6+ years of expertise automating CI/CD deployment pipelines, Kubernetes cluster orchestration, and infrastructure-as-code.',
+      skills: ['AWS', 'Kubernetes', 'Docker', 'Terraform', 'CI/CD', 'Prometheus', 'Grafana', 'Linux'],
+      education: 'B.Tech in Computer Engineering — IIT Bombay (2020)',
+      bullets: `• Built zero-downtime multi-region Kubernetes clusters on AWS EKS supporting 10M+ daily active sessions.\n• Automated CI/CD deployment pipelines using GitHub Actions and Terraform, reducing deployment lead time from 3 hours to 6 minutes.\n• Implemented real-time Prometheus & Grafana monitoring dashboards, improving Mean Time to Detect (MTTD) incidents by 55%.\n• Enforced strict IAM security policies and automated SOC2 compliance audits across cloud environments.`
+    }
+  };
+
+  function getSavedProfiles() {
+    try {
+      const saved = localStorage.getItem(RESUME_PROFILES_KEY);
+      if (saved) {
+        return { ...DEFAULT_CAREER_PROFILES, ...JSON.parse(saved) };
+      }
+    } catch(e) {}
+    return { ...DEFAULT_CAREER_PROFILES };
+  }
+
+  function saveProfiles(profilesObj) {
+    try {
+      localStorage.setItem(RESUME_PROFILES_KEY, JSON.stringify(profilesObj));
+    } catch(e) {}
+  }
+
+  function loadProfileVersion(profileId) {
+    const profiles = getSavedProfiles();
+    const p = profiles[profileId];
+    if (!p) return;
+
+    if (inputFullName && !inputFullName.value.trim()) inputFullName.value = 'Jane Doe';
+    if (inputJobTitle) inputJobTitle.value = p.title || '';
+    if (inputSummary) inputSummary.value = p.summary || '';
+    if (inputEducation) inputEducation.value = p.education || '';
+    if (bulletPoints) bulletPoints.value = p.bullets || '';
+
+    if (Array.isArray(p.skills)) {
+      const tagsContainer = document.getElementById('skillsTagsContainer');
+      const skillInput = document.getElementById('skillInputField');
+      if (tagsContainer) {
+        tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
+        p.skills.forEach(skill => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.innerHTML = `${escapeHTML(skill)} <span class="tag-remove">&times;</span>`;
+          span.querySelector('.tag-remove').addEventListener('click', () => {
+            span.remove();
+            syncLiveSkills();
+            autoSaveFormFields();
+          });
+          if (skillInput) tagsContainer.insertBefore(span, skillInput);
+          else tagsContainer.appendChild(span);
+        });
+      }
+    }
+
+    try { localStorage.setItem(ACTIVE_PROFILE_KEY, profileId); } catch(e) {}
+
+    syncLivePreview();
+    syncLiveSkills();
+    autoSaveFormFields();
+
+    if (typeof showToast === 'function') {
+      showToast(`Loaded ${p.name || p.title} profile version!`, 'success');
+    }
+  }
+
+  function renderVersionProfilesModal() {
+    const grid = document.getElementById('versionProfilesGrid');
+    if (!grid) return;
+
+    const profiles = getSavedProfiles();
+    const activeId = localStorage.getItem(ACTIVE_PROFILE_KEY) || 'frontend-lead';
+
+    grid.innerHTML = Object.values(profiles).map(p => {
+      const isActive = p.id === activeId;
+      const skillsBadge = Array.isArray(p.skills) ? p.skills.slice(0, 4).join(', ') : '';
+      return `
+        <div class="version-profile-card ${isActive ? 'active' : ''}" data-profile-id="${p.id}" style="padding: 12px 14px; border: 1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-color)'}; background: ${isActive ? 'var(--bg-active)' : 'var(--bg-surface)'}; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <strong style="font-size: 0.92rem; color: var(--text-primary);">${escapeHTML(p.name || p.title)}</strong>
+              ${isActive ? `<span class="badge-tag green" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #10b981;">Active Version</span>` : ''}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;">${escapeHTML(p.title)}</div>
+            ${skillsBadge ? `<div style="font-size: 0.75rem; color: var(--accent-primary); margin-top: 4px; font-weight: 500;">skills: ${escapeHTML(skillsBadge)}...</div>` : ''}
+          </div>
+          <button type="button" class="btn-primary-action btn-sm btn-load-profile" data-profile-id="${p.id}" style="padding: 6px 12px; font-size: 0.8rem;">
+            ${isActive ? 'Active' : 'Load Version'}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.btn-load-profile, .version-profile-card').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const profileId = el.getAttribute('data-profile-id');
+        if (profileId) {
+          loadProfileVersion(profileId);
+          closeVersionModal();
+        }
+      });
+    });
+  }
+
+  function openVersionModal() {
+    const modal = document.getElementById('versionProfilesModal');
+    if (!modal) return;
+    renderVersionProfilesModal();
+    modal.style.display = 'flex';
+    if (window.feather) feather.replace();
+  }
+
+  function closeVersionModal() {
+    const modal = document.getElementById('versionProfilesModal');
+    if (modal) modal.style.display = 'none';
   }
 
   const sidebarNewResumeBtn = document.getElementById('sidebarNewResumeBtn');
+  const btnNewResume = document.getElementById('btnNewResume');
+  const btnCloseVersionModal = document.getElementById('btnCloseVersionModal');
+  const btnSaveCurrentAsProfile = document.getElementById('btnSaveCurrentAsProfile');
+  const btnResetToBlankResume = document.getElementById('btnResetToBlankResume');
+
   if (sidebarNewResumeBtn) {
     sidebarNewResumeBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const rbNavItem = document.querySelector('.nav-item[data-tab="resume-builder"]');
       if (rbNavItem) rbNavItem.click();
+      openVersionModal();
+    });
+  }
+  if (btnNewResume) btnNewResume.addEventListener('click', () => openVersionModal());
+  if (btnCloseVersionModal) btnCloseVersionModal.addEventListener('click', () => closeVersionModal());
+
+  const versionModal = document.getElementById('versionProfilesModal');
+  if (versionModal) {
+    versionModal.addEventListener('click', (e) => {
+      if (e.target === versionModal) closeVersionModal();
+    });
+  }
+
+  if (btnSaveCurrentAsProfile) {
+    btnSaveCurrentAsProfile.addEventListener('click', () => {
+      const customTitle = prompt('Enter a name for this Custom Resume Profile (e.g. "FAANG Senior Role"):');
+      if (!customTitle || !customTitle.trim()) return;
+
+      const profileId = 'custom-' + Date.now();
+      const currentSkills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean);
+
+      const newProfile = {
+        id: profileId,
+        name: customTitle.trim(),
+        title: inputJobTitle ? inputJobTitle.value.trim() : 'Custom Role',
+        summary: inputSummary ? inputSummary.value.trim() : '',
+        skills: currentSkills,
+        education: inputEducation ? inputEducation.value.trim() : '',
+        bullets: bulletPoints ? bulletPoints.value.trim() : ''
+      };
+
+      const customProfiles = getSavedProfiles();
+      customProfiles[profileId] = newProfile;
+      saveProfiles(customProfiles);
+      loadProfileVersion(profileId);
+      closeVersionModal();
+    });
+  }
+
+  if (btnResetToBlankResume) {
+    btnResetToBlankResume.addEventListener('click', () => {
+      closeVersionModal();
       triggerNewResumeFlow();
     });
   }
@@ -4752,6 +4949,53 @@ Key Requirements:
       }, 100);
     });
   }
+
+  /* ==========================================================================
+     RESUME ACCENT COLOR PALETTE SWATCHES ENGINE
+     ========================================================================== */
+  const ACCENT_STORAGE_KEY = 'resuai_accent_color';
+
+  function setResumeAccentColor(colorHex) {
+    if (!colorHex) return;
+
+    document.querySelectorAll('.preview-paper-sheet, #printableResumeDoc, #tailoredResumeDoc').forEach(sheet => {
+      sheet.style.setProperty('--accent-primary', colorHex);
+      sheet.style.setProperty('--accent', colorHex);
+      sheet.style.setProperty('--primary', colorHex);
+    });
+
+    document.querySelectorAll('.topbar-swatches-group .swatch-btn').forEach(btn => {
+      const btnColor = btn.getAttribute('data-color');
+      if (btnColor && btnColor.toLowerCase() === colorHex.toLowerCase()) {
+        btn.classList.add('active');
+        btn.style.borderColor = '#fff';
+        btn.style.boxShadow = `0 0 0 2px ${colorHex}`;
+      } else {
+        btn.classList.remove('active');
+        btn.style.borderColor = 'transparent';
+        btn.style.boxShadow = 'none';
+      }
+    });
+
+    try {
+      localStorage.setItem(ACCENT_STORAGE_KEY, colorHex);
+    } catch(e) {}
+  }
+
+  const savedAccentColor = localStorage.getItem(ACCENT_STORAGE_KEY) || '#C98B4A';
+  setResumeAccentColor(savedAccentColor);
+
+  document.querySelectorAll('.topbar-swatches-group .swatch-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const color = btn.getAttribute('data-color');
+      if (color) {
+        setResumeAccentColor(color);
+        if (typeof showToast === 'function') {
+          showToast(`Applied ${btn.title || 'accent color'}!`, 'info');
+        }
+      }
+    });
+  });
 
   // Load saved settings on startup
   loadPlatformSettings();
