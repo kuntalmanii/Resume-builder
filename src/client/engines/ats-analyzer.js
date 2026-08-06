@@ -10,6 +10,7 @@ class AtsAnalyzer {
     this.extractedKeywords = [];
     this.missingKeywords = [];
     this.initialized = false;
+    this.isScanning = false;
   }
 
   init() {
@@ -50,7 +51,8 @@ class AtsAnalyzer {
     if (achievements) text += ' ' + achievements;
 
     document.querySelectorAll('#skillsTagsContainer .tag').forEach(tag => {
-      text += ' ' + tag.textContent;
+      const cleanTag = tag.textContent.replace(/[×\u00d7]/g, '').trim();
+      if (cleanTag) text += ' ' + cleanTag;
     });
 
     return text.trim();
@@ -97,6 +99,9 @@ class AtsAnalyzer {
 
   /* ------ Proxy 1-Click ATS Scan via Gemini AI Backend ------ */
   async runAtsScan() {
+    if (this.isScanning) return;
+    this.isScanning = true;
+
     const btnScan = document.getElementById('btnRunAtsAnalysis');
     const btnRunAtsText = document.getElementById('btnRunAtsText');
     const jdInput = document.getElementById('atsJdInput') || document.getElementById('atsTargetJdInput');
@@ -114,6 +119,7 @@ class AtsAnalyzer {
       if (typeof window.showToast === 'function') window.showToast(msg, 'error');
       else alert(msg);
       if (jdInput) jdInput.focus();
+      this.isScanning = false;
       return;
     }
 
@@ -121,6 +127,7 @@ class AtsAnalyzer {
       const msg = 'Please fill out your resume details or upload a resume PDF before running analysis.';
       if (typeof window.showToast === 'function') window.showToast(msg, 'error');
       else alert(msg);
+      this.isScanning = false;
       return;
     }
 
@@ -215,6 +222,7 @@ class AtsAnalyzer {
         btnScan.innerHTML = origBtnHTML;
       }
       if (window.feather) feather.replace();
+      this.isScanning = false;
     }
   }
 
@@ -322,18 +330,26 @@ class AtsAnalyzer {
         : `<span class="badge-tag amber">General Skills Matched</span>`;
     }
 
-    // Render Missing Keywords
+    // Render Missing Keywords with current skills cross-reference
+    const existingSkills = new Set(
+      Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
+        .map(t => t.textContent.replace(/[×\u00d7]/g, '').trim().toLowerCase())
+    );
+
     const missingTitle = document.getElementById('missingKeywordsTitle');
     const missingContainer = document.getElementById('missingKeywordsContainer') || document.getElementById('atsMissingBadgeList');
     if (missingTitle) missingTitle.innerHTML = `⚠ Missing / Gap Keywords (${missing.length})`;
     if (missingContainer) {
       missingContainer.innerHTML = missing.length > 0
-        ? missing.map(kw => `
+        ? missing.map(kw => {
+          const isAdded = existingSkills.has(kw.toLowerCase());
+          return `
           <span class="missing-keyword-tag">
             <span>${this.escapeHTML(kw)}</span>
-            <span class="tag-add-btn" data-keyword="${this.escapeHTML(kw)}" title="Click to add ${this.escapeHTML(kw)} to Core Skills">+ Add</span>
+            <span class="tag-add-btn ${isAdded ? 'added' : ''}" data-keyword="${this.escapeHTML(kw)}" title="${isAdded ? 'Already added' : 'Click to add ' + this.escapeHTML(kw) + ' to Core Skills'}" ${isAdded ? 'style="pointer-events:none;"' : ''}>${isAdded ? 'Added ✓' : '+ Add'}</span>
           </span>
-        `).join('')
+        `;
+        }).join('')
         : `<span class="badge-tag green">✓ 100% Keywords Matched!</span>`;
     }
 

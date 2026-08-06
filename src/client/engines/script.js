@@ -3468,15 +3468,7 @@ Key Requirements:
     return await response.json();
   }
 
-  // Run ATS Analysis Action Button Handler - Delegated to AtsAnalyzer module
-  if (btnRunAtsAnalysis) {
-    btnRunAtsAnalysis.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (window.atsAnalyzer && typeof window.atsAnalyzer.runAtsScan === 'function') {
-        window.atsAnalyzer.runAtsScan();
-      }
-    });
-  }
+
 
   // Restore form persistence & initial live preview sync
   loadSavedFormFields();
