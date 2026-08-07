@@ -359,7 +359,11 @@ document.addEventListener('DOMContentLoaded', () => {
       authCard.classList.add('auth-card-shake');
       setTimeout(() => authCard.classList.remove('auth-card-shake'), 500);
     }
-    showToast(msg, 'error');
+    // Guard required: showAuthError() is called from async Supabase auth
+    // callbacks that can fire before DOMContentLoaded fully executes.
+    // window.showToast is set later at line ~4201; the typeof guard ensures
+    // we never throw a ReferenceError if the callback fires too early.
+    if (typeof showToast === 'function') showToast(msg, 'error');
   }
 
   function clearAuthError() {
