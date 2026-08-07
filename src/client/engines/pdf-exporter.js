@@ -144,6 +144,27 @@ class PdfExporter {
         padding: 0 !important;
         margin: 0 !important;
         background: #ffffff !important;
+        /* Offline fallback: if Google Fonts (${styles.fontLink}) fails to
+           load, the browser will cascade to these system fonts instead of
+           falling back all the way to Times New Roman (browser default).
+           The font stacks below mirror the web font choices:
+             - inter-jakarta  → Arial, Helvetica, sans-serif
+             - roboto-sans    → Arial, Helvetica, sans-serif
+             - georgia-serif  → Georgia, 'Times New Roman', serif        */
+        font-family: ${styles.bodyFont}, Arial, Helvetica, sans-serif !important;
+        font-size: 9.5pt !important;
+        line-height: 1.55 !important;
+        color: #1a1a2e !important;
+      }
+      .preview-paper-sheet {
+        font-family: ${styles.bodyFont}, Arial, Helvetica, sans-serif !important;
+      }
+      .doc-name,
+      .section-title,
+      .resume-name,
+      .tailored-name {
+        /* Heading font with same offline-safe fallback chain */
+        font-family: ${styles.headingFont}, Arial, Helvetica, sans-serif !important;
       }
     }
   </style>
