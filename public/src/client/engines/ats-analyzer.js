@@ -160,13 +160,13 @@ class AtsAnalyzer {
       const response = await fetch('/api/ats-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // NOTE: The backend (api/ats-analyze.js) reads body.jobDescription as its
+        // primary key, with jdText / targetJdText as fallbacks. We send only the
+        // canonical key here to avoid redundant payload bloat.
         body: JSON.stringify({
-          jdText: jdText,
-          targetJdText: jdText,
           jobDescription: jdText,
           resumeText: resumeContent,
-          geminiModel: window.getActiveSettings ? window.getActiveSettings().geminiModel : '',
-          atsEngine: window.getActiveSettings ? window.getActiveSettings().atsEngine : ''
+          geminiModel: window.getActiveSettings ? window.getActiveSettings().geminiModel : 'gemini-2.0-flash'
         })
       });
 
@@ -203,7 +203,20 @@ class AtsAnalyzer {
 
     } catch (err) {
       console.warn('ATS Gemini endpoint error, falling back to local calculation:', err.message);
+
+      // Stop the progress animation immediately
       clearInterval(timer);
+
+      // ✅ Reset progress bar back to 0 so it never stays stuck at a partial fill.
+      // The success path sets 100% before hiding the loader; the error path
+      // must symmetrically reset back to 0 before hiding it.
+      if (atsProgressFill) {
+        atsProgressFill.style.width = '0%';
+        atsProgressFill.style.transition = 'none'; // skip animation on reset
+      }
+      if (atsProgressPercent) atsProgressPercent.textContent = '0%';
+      if (loadingStepText) loadingStepText.textContent = 'Running local ATS analysis…';
+
       if (atsLoadingState) atsLoadingState.style.display = 'none';
 
       const localResult = this.calculateScore(resumeContent, jdText);
@@ -227,7 +240,7 @@ class AtsAnalyzer {
   }
 
   renderBreakdownUi(score, matched = [], missing = [], recommendations = []) {
-    const dynamicScore = Math.min(100, Math.max(0, parseInt(score) ?? 0));
+    const dynamicScore = Math.min(100, Math.max(0, parseInt(score, 10) || 0));
 
     // Update main score ring numbers
     const scoreNumber = document.getElementById('scoreNumber');
