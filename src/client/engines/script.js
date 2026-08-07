@@ -46,9 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   };
 
-  window.onunhandledrejection = function (event) {
+  window.addEventListener('unhandledrejection', function (event) {
     console.error('[ResuAI Unhandled Rejection]', event.reason);
-  };
+  });
 
   // Storage Keys & Core Constants
   const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
