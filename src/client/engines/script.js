@@ -50,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('[ResuAI Unhandled Rejection]', event.reason);
   };
 
+  // Storage Keys & Core Constants
+  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
+
   // Initialize Feather Vector Icons
   if (window.feather) {
     feather.replace();
@@ -1329,8 +1332,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      5. Automatic Form Persistence (LocalStorage Auto-Save)
      ========================================================================== */
-  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
-
   const inputFullName = document.getElementById('inputFullName');
   const inputJobTitle = document.getElementById('inputJobTitle');
   const inputEmail = document.getElementById('inputEmail');
