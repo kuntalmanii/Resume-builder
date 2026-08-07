@@ -2888,6 +2888,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderVersionProfilesModal();
     modal.style.display = 'flex';
     if (window.feather) feather.replace();
+
+    // Scroll the active profile card into view after the modal is painted.
+    // requestAnimationFrame ensures the browser has completed layout for
+    // the newly visible flex modal before scrollIntoView calculates position.
+    requestAnimationFrame(() => {
+      const grid = document.getElementById('versionProfilesGrid');
+      if (grid) grid.scrollTop = 0; // always reset first so active card scroll is predictable
+      const activeCard = modal.querySelector('.version-profile-card.active');
+      if (activeCard) activeCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
   }
 
   function closeVersionModal() {
