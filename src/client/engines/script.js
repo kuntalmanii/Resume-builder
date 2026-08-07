@@ -3077,7 +3077,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const missingKeywordsContainer = document.getElementById('missingKeywordsContainer');
   const recommendationsGridContainer = document.getElementById('recommendationsGridContainer');
 
-  let uploadedFileText = "";
+  // Exposed on window so ats-analyzer.js (a separate module) can read the
+  // uploaded PDF/TXT content via window.uploadedFileText in getResumeText().
+  window.uploadedFileText = "";
 
   // Configure PDF.js worker URL if library is loaded
   if (window.pdfjsLib) {
@@ -3158,15 +3160,15 @@ document.addEventListener('DOMContentLoaded', () => {
       selectedFileBadge.style.display = 'inline-flex';
     }
 
-    uploadedFileText = ''; // Reset before extraction
+    window.uploadedFileText = ''; // Reset before extraction
 
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       // PDF — use PDF.js
-      uploadedFileText = await extractPdfText(file);
+      window.uploadedFileText = await extractPdfText(file);
 
     } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
       // TXT — wrap FileReader in a Promise so it's properly awaited
-      uploadedFileText = await new Promise((resolve) => {
+      window.uploadedFileText = await new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload  = (e) => resolve(e.target.result || '');
         reader.onerror = ()  => resolve('');
@@ -3175,7 +3177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } else if (file.name.endsWith('.docx')) {
       // DOCX — notify user that PDF or TXT is recommended for full text extraction
-      uploadedFileText = '';
+      window.uploadedFileText = '';
       if (selectedFileName) {
         selectedFileName.textContent = `${file.name} — DOCX file selected. For best ATS parsing, PDF or TXT is recommended.`;
       }
