@@ -154,7 +154,7 @@ class AtsAnalyzer {
         else loadingStepText.textContent = "Generating structured ATS diagnostic report...";
       }
       if (progress >= 90) clearInterval(timer);
-    }, 60);
+    }, 300); // 300ms × 9 steps = 2.7s — matches realistic Gemini API latency
 
     try {
       const response = await fetch('/api/ats-analyze', {
