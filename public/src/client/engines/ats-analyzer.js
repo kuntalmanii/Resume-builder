@@ -34,7 +34,8 @@ class AtsAnalyzer {
   getResumeText() {
     let text = (window.uploadedFileText || '').trim();
     const editorBody = document.querySelector('.doc-editor-body');
-    if (editorBody && editorBody.innerText) {
+    // Optional chaining: skip if editorBody is null or has no innerText
+    if (editorBody?.innerText) {
       text += '\n' + editorBody.innerText.trim();
     }
 
@@ -256,8 +257,7 @@ class AtsAnalyzer {
       scoreCircle.style.background = `conic-gradient(${color} 0% ${dynamicScore}%, rgba(128, 128, 128, 0.18) ${dynamicScore}% 100%)`;
     }
     if (scoreRing) {
-      const offset = 283 - (283 * dynamicScore) / 100;
-      scoreRing.style.strokeDashoffset = offset;
+      scoreRing.style.strokeDashoffset = 283 - (283 * dynamicScore) / 100;
     }
     if (statusBadge) {
       statusBadge.textContent = dynamicScore >= 75 ? 'Passed ATS Gatekeeper' : 'Review Suggested';
