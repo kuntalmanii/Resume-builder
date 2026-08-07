@@ -12,6 +12,30 @@
  * 7. ATS Analyzer Diagnostic Report & Scanner Engine
  */
 
+/**
+ * escapeHTML — Global XSS-safe HTML escape helper.
+ *
+ * Defined here in global scope (outside DOMContentLoaded) so it is
+ * accessible to all functions throughout this file that build innerHTML
+ * strings (renderCustomSectionInputs, renderCustomSectionsPreview,
+ * renderVersionProfilesModal, etc.).
+ *
+ * NOTE: ats-analyzer.js has its own identical copy as a class method
+ * (this.escapeHTML). This standalone version is for script.js only.
+ *
+ * @param {*} str - Value to escape. Non-strings return ''.
+ * @returns {string} HTML-escaped string safe for innerHTML insertion.
+ */
+function escapeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Global Error Boundary & Monitoring Hooks
   window.onerror = function (msg, url, lineNo, columnNo, error) {
@@ -4912,19 +4936,7 @@ Key Requirements:
   if (jobSearchInput) jobSearchInput.addEventListener('input', renderPipelineViews);
   if (jobStageFilter) jobStageFilter.addEventListener('change', renderPipelineViews);
 
-  // Helper escape HTML string function
-  function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'"]/g, 
-      tag => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[tag] || tag)
-    );
-  }
+  // escapeHTML is defined as a global function at the top of this file.
 
   // Initialize pipeline
   loadJobApplications();
