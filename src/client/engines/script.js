@@ -298,6 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever'
     };
   }
+  // Exposed on window so external modules (ats-analyzer.js, pdf-exporter.js)
+  // can retrieve the active Gemini model and ATS engine settings at call time.
+  // Without this, window.getActiveSettings is always undefined and all
+  // backend AI calls silently fall back to empty-string defaults.
+  window.getActiveSettings = getActiveSettings;
 
   let isSigningOut = false;
 
