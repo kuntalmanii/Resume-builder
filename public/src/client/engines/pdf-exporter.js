@@ -12,6 +12,13 @@ class PdfExporter {
   init() {
     if (this.initialized) return;
     this.bindExportButtons();
+    this.calculatePageBreaks();
+
+    const paper = document.querySelector('.preview-paper-sheet');
+    if (paper && typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => this.calculatePageBreaks());
+      observer.observe(paper);
+    }
     this.initialized = true;
   }
 
