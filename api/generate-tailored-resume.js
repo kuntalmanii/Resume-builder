@@ -1,14 +1,5 @@
 const https = require('https');
-
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-pro-exp-02-05', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-
-const SHARED_TAXONOMY_KEYWORDS = [
-  'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-  'Node.js', 'Express', 'Python', 'Django', 'FastAPI', 'Go', 'Rust', 'Java',
-  'Spring Boot', 'C++', 'GraphQL', 'REST API', 'PostgreSQL', 'MySQL', 'MongoDB',
-  'Redis', 'Supabase', 'Firebase', 'AWS', 'Docker', 'Kubernetes', 'CI/CD',
-  'Git', 'Jest', 'TailwindCSS', 'Microservices', 'System Design'
-];
+const { GEMINI_MODELS, SHARED_TAXONOMY_KEYWORDS } = require('./_shared');
 
 function extractResumeDetails(resumeText) {
   const text = (resumeText || '').trim();

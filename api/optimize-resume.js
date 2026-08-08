@@ -1,14 +1,5 @@
 const https = require('https');
-
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-pro-exp-02-05', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-
-function sanitizeInputText(str) {
-  if (typeof str !== 'string') return '';
-  return str
-    .replace(/<script\b[^<]*>(?:[\s\S]*?)<\/script>/gi, '')
-    .replace(/<[^>]+>/g, '')
-    .trim();
-}
+const { GEMINI_MODELS, sanitizeInputText } = require('./_shared');
 
 function runServerFallbackOptimization(jobTitle, experienceText) {
   return {
