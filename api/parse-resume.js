@@ -52,90 +52,97 @@ function makeGeminiRequest(model, prompt, apiKey) {
 
 /**
  * Heuristic fallback parser — runs entirely in Node.js without Gemini.
- * Extracts the most common resume patterns via regex.
+ * Extracts the most common resume patterns cleanly via regex.
  */
 function heuristicParse(text) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // --- Email ---
+  // Email
   const emailMatch = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
   const email = emailMatch ? emailMatch[0] : '';
 
-  // --- Phone ---
+  // Phone
   const phoneMatch = text.match(/(\+?\d[\d\s\-().]{7,}\d)/);
   const phone = phoneMatch ? phoneMatch[0].trim() : '';
 
-  // --- LinkedIn ---
+  // LinkedIn
   const linkedinMatch = text.match(/linkedin\.com\/in\/([^\s,/<>"]+)/i);
   const linkedin = linkedinMatch ? `https://linkedin.com/in/${linkedinMatch[1]}` : '';
 
-  // --- GitHub ---
+  // GitHub
   const githubMatch = text.match(/github\.com\/([^\s,/<>"]+)/i);
   const github = githubMatch ? `https://github.com/${githubMatch[1]}` : '';
 
-  // --- Portfolio / website ---
+  // Portfolio
   const portfolioMatch = text.match(/https?:\/\/(?!linkedin|github)([^\s,<>"]+)/i);
   const portfolio = portfolioMatch ? portfolioMatch[0] : '';
 
-  // --- Location ---
-  const locationMatch = text.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s*(?:[A-Z]{2}|[A-Za-z]+))\b/);
-  const location = locationMatch ? locationMatch[0] : '';
+  // Location helper check
+  const isLocationStr = (str) => /^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(str) || /\b(bengaluru|bangalore|mumbai|delhi|hyderabad|pune|chennai|seattle|san francisco|new york|london|india|usa|uk|canada)\b/i.test(str);
 
-  // --- Name: first non-empty line that looks like a name (no @ or digits) ---
+  const locMatch = text.match(/\b([A-Z][a-zA-Z\s]{2,25},\s*(?:[A-Z]{2}|[A-Za-z]{2,20}))\b/);
+  const location = locMatch ? locMatch[1].trim() : '';
+
+  // Name: first non-empty line that isn't contact/location/section heading
   let fullName = '';
   for (const line of lines.slice(0, 6)) {
-    if (!line.includes('@') && !/\d{3,}/.test(line) && line.length >= 4 && line.length <= 50
-        && !/^(summary|profile|objective|resume|curriculum|experience|education|skills)/i.test(line)) {
+    if (!line.includes('@') && !/\d{5,}/.test(line) && line.length >= 2 && line.length <= 50
+        && !/^(summary|profile|objective|resume|cv|experience|education|skills|certifications|projects)/i.test(line)
+        && !isLocationStr(line)) {
       fullName = line;
       break;
     }
   }
 
-  // --- Summary: paragraph after "Summary" / "Profile" / "Objective" ---
-  const summaryMatch = text.match(/(?:summary|profile|objective|about me)[:\s]*\n+([\s\S]{40,400}?)(?:\n{2,}|\n[A-Z])/i);
-  const summary = summaryMatch ? summaryMatch[1].trim().replace(/\n/g, ' ') : '';
-
-  // --- Education ---
-  const educationMatch = text.match(/(?:education|academic)[:\s]*\n+([\s\S]{20,600}?)(?:\n{2,}(?:[A-Z])|\n(?:experience|skills|certifications|projects|achievements|work))/i);
-  const education = educationMatch ? educationMatch[1].trim() : '';
-
-
-  // --- Skills ---
-  const skillsMatch = text.match(/(?:skills|technologies|tech stack|technical skills)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}|\n[A-Z](?:[a-z]+\s){0,2}[A-Z])/i);
-  const rawSkills = skillsMatch ? skillsMatch[1] : '';
-  const skills = rawSkills
-    .split(/[,|•\n\/]/)
-    .map(s => s.replace(/[^\w\s.#+]/g, '').trim())
-    .filter(s => s.length >= 2 && s.length <= 35);
-
-  // --- Experience ---
-  const expMatch = text.match(/(?:experience|work history|employment)[:\s]*\n+([\s\S]{50,2000}?)(?:\n{2,}(?:education|skills|certifications|projects|achievements)\b)/i);
-  const experience = expMatch ? expMatch[1].trim() : '';
-
-  // --- Certifications ---
-  const certMatch = text.match(/(?:certifications?|certificates?|licenses?)[:\s]*\n*([\s\S]{10,600}?)(?:\n{2,}|\n[A-Z])/i);
-  const certifications = certMatch ? certMatch[1].trim() : '';
-
-  // --- Projects ---
-  const projectsMatch = text.match(/(?:projects?|portfolio)[:\s]*\n+([\s\S]{20,1000}?)(?:\n{2,}(?:education|skills|certifications|achievements|experience)\b)/i);
-  const projects = projectsMatch ? projectsMatch[1].trim() : '';
-
-  // --- Achievements / Awards ---
-  const achievementsMatch = text.match(/(?:achievements?|awards?|honors?|accomplishments?)[:\s]*\n*([\s\S]{10,600}?)(?:\n{2,}|\n[A-Z])/i);
-  const achievements = achievementsMatch ? achievementsMatch[1].trim() : '';
-
-  // --- Job title: line right after name ---
+  // Job title: line after name IF it's not location / contact / section heading
   let jobTitle = '';
   let foundName = false;
   for (const line of lines.slice(0, 10)) {
-    if (foundName) {
-      if (!line.includes('@') && !/^\+/.test(line) && line.length >= 4 && line.length <= 80) {
+    if (foundName && line !== fullName) {
+      if (!line.includes('@') && !/^\+?\d/.test(line) && !isLocationStr(line)
+          && line.length >= 3 && line.length <= 60
+          && !/^(summary|profile|objective|experience|education|skills)/i.test(line)) {
         jobTitle = line;
         break;
       }
     }
     if (line === fullName) foundName = true;
   }
+
+  // Summary
+  const summaryMatch = text.match(/(?:summary|profile|objective|about me)[:\s]*\n+([\s\S]{20,400}?)(?:\n{2,}|\n[A-Z])/i);
+  const summary = summaryMatch ? summaryMatch[1].trim().replace(/\n+/g, ' ') : '';
+
+  // Skills
+  const skillsMatch = text.match(/(?:skills|technologies|tech stack|competencies)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}|\n[A-Z])/i);
+  const rawSkills = skillsMatch ? skillsMatch[1] : '';
+  const skills = rawSkills
+    .split(/[,|•\n\/]/)
+    .map(s => s.replace(/[^\w\s.#+]/g, '').trim())
+    .filter(s => s.length >= 2 && s.length <= 35 && !/^(skills|competencies|tools|technical)$/i.test(s));
+
+  // Experience: block under EXPERIENCE header
+  const expMatch = text.match(/(?:professional experience|experience|work history|employment)[:\s]*\n+([\s\S]{30,2000}?)(?:\n{2,}(?:education|skills|certifications|projects|achievements|credentials)\b)/i);
+  let experience = expMatch ? expMatch[1].trim() : '';
+  if (!experience) {
+    experience = lines.filter(l => /^[•\-\*]|\b(20\d\d|19\d\d)\b/.test(l) && l.length > 15).join('\n');
+  }
+
+  // Education
+  const eduMatch = text.match(/(?:education|academic|credentials)[:\s]*\n+([\s\S]{15,600}?)(?:\n{2,}(?:certifications|projects|skills|experience|interests)\b)/i);
+  const education = eduMatch ? eduMatch[1].trim() : '';
+
+  // Certifications
+  const certMatch = text.match(/(?:certifications?|certificates?|licenses?)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}(?:projects|skills|education|experience|interests)\b)/i);
+  const certifications = certMatch ? certMatch[1].trim() : '';
+
+  // Projects
+  const projMatch = text.match(/(?:technical projects|projects?|portfolio)[:\s]*\n+([\s\S]{15,800}?)(?:\n{2,}(?:education|skills|certifications|achievements|experience)\b)/i);
+  const projects = projMatch ? projMatch[1].trim() : '';
+
+  // Achievements
+  const achMatch = text.match(/(?:achievements?|awards?|honors?)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}|\n[A-Z])/i);
+  const achievements = achMatch ? achMatch[1].trim() : '';
 
   return {
     fullName, jobTitle, email, phone, location,
@@ -154,14 +161,13 @@ module.exports = async function parseResumeHandler(req, res) {
     const b = req.body || {};
     const rawText = (b.resumeText || '').trim();
 
-    if (!rawText || rawText.length < 30) {
-      return res.status(400).json({ error: 'Resume text is required (minimum 30 characters).' });
+    if (!rawText || rawText.length < 10) {
+      return res.status(400).json({ error: 'Resume text is required.' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      // No API key — use heuristic parser
       return res.status(200).json({ ...heuristicParse(rawText), _source: 'heuristic' });
     }
 
@@ -173,15 +179,15 @@ ${rawText.slice(0, 5000)}
 Respond STRICTLY with a single valid JSON object — no markdown fences, no extra prose:
 {
   "fullName": "<candidate full name>",
-  "jobTitle": "<current or target job title from resume header>",
+  "jobTitle": "<current or target job title, leave empty string if line is a location or missing>",
   "email": "<email address>",
   "phone": "<phone number>",
-  "location": "<city, state or country>",
+  "location": "<city, state or country only>",
   "linkedin": "<full LinkedIn URL if present, else empty string>",
   "github": "<full GitHub URL if present, else empty string>",
   "portfolio": "<personal website/portfolio URL if present, else empty string>",
   "summary": "<professional summary or objective paragraph>",
-  "experience": "<all work experience bullet points, preserve formatting, use \\n between roles>",
+  "experience": "<work experience bullet points only, exclude education or certifications>",
   "skills": ["<skill1>", "<skill2>", "<skill3>"],
   "education": "<education section text>",
   "certifications": "<certifications or licenses text>",
@@ -190,10 +196,10 @@ Respond STRICTLY with a single valid JSON object — no markdown fences, no extr
 }
 
 Rules:
+- Do NOT set jobTitle to a location like "Bengaluru, Karnataka" or "Seattle, WA"
 - If a field is not present in the resume, use an empty string "" or empty array []
 - For skills, return individual technology names as an array, not a long sentence
-- Preserve line breaks in experience/education/projects using \\n
-- Do NOT invent or hallucinate any data not present in the resume`;
+- Do NOT duplicate content between sections`;
 
     const models = [...new Set(GEMINI_MODELS.filter(Boolean))];
     let result = null;

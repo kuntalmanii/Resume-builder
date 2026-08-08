@@ -2251,8 +2251,17 @@ document.addEventListener('DOMContentLoaded', () => {
       updateTextNode(previewName, inputFullName.value.trim().toUpperCase() || 'YOUR NAME');
     }
     if (inputJobTitle && previewRole) {
-      updateTextNode(previewRole, inputJobTitle.value.trim().toUpperCase() || '');
+      const titleVal = inputJobTitle.value.trim();
+      const locVal = inputLocation ? inputLocation.value.trim() : '';
+      if (titleVal && titleVal.toLowerCase() !== locVal.toLowerCase() && !/^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(titleVal)) {
+        updateTextNode(previewRole, titleVal.toUpperCase());
+        previewRole.style.display = 'block';
+      } else {
+        updateTextNode(previewRole, '');
+        previewRole.style.display = 'none';
+      }
     }
+
     if (previewMeta) {
       const chips = [];
       const loc  = inputLocation ? inputLocation.value.trim() : '';
@@ -3211,12 +3220,16 @@ document.addEventListener('DOMContentLoaded', () => {
           const linkedinMatch = text.match(/linkedin\.com\/in\/([^\s,/<>"]+)/i);
           const githubMatch = text.match(/github\.com\/([^\s,/<>"]+)/i);
           const portfolioMatch = text.match(/https?:\/\/(?!linkedin|github)([^\s,<>"]+)/i);
-          const locationMatch = text.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s*(?:[A-Z]{2}|[A-Za-z]+))\b/);
+
+          const isLocationStr = (str) => /^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(str) || /\b(bengaluru|bangalore|mumbai|delhi|hyderabad|pune|chennai|seattle|san francisco|new york|london|india|usa|uk|canada)\b/i.test(str);
+          const locMatch = text.match(/\b([A-Z][a-zA-Z\s]{2,25},\s*(?:[A-Z]{2}|[A-Za-z]{2,20}))\b/);
+          const location = locMatch ? locMatch[1].trim() : '';
 
           let name = '';
           for (const line of lines.slice(0, 6)) {
-            if (!line.includes('@') && !/\d{3,}/.test(line) && line.length >= 2 && line.length <= 50
-                && !/^(summary|profile|objective|resume|cv|experience|education|skills)/i.test(line)) {
+            if (!line.includes('@') && !/\d{5,}/.test(line) && line.length >= 2 && line.length <= 50
+                && !/^(summary|profile|objective|resume|cv|experience|education|skills|certifications|projects)/i.test(line)
+                && !isLocationStr(line)) {
               name = line; break;
             }
           }
@@ -3225,28 +3238,36 @@ document.addEventListener('DOMContentLoaded', () => {
           let nameFound = false;
           for (const line of lines.slice(0, 10)) {
             if (nameFound && line !== name) {
-              if (!line.includes('@') && !/^\+/.test(line) && line.length >= 3 && line.length <= 80) {
+              if (!line.includes('@') && !/^\+?\d/.test(line) && !isLocationStr(line)
+                  && line.length >= 3 && line.length <= 60
+                  && !/^(summary|profile|objective|experience|education|skills)/i.test(line)) {
                 title = line; break;
               }
             }
             if (line === name) nameFound = true;
           }
 
-          const skillsMatch = text.match(/(?:skills|technologies|tech stack)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}|\n[A-Z])/i);
+          const skillsMatch = text.match(/(?:skills|technologies|tech stack|competencies)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}|\n[A-Z])/i);
           const rawSkills = skillsMatch ? skillsMatch[1] : '';
-          const extractedSkills = rawSkills.split(/[,|•\n\/]/).map(s => s.replace(/[^\w\s.#+]/g, '').trim()).filter(s => s.length >= 2 && s.length <= 35);
+          const extractedSkills = rawSkills.split(/[,|•\n\/]/).map(s => s.replace(/[^\w\s.#+]/g, '').trim()).filter(s => s.length >= 2 && s.length <= 35 && !/^(skills|competencies|tools|technical)$/i.test(s));
+
+          const expMatch = text.match(/(?:professional experience|experience|work history|employment)[:\s]*\n+([\s\S]{30,2000}?)(?:\n{2,}(?:education|skills|certifications|projects|achievements|credentials)\b)/i);
+          let experienceText = expMatch ? expMatch[1].trim() : '';
+          if (!experienceText) {
+            experienceText = lines.filter(l => /^[•\-\*]|\b(20\d\d|19\d\d)\b/.test(l) && l.length > 15).join('\n');
+          }
 
           parsed = {
             fullName: parsed?.fullName || name || lines[0] || '',
-            jobTitle: parsed?.jobTitle || title || lines[1] || '',
+            jobTitle: parsed?.jobTitle || title || '',
             email: parsed?.email || (emailMatch ? emailMatch[0] : ''),
             phone: parsed?.phone || (phoneMatch ? phoneMatch[0] : ''),
-            location: parsed?.location || (locationMatch ? locationMatch[0] : ''),
+            location: parsed?.location || location,
             linkedin: parsed?.linkedin || (linkedinMatch ? `https://linkedin.com/in/${linkedinMatch[1]}` : ''),
             github: parsed?.github || (githubMatch ? `https://github.com/${githubMatch[1]}` : ''),
             portfolio: parsed?.portfolio || (portfolioMatch ? portfolioMatch[0] : ''),
             summary: parsed?.summary || '',
-            experience: parsed?.experience || text,
+            experience: parsed?.experience || experienceText,
             skills: (parsed?.skills && parsed.skills.length > 0) ? parsed.skills : extractedSkills,
             education: parsed?.education || '',
             certifications: parsed?.certifications || '',
@@ -3254,6 +3275,7 @@ document.addEventListener('DOMContentLoaded', () => {
             achievements: parsed?.achievements || ''
           };
         }
+
 
 
         // Auto-fill legacy form fields

@@ -3020,9 +3020,8 @@ i[data-feather] svg { width: 1em; height: 1em; }
   line-height: 1.4 !important;
 }
 
-/* Contact Grid Header */
-.doc-contact-grid,
-.paper-contact-row {
+/* Contact Grid Header for Editor Form */
+.doc-contact-grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)) !important;
   gap: 8px 14px !important;
@@ -3030,6 +3029,40 @@ i[data-feather] svg { width: 1em; height: 1em; }
   padding-top: 12px !important;
   border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
+
+/* Contact Chips Header for Live Paper & PDF Export */
+.paper-contact-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px 8px !important;
+  margin-top: 8px !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+}
+.paper-contact-row .contact-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 10.5px !important;
+  color: #374151 !important;
+  white-space: nowrap !important;
+}
+.paper-contact-row .contact-chip svg,
+.paper-contact-row .contact-chip i {
+  width: 12px !important;
+  height: 12px !important;
+  stroke: #4b5563 !important;
+  flex-shrink: 0 !important;
+}
+.paper-contact-row .contact-divider {
+  color: #9ca3af !important;
+  font-size: 11px !important;
+  user-select: none !important;
+  margin: 0 2px !important;
+}
+
 .doc-contact-item {
   display: flex;
   align-items: center;
