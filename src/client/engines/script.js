@@ -206,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const authToggleBtn     = document.getElementById('authToggleBtn');
   const ssoGithubBtn      = document.getElementById('ssoGithubBtn');
   const ssoGoogleBtn      = document.getElementById('ssoGoogleBtn');
-  const logoutBtn         = document.getElementById('logoutBtn');
   const topSignoutBtn     = document.getElementById('topSignoutBtn');
 
   let isSignUpMode = false;
@@ -954,12 +953,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Direct element listeners
-  if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
   if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
 
   // Global delegation for any signout button across the DOM
   document.addEventListener('click', function(e) {
-    const targetBtn = e.target.closest('.btn-signout, .sidebar-signout-btn, #topSignoutBtn, #logoutBtn, #profileModalSignoutBtn, .btn-logout, [data-action="signout"]');
+    const targetBtn = e.target.closest('.btn-signout, .sidebar-signout-btn, #topSignoutBtn, #profileModalSignoutBtn, .btn-logout, [data-action="signout"]');
     if (targetBtn) {
       e.preventDefault();
       handleSignOut(e);
