@@ -4896,27 +4896,41 @@ Key Requirements:
     if (!jobModal || !jobForm) return;
 
     jobForm.reset();
-    document.getElementById('jobId').value = '';
+
+    const jobIdEl        = document.getElementById('jobId');
+    const jobTitleEl     = document.getElementById('jobModalTitle');
+    const jobCompanyEl   = document.getElementById('jobCompany');
+    const jobRoleTitleEl = document.getElementById('jobTitle');
+    const jobStageEl     = document.getElementById('jobStage');
+    const jobSalaryEl    = document.getElementById('jobSalary');
+    const jobDateEl      = document.getElementById('jobDate');
+    const jobLocationEl  = document.getElementById('jobLocation');
+    const jobAtsScoreEl  = document.getElementById('jobAtsScore');
+    const jobUrlEl       = document.getElementById('jobUrl');
+    const jobJdTextEl    = document.getElementById('jobJdText');
+    const jobNotesEl     = document.getElementById('jobNotes');
+
+    if (jobIdEl) jobIdEl.value = '';
 
     if (jobId) {
       const job = jobApplicationsList.find(j => String(j.id) === String(jobId));
       if (job) {
-        document.getElementById('jobModalTitle').textContent = 'Edit Job Application';
-        document.getElementById('jobId').value = job.id;
-        document.getElementById('jobCompany').value = job.company || '';
-        document.getElementById('jobTitle').value = job.title || '';
-        document.getElementById('jobStage').value = job.stage || 'applied';
-        document.getElementById('jobSalary').value = job.salary || '';
-        document.getElementById('jobDate').value = job.date || '';
-        document.getElementById('jobLocation').value = job.location || '';
-        document.getElementById('jobAtsScore').value = job.atsScore || '';
-        document.getElementById('jobUrl').value = job.url || '';
-        document.getElementById('jobJdText').value = job.jdText || '';
-        document.getElementById('jobNotes').value = job.notes || '';
+        if (jobTitleEl)     jobTitleEl.textContent = 'Edit Job Application';
+        if (jobIdEl)        jobIdEl.value          = job.id;
+        if (jobCompanyEl)   jobCompanyEl.value     = job.company || '';
+        if (jobRoleTitleEl) jobRoleTitleEl.value   = job.title || '';
+        if (jobStageEl)     jobStageEl.value       = job.stage || 'applied';
+        if (jobSalaryEl)    jobSalaryEl.value      = job.salary || '';
+        if (jobDateEl)      jobDateEl.value        = job.date || '';
+        if (jobLocationEl)  jobLocationEl.value    = job.location || '';
+        if (jobAtsScoreEl)  jobAtsScoreEl.value    = job.atsScore || '';
+        if (jobUrlEl)       jobUrlEl.value         = job.url || '';
+        if (jobJdTextEl)    jobJdTextEl.value      = job.jdText || '';
+        if (jobNotesEl)     jobNotesEl.value       = job.notes || '';
       }
     } else {
-      document.getElementById('jobModalTitle').textContent = 'Add Job Application';
-      document.getElementById('jobDate').value = new Date().toISOString().split('T')[0];
+      if (jobTitleEl) jobTitleEl.textContent = 'Add Job Application';
+      if (jobDateEl)  jobDateEl.value        = new Date().toISOString().split('T')[0];
     }
 
     jobModal.style.display = 'flex';
@@ -4940,9 +4954,9 @@ Key Requirements:
     jobForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const id = document.getElementById('jobId').value;
-      const company = document.getElementById('jobCompany').value.trim();
-      const title = document.getElementById('jobTitle').value.trim();
+      const id      = document.getElementById('jobId')?.value || '';
+      const company = document.getElementById('jobCompany')?.value?.trim() || '';
+      const title   = document.getElementById('jobTitle')?.value?.trim() || '';
 
       if (!company || !title) return;
 
@@ -4950,14 +4964,14 @@ Key Requirements:
         id: id || `job-${Date.now()}`,
         company,
         title,
-        stage: document.getElementById('jobStage').value,
-        salary: document.getElementById('jobSalary').value.trim(),
-        date: document.getElementById('jobDate').value,
-        location: document.getElementById('jobLocation').value.trim(),
-        atsScore: Number(document.getElementById('jobAtsScore').value) || 0,
-        url: document.getElementById('jobUrl').value.trim(),
-        jdText: document.getElementById('jobJdText').value.trim(),
-        notes: document.getElementById('jobNotes').value.trim()
+        stage:    document.getElementById('jobStage')?.value || 'applied',
+        salary:   document.getElementById('jobSalary')?.value?.trim() || '',
+        date:     document.getElementById('jobDate')?.value || '',
+        location: document.getElementById('jobLocation')?.value?.trim() || '',
+        atsScore: Number(document.getElementById('jobAtsScore')?.value) || 0,
+        url:      document.getElementById('jobUrl')?.value?.trim() || '',
+        jdText:   document.getElementById('jobJdText')?.value?.trim() || '',
+        notes:    document.getElementById('jobNotes')?.value?.trim() || ''
       };
 
       if (id) {
