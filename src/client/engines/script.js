@@ -2328,7 +2328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCharCounter();
     calculateProfileStrength();
     updateTopUserProfile();
-    debouncedAutoSave();
+    if (typeof debouncedAutoSave === 'function') debouncedAutoSave();
   }
 
   const debouncedSyncLivePreview = debounce(syncLivePreview, 150);
