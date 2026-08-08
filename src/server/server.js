@@ -54,23 +54,7 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-pro-exp-02-05', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-
-const SHARED_TAXONOMY_KEYWORDS = [
-  'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-  'Node.js', 'Express', 'Python', 'Django', 'FastAPI', 'Go', 'Rust', 'Java',
-  'Spring Boot', 'C++', 'GraphQL', 'REST API', 'PostgreSQL', 'MySQL', 'MongoDB',
-  'Redis', 'Supabase', 'Firebase', 'AWS', 'Docker', 'Kubernetes', 'CI/CD',
-  'Git', 'Jest', 'TailwindCSS', 'Microservices', 'System Design',
-  'Machine Learning', 'PyTorch', 'TensorFlow', 'NLP', 'Data Science', 'Pandas',
-  'NumPy', 'Scikit-Learn', 'Deep Learning', 'Photoshop', 'Illustrator', 'Figma',
-  'Graphic Design', 'UI/UX Design', 'InDesign', 'Typography', 'Vector Graphics',
-  'Agile', 'Scrum', 'Jira', 'Budget Management', 'Project Management', 'Sprint Planning',
-  'Risk Mitigation', 'Resource Allocation', 'Communication', 'Problem-Solving', 'Problem Solving',
-  'Conflict Resolution', 'Client Retention', 'Customer Success', 'Customer Satisfaction',
-  'Stakeholder Engagement', 'Presentation', 'Relationship Management', 'Cross-Functional Leadership',
-  'Tableau', 'PowerBI', 'SQL', 'Data Analytics', 'Data Analysis'
-];
+const { GEMINI_MODELS, SHARED_TAXONOMY_KEYWORDS } = require('../../api/_shared');
 
 // ============================================================================
 // 2. LOGGING SERVICE
@@ -419,7 +403,6 @@ function runServerFallbackAnalysis(jdText, resumeText) {
   });
 
   const total = activeJdKeywords.length || 1;
-  const matchRatio = matched.length / total;
   const dynamicScore = Math.min(100, Math.max(0, Math.round((matched.length / total) * 100)));
   const topMissing = missing.slice(0, 2).join(', ') || 'core skills';
 
@@ -565,7 +548,14 @@ const server = http.createServer((req, res) => {
         const fallback = runServerFallbackOptimization(jobTitle, experienceText);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(fallback));
-      } catch (err) {}
+      } catch (err) {
+        log('ERROR', `Optimize resume handler catch error: ${err.message}`);
+        if (!res.headersSent) {
+          const fallback = runServerFallbackOptimization('', '');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(fallback));
+        }
+      }
     })();
     return;
   }
@@ -612,14 +602,25 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && pathname === '/api/ats-chat') {
-    try {
-      const atsChatHandler = require('../../api/ats-chat.js');
-      atsChatHandler(req, res);
-    } catch (err) {
-      log('ERROR', `ATS Chat route error: ${err.message}`);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Server chat error' }));
-    }
+    (async () => {
+      try {
+        if (isRateLimited(clientIp)) {
+          log('WARN', `Rate limit exceeded for IP: ${clientIp} on /api/ats-chat`);
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
+          return;
+        }
+
+        const atsChatHandler = require('../../api/ats-chat.js');
+        await atsChatHandler(req, res);
+      } catch (err) {
+        log('ERROR', `ATS Chat route error: ${err.message}`);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server chat error' }));
+        }
+      }
+    })();
     return;
   }
 

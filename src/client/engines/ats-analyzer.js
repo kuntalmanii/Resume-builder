@@ -227,7 +227,8 @@ class AtsAnalyzer {
   }
 
   renderBreakdownUi(score, matched = [], missing = [], recommendations = []) {
-    const dynamicScore = Math.min(100, Math.max(0, parseInt(score) ?? 0));
+    const parsedScore = parseInt(score, 10);
+    const dynamicScore = Math.min(100, Math.max(0, isNaN(parsedScore) ? 0 : parsedScore));
 
     // Update main score ring numbers
     const scoreNumber = document.getElementById('scoreNumber');

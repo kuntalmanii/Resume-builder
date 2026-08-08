@@ -126,7 +126,7 @@ module.exports = async (req, res) => {
       return sendResponse(res, 400, { error: 'Message content is required.' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText);

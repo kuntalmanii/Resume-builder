@@ -22,7 +22,8 @@ const SHARED_TAXONOMY_KEYWORDS = [
   'Agile', 'Scrum', 'Jira', 'Budget Management', 'Project Management', 'Sprint Planning',
   'Risk Mitigation', 'Resource Allocation', 'Communication', 'Problem-Solving', 'Problem Solving',
   'Conflict Resolution', 'Client Retention', 'Customer Success', 'Customer Satisfaction',
-  'Stakeholder Engagement', 'Presentation', 'Relationship Management', 'Cross-Functional Leadership'
+  'Stakeholder Engagement', 'Presentation', 'Relationship Management', 'Cross-Functional Leadership',
+  'Tableau', 'PowerBI', 'SQL', 'Data Analytics', 'Data Analysis'
 ];
 
 function sanitizeInputText(str) {
