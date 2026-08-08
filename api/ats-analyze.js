@@ -5,239 +5,219 @@ function extractKeywords(text) {
   if (!text) return new Set();
   const lower = text.toLowerCase();
   const found = new Set();
-  SHARED_TAXONOMY_KEYWORDS.forEach(kw => {
-    if (lower.includes(kw.toLowerCase())) {
-      found.add(kw);
-    }
-  });
+  SHARED_TAXONOMY_KEYWORDS.forEach(kw => { if (lower.includes(kw.toLowerCase())) found.add(kw); });
   return found;
 }
 
 function runServerFallbackAnalysis(resumeText, jobDescription) {
   const cleanResume = sanitizeInputText(resumeText);
-  const cleanJd = sanitizeInputText(jobDescription);
+  const cleanJd     = sanitizeInputText(jobDescription);
+  const resumeKws   = extractKeywords(cleanResume);
+  const jdKws       = extractKeywords(cleanJd);
 
-  const resumeKeywords = extractKeywords(cleanResume);
-  const jdKeywords = extractKeywords(cleanJd);
-
-  // Fallback word extraction if taxonomy items are sparse in JD
-  if (jdKeywords.size === 0 && cleanJd.length > 20) {
+  if (jdKws.size === 0 && cleanJd.length > 20) {
     const words = cleanJd.match(/\b[A-Za-z]{4,}\b/g) || [];
-    const stopWords = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team']);
-    const wordFreq = {};
-    words.forEach(w => {
-      if (!stopWords.has(w.toLowerCase())) {
-        wordFreq[w] = (wordFreq[w] || 0) + 1;
-      }
-    });
-    const topWords = Object.keys(wordFreq).sort((a,b) => wordFreq[b] - wordFreq[a]).slice(0, 8);
-    topWords.forEach(w => jdKeywords.add(w));
+    const stops = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your',
+      'requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team',
+      'using','their','about','which','where','other','must','also','such','both','some','more','well']);
+    const freq = {};
+    words.forEach(w => { if (!stops.has(w.toLowerCase())) freq[w] = (freq[w]||0)+1; });
+    Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).slice(0,12).forEach(w=>jdKws.add(w));
   }
 
-  const matched = [];
-  const missing = [];
-
-  jdKeywords.forEach(kw => {
-    if (resumeKeywords.has(kw) || cleanResume.toLowerCase().includes(kw.toLowerCase())) {
-      matched.push(kw);
-    } else {
-      missing.push(kw);
-    }
+  const matched = [], missing = [];
+  jdKws.forEach(kw => {
+    (resumeKws.has(kw) || cleanResume.toLowerCase().includes(kw.toLowerCase())) ? matched.push(kw) : missing.push(kw);
   });
 
-  const matchedCount = matched.length;
-  const totalCount = jdKeywords.size || 1;
-  const matchPct = Math.min(100, Math.round((matchedCount / totalCount) * 100));
+  const pct      = jdKws.size > 0 ? Math.min(100, Math.round((matched.length/jdKws.size)*100)) : 0;
+  const words    = cleanResume.match(/\b[A-Za-z]{3,}\b/g)||[];
+  const total    = words.length;
+  const unique   = new Set(words.map(w=>w.toLowerCase())).size;
+  const lexDiv   = total > 0 ? unique/total : 1;
+  const hasVerbs = /(managed|led|directed|architected|engineered|built|scaled|delivered|optimized|spearheaded|implemented|developed|designed)\b/i.test(cleanResume);
+  const hasDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(cleanResume);
+  const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime)\b/i.test(cleanResume);
+  const stuffed  = (total>15 && lexDiv<0.35) || (total>10 && !hasVerbs && !hasDates);
 
-  // Contextual Integrity & Keyword Stuffing Detector
-  const resumeWords = cleanResume.match(/\b[A-Za-z]{3,}\b/g) || [];
-  const totalWords = resumeWords.length;
-  const uniqueWords = new Set(resumeWords.map(w => w.toLowerCase())).size;
-  const lexicalDiversity = totalWords > 0 ? (uniqueWords / totalWords) : 1;
+  let finalScore  = stuffed ? Math.min(20, Math.round(pct*0.2)) : pct;
+  const fmt       = stuffed ? 30 : 95;
+  const exp       = stuffed ? 15 : (hasNums ? 88 : 62);
+  const metric    = stuffed ? 10 : (hasNums ? 76 : 40);
+  const recs      = [];
 
-  const hasActionVerbs = /(managed|led|directed|architected|engineered|built|building|scaled|delivered|budgeted|optimized|spearheaded|implemented|developed|developing|designed|designing)\b/i.test(cleanResume);
-  const hasWorkDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|years|yrs)\b/i.test(cleanResume);
-
-  const isKeywordStuffed = (totalWords > 15 && lexicalDiversity < 0.35) || (totalWords > 10 && !hasActionVerbs && !hasWorkDates);
-
-  let finalScore = matchPct;
-  let formattingScore = 95;
-  let experienceScore = 88;
-  const recommendations = [];
-
-  if (isKeywordStuffed) {
-    // Cap score and penalize experience/formatting due to lack of contextual experience
-    finalScore = Math.min(20, Math.round(matchPct * 0.20));
-    formattingScore = 30;
-    experienceScore = 15;
-    recommendations.push('⚠️ Keyword Stuffing Warning: Your resume contains repeated keywords without contextual work experience, action verbs, or quantifiable metrics. Modern ATS parsers penalize un-anchored keyword lists.');
-    recommendations.push('Rewrite experience items using structured bullet points: [Action Verb] + [Context/Project] + [Quantified Metric].');
-  } else if (missing.length > 0) {
-    recommendations.push(`Critical Skill Gap: The uploaded resume lacks required core technical competencies for this role (missing: ${missing.slice(0, 4).join(', ')}).`);
-    recommendations.push('Incorporate target technical keywords directly into your experience section headings for ATS compliance.');
+  if (stuffed) {
+    recs.push('Keyword Stuffing Detected: Resume appears to be a keyword list without structured experience, dates, or action verbs. ATS parsers penalize this pattern severely.');
+    recs.push('Rewrite each bullet using: [Action Verb] + [Project/Technology Context] + [Quantified Business Impact].');
+    recs.push('Add work experience dates, company names, and role titles to pass ATS structural validation.');
   } else {
-    recommendations.push('Excellent alignment! Your resume matches all core technical requirements.');
-    recommendations.push('Quantify experience bullets using metric-driven outcome formulas ([Action Verb] + [Metric] + [Outcome]).');
+    if (missing.length>0) recs.push(`Critical Skill Gap: Missing ${missing.length} required keywords (${missing.slice(0,4).join(', ')}). Incorporate these into your experience bullets.`);
+    if (!hasNums)  recs.push('Metric Density Low: Add quantified achievements (%, $, user counts, team size, performance gains) to boost ATS experience scoring.');
+    if (!hasVerbs) recs.push('Strengthen action verbs: Start every bullet with a powerful verb (Architected, Optimized, Engineered) instead of passive language.');
+    if (matched.length>0) recs.push(`Strong alignment on: ${matched.slice(0,5).join(', ')}. Ensure these appear in role-specific context, not only in a skills section.`);
+    if (recs.length===0) {
+      recs.push('Excellent alignment! Resume matches all core technical requirements for this role.');
+      recs.push('To stand out further, add quantified impact to each job entry (e.g. "Reduced p99 latency by 38%").');
+    }
   }
-  const verdict = finalScore >= 85 ? 'SHORTLIST' : (finalScore >= 70 ? 'HOLD' : 'REJECT');
+
+  const verdict = stuffed
+    ? 'This resume would not pass basic ATS parsing — it reads as a keyword dump without structured work experience or dates. Reject at screening stage.'
+    : finalScore>=85
+    ? 'Strong candidate. Clear technical depth and keyword alignment. Would pass ATS screening and warrant a phone screen. Adding impact metrics would make this top 5%.'
+    : finalScore>=65
+    ? `Moderate fit. Missing ${missing.length>0?missing.slice(0,3).join(', '):'some key skills'}. With targeted additions in experience sections this could clear ATS filters.`
+    : `Significant keyword gaps (${missing.slice(0,3).join(', ')}). Would likely be filtered before a human reviewer sees it.`;
 
   return {
     score: finalScore,
-    verdict,
-    matchedKeywords: matched,
-    missingKeywords: missing,
-    recommendations,
+    verdict: finalScore>=85?'SHORTLIST':finalScore>=70?'HOLD':'REJECT',
+    matchedKeywords: matched, missingKeywords: missing, recommendations: recs,
+    recruiterVerdict: verdict,
+    hiringProbability: {
+      interview:  finalScore>=85?'91%':finalScore>=70?'74%':'48%',
+      offer:      finalScore>=85?'82%':finalScore>=70?'61%':'33%',
+      atsGatePass:finalScore>=85?'97%':finalScore>=70?'81%':'52%'
+    },
+    smartRewrites: [],
     sectionScores: {
-      keywordMatch: finalScore,
-      skillsAlignment: Math.min(100, Math.round(finalScore * 0.95)),
-      formattingATS: formattingScore,
-      experienceImpact: experienceScore
+      keywordMatch:    finalScore,
+      skillsAlignment: Math.min(100,Math.round(finalScore*0.95)),
+      formattingATS:   fmt,
+      experienceImpact:exp,
+      metricDensity:   metric,
+      educationCerts:  100,
+      readabilityScore:Math.min(98,70+Math.round(lexDiv*40)),
+      actionVerbs:     hasVerbs?Math.min(96,finalScore+10):Math.max(40,finalScore-20)
     }
   };
 }
 
-function makeGeminiRequest(model, promptText, apiKey) {
+function makeGeminiRequest(model, prompt, apiKey) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
-      contents: [{ parts: [{ text: promptText }] }]
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
     });
-
-    const options = {
-      hostname: 'generativelanguage.googleapis.com',
-      port: 443,
+    const opts = {
+      hostname: 'generativelanguage.googleapis.com', port: 443,
       path: `/v1beta/models/${model}:generateContent?key=${apiKey}`,
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      }
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
     };
-
-    const req = https.request(options, (res) => {
+    const req = https.request(opts, res => {
       let body = '';
-      res.on('data', chunk => body += chunk);
+      res.on('data', c => body += c);
       res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (res.statusCode>=200 && res.statusCode<300) {
           try {
-            const parsed = JSON.parse(body);
-            const rawContent = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              const analysisObj = JSON.parse(jsonMatch[0]);
-              const rawScore = analysisObj.score ?? analysisObj.match_score ?? 75;
-              const missingMustHave = analysisObj.missing_must_have_skills || [];
-              const missingNiceToHave = analysisObj.missing_nice_to_have_skills || [];
-              const allMissing = analysisObj.missingKeywords || [...missingMustHave, ...missingNiceToHave];
-
-              const recommendations = analysisObj.actionable_fixes || analysisObj.recommendations ||
-                (analysisObj.gaps_and_recommendations ? analysisObj.gaps_and_recommendations.map(g => typeof g === 'object' ? `${g.issue}: ${g.actionable_fix}` : String(g)) : []);
-
-              const normalized = {
-                score: rawScore,
-                verdict: analysisObj.verdict || (rawScore >= 85 ? 'SHORTLIST' : (rawScore >= 70 ? 'HOLD' : 'REJECT')),
-                matchedKeywords: analysisObj.matchedKeywords || analysisObj.matching_keywords || [],
-                missingKeywords: allMissing,
-                recommendations: recommendations,
-                deductionsBreakdown: analysisObj.deductions_breakdown || [],
-                criticalGapsSummary: analysisObj.critical_gaps_summary || '',
-                sectionScores: analysisObj.sectionScores || {
-                  keywordMatch: rawScore,
-                  skillsAlignment: Math.min(100, Math.round(rawScore * 0.95)),
-                  formattingATS: analysisObj.quantified_metrics_present === false ? 60 : 95,
-                  experienceImpact: rawScore < 50 ? 35 : 88
-                }
-              };
-              resolve(normalized);
-            } else {
-              reject(new Error("Failed to parse JSON response from Gemini API"));
-            }
-          } catch (e) {
-            reject(new Error("Gemini response JSON parse error: " + e.message));
-          }
-        } else {
-          reject(new Error(`Gemini API returned status HTTP ${res.statusCode}: ${body}`));
-        }
+            const raw = JSON.parse(body).candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+            const brace = raw.match(/(\{[\s\S]*\})/);
+            const str   = fence ? fence[1] : (brace ? brace[1] : null);
+            if (!str) throw new Error('No JSON in Gemini response');
+            const a = JSON.parse(str);
+            const s = a.score ?? 75;
+            const missingAll = a.missingKeywords || [...(a.missing_must_have_skills||[]),...(a.missing_nice_to_have_skills||[])];
+            const recs = a.recommendations || a.actionable_fixes
+              || (Array.isArray(a.gaps_and_recommendations)
+                  ? a.gaps_and_recommendations.map(g=>typeof g==='object'?`${g.issue}: ${g.actionable_fix}`:String(g))
+                  : []);
+            const rewrites = Array.isArray(a.smart_rewrites)
+              ? a.smart_rewrites.map(r=>({ before:r.before||r.original||'', after:r.after||r.optimized||'', highlights:Array.isArray(r.highlights)?r.highlights:[] }))
+              : [];
+            const hp = a.hiring_probability||{};
+            const ss = a.section_scores || a.sectionScores||{};
+            resolve({
+              score:s, verdict:a.verdict||(s>=85?'SHORTLIST':s>=70?'HOLD':'REJECT'),
+              matchedKeywords:a.matchedKeywords||a.matching_keywords||[],
+              missingKeywords:missingAll, recommendations:recs,
+              recruiterVerdict:a.recruiter_verdict||a.recruiterVerdict||'',
+              hiringProbability:{
+                interview:  hp.interview||`${Math.min(99,s+5)}%`,
+                offer:      hp.offer||`${Math.min(95,s-10)}%`,
+                atsGatePass:hp.ats_gate_pass||hp.atsGatePass||`${Math.min(99,s+8)}%`
+              },
+              smartRewrites:rewrites,
+              sectionScores:{
+                keywordMatch:    ss.keyword_match||ss.keywordMatch||s,
+                skillsAlignment: ss.skills_alignment||ss.skillsAlignment||Math.min(100,Math.round(s*0.95)),
+                formattingATS:   ss.formatting_ats||ss.formattingATS||95,
+                experienceImpact:ss.experience_impact||ss.experienceImpact||(s<50?35:88),
+                metricDensity:   ss.metric_density||ss.metricDensity||Math.max(40,s-15),
+                educationCerts:  ss.education_certs||ss.educationCerts||100,
+                readabilityScore:ss.readability_score||ss.readabilityScore||Math.min(98,70+Math.round(s/5)),
+                actionVerbs:     ss.action_verbs||ss.actionVerbs||Math.min(96,s+5)
+              }
+            });
+          } catch(e) { reject(new Error('Gemini parse: '+e.message)); }
+        } else { reject(new Error(`Gemini HTTP ${res.statusCode}: ${body.slice(0,200)}`)); }
       });
     });
-
-    req.on('error', err => reject(err));
-    req.write(postData);
-    req.end();
+    req.on('error', e=>reject(e));
+    req.write(postData); req.end();
   });
 }
 
 module.exports = async function handler(req, res) {
   setCorsHeaders(res, req);
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
+  if (req.method==='OPTIONS') return res.status(200).end();
+  if (req.method!=='POST') return res.status(405).json({ error:'Method Not Allowed' });
   try {
-    const body = req.body || {};
-    const resumeText = body.resumeText || body.resume_text || '';
-    const jobDescription = body.jobDescription || body.jdText || body.targetJdText || body.job_description || '';
-    const preferredModel = body.preferredModel || body.geminiModel || '';
-    const cleanResume = sanitizeInputText(resumeText);
-    const cleanJd = sanitizeInputText(jobDescription);
+    const b    = req.body||{};
+    const cR   = sanitizeInputText(b.resumeText||b.resume_text||'');
+    const cJD  = sanitizeInputText(b.jobDescription||b.jdText||b.targetJdText||'');
+    const pref = b.preferredModel||b.geminiModel||'';
+    const key  = process.env.GEMINI_API_KEY;
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    if (!cR||!cJD) return res.status(400).json({ error:'Both resumeText and jobDescription are required.' });
+    if (!key) return res.status(200).json(runServerFallbackAnalysis(cR,cJD));
 
-    if (!apiKey) {
-      const fallback = runServerFallbackAnalysis(cleanResume, cleanJd);
-      return res.status(200).json(fallback);
-    }
+    const prompt = `You are an expert Senior Technical Recruiter and ATS parser with 15+ years of FAANG-level hiring experience.
 
-    const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
-Analyze the following Candidate Resume against the Target Job Description for ATS compatibility.
+Analyze the Candidate Resume against the Job Description for comprehensive ATS compatibility.
 
-JOB DESCRIPTION:
-${cleanJd}
+===JOB DESCRIPTION===
+${cJD.slice(0,3000)}
 
-CANDIDATE RESUME & SKILLS TEXT:
-${cleanResume}
+===CANDIDATE RESUME===
+${cR.slice(0,4000)}
 
-Evaluate keyword overlap, hard technical requirements, and section formatting.
-Respond STRICTLY with a valid JSON object following this exact JSON schema:
+Analyze: keyword overlap, missing skills, experience quality (action verbs, metrics), formatting, and hiring probability.
+
+Respond STRICTLY with a single valid JSON object — no markdown fences, no prose outside JSON:
 {
-  "score": <number between 0 and 100 representing ATS match percentage>,
-  "matchedKeywords": [<array of technical skills, frameworks, and requirements matched in both>],
-  "missingKeywords": [<array of critical technical skills & qualifications present in JD but missing in Resume>],
-  "recommendations": [<array of formatting or ATS parsing recommendations>],
-  "sectionScores": {
-    "keywordMatch": <0-100>,
-    "skillsAlignment": <0-100>,
-    "formattingATS": <0-100>,
-    "experienceImpact": <0-100>
+  "score": <integer 0-100>,
+  "verdict": <"SHORTLIST"|"HOLD"|"REJECT">,
+  "matchedKeywords": [<skills found in both>],
+  "missingKeywords": [<required skills missing in resume>],
+  "recommendations": [<4-6 specific actionable strings>],
+  "recruiter_verdict": "<2-3 sentence direct recruiter assessment>",
+  "hiring_probability": { "interview": "<e.g. 87%>", "offer": "<e.g. 72%>", "ats_gate_pass": "<e.g. 94%>" },
+  "smart_rewrites": [
+    { "before": "<weak bullet>", "after": "<ATS-optimized rewrite>", "highlights": ["Verb: X","Metric: Y","Keyword: Z"] },
+    { "before": "<weak bullet 2>", "after": "<ATS-optimized rewrite 2>", "highlights": ["Verb: A","Metric: B"] }
+  ],
+  "section_scores": {
+    "keyword_match": <0-100>, "skills_alignment": <0-100>, "formatting_ats": <0-100>,
+    "experience_impact": <0-100>, "metric_density": <0-100>, "education_certs": <0-100>,
+    "readability_score": <0-100>, "action_verbs": <0-100>
   }
 }`;
 
+    const models = [...new Set([pref,...GEMINI_MODELS].filter(Boolean))];
     let result = null;
-    let modelsToTry = [preferredModel, ...GEMINI_MODELS].filter(Boolean);
-    modelsToTry = [...new Set(modelsToTry)];
-
-    for (const model of modelsToTry) {
-      try {
-        result = await makeGeminiRequest(model, prompt, apiKey);
-        if (result) break;
-      } catch (err) {
-        console.warn(`Model ${model} failed, trying next...`, err.message);
-      }
+    for (const model of models) {
+      try { result = await makeGeminiRequest(model, prompt, key); if (result) break; }
+      catch(e) { console.warn(`[ATS] ${model} failed:`,e.message); }
     }
-
-    if (!result) {
-      result = runServerFallbackAnalysis(cleanResume, cleanJd);
-    }
-
+    if (!result) result = runServerFallbackAnalysis(cR,cJD);
     return res.status(200).json(result);
-  } catch (err) {
-    console.error('ATS API catch error:', err);
-    const body = req.body || {};
-    const fallback = runServerFallbackAnalysis(body.resumeText || '', body.jobDescription || '');
-    return res.status(200).json(fallback);
+  } catch(err) {
+    console.error('[ATS] Error:',err);
+    const b = req.body||{};
+    return res.status(200).json(runServerFallbackAnalysis(
+      sanitizeInputText(b.resumeText||''), sanitizeInputText(b.jobDescription||b.jdText||'')
+    ));
   }
 };

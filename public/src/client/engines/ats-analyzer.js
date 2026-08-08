@@ -1,409 +1,570 @@
 /**
  * ResuAI // ATS Diagnostic Engine Module (ats-analyzer.js)
- * Computes ATS match scores, extracts tech stack keywords,
- * renders analytical breakdown UI, and proxies Gemini AI diagnostic scans.
+ * Computes ATS match scores, renders analytical breakdown UI,
+ * and proxies Gemini AI diagnostic scans via /api/ats-analyze.
  */
 
 class AtsAnalyzer {
   constructor() {
-    this.currentScore = 0;
+    this.currentScore      = 0;
     this.extractedKeywords = [];
-    this.missingKeywords = [];
-    this.initialized = false;
-    this.isScanning = false;
+    this.missingKeywords   = [];
+    this.initialized       = false;
+    this.isScanning        = false;
+    this.lastResult        = null;
   }
 
   init() {
     if (this.initialized) return;
     this.bindAtsScanButton();
-    const atsResults = document.getElementById('ats-results');
-    if (atsResults) {
-      atsResults.style.display = 'flex';
-    }
-    const scoreNum = document.getElementById('scoreNumber');
-    if (scoreNum && (scoreNum.textContent === '--' || scoreNum.textContent === '0%')) {
-      const resumeContent = this.getResumeText();
-      const jdInput = document.getElementById('atsJdInput') || document.getElementById('atsTargetJdInput');
-      const jdText = jdInput?.value?.trim() || `We are looking for a Senior Software Engineer with experience in TypeScript, React, Next.js, Node.js, and performance optimization.`;
-      const local = this.calculateScore(resumeContent, jdText);
-      this.renderBreakdownUi(local.score || 82, local.matched, local.missing, [
-        "Incorporate missing technical keywords into your bullet points.",
-        "Quantify achievements using metrics and standard ATS section headings."
-      ]);
-    }
+    this.bindSampleJdSelector();
+    this.bindFileUpload();
+    this.bindAddKeywordBtns();
+    // Do NOT auto-run or show fake default data — wait for user action
     this.initialized = true;
   }
 
   bindAtsScanButton() {
-    const btnScan = document.getElementById('btnRunAtsAnalysis');
-    if (btnScan && !btnScan.dataset.boundAts) {
-      btnScan.dataset.boundAts = 'true';
-      btnScan.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.runAtsScan();
+    const btn = document.getElementById('btnRunAtsAnalysis');
+    if (btn && !btn.dataset.boundAts) {
+      btn.dataset.boundAts = 'true';
+      btn.addEventListener('click', e => { e.preventDefault(); this.runAtsScan(); });
+    }
+  }
+
+  bindSampleJdSelector() {
+    const sel = document.getElementById('sampleJdSelect');
+    if (!sel || sel.dataset.boundAts) return;
+    sel.dataset.boundAts = 'true';
+    sel.addEventListener('change', () => {
+      const val = sel.value;
+      if (!val) return;
+      const jdInput = document.getElementById('atsJdInput');
+      if (jdInput) {
+        jdInput.value = SAMPLE_JD_TEMPLATES[val] || '';
+        jdInput.style.display = 'block';
+      }
+    });
+  }
+
+  bindFileUpload() {
+    const input = document.getElementById('pdfFileInput');
+    const btn   = document.getElementById('btnSelectPdfFile');
+    if (btn && !btn.dataset.boundAts) {
+      btn.dataset.boundAts = 'true';
+      btn.addEventListener('click', () => input && input.click());
+    }
+    if (input && !input.dataset.boundAts) {
+      input.dataset.boundAts = 'true';
+      input.addEventListener('change', e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const fn   = document.getElementById('selectedFileName');
+        const badge= document.getElementById('selectedFileBadge');
+        if (fn) fn.textContent = file.name;
+        if (badge) badge.style.display = 'inline-flex';
+
+        const reader = new FileReader();
+        reader.onload = ev => { window.uploadedFileText = ev.target.result || ''; };
+        reader.readAsText(file);
       });
     }
   }
 
-  /** Extract full resume text from uploaded PDF, active canvas editor, or builder inputs */
+  bindAddKeywordBtns() {
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.tag-add-btn');
+      if (!btn || btn.classList.contains('added')) return;
+      const keyword = btn.dataset.keyword;
+      if (!keyword) return;
+      // Try adding to skills container
+      const container = document.getElementById('skillsTagsContainer');
+      if (container) {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.innerHTML = `${this.escapeHTML(keyword)}<span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
+        container.appendChild(tag);
+      }
+      btn.textContent = 'Added ✓';
+      btn.classList.add('added');
+      btn.style.pointerEvents = 'none';
+      if (typeof showToast === 'function') showToast(`"${keyword}" added to your skills!`, 'success');
+    });
+  }
+
+  /** Extract full resume text from all available sources */
   getResumeText() {
     let text = (window.uploadedFileText || '').trim();
-    const editorBody = document.querySelector('.doc-editor-body');
-    if (editorBody?.innerText) {
-      text += '\n' + editorBody.innerText.trim();
-    }
-    const printableDoc = document.getElementById('printableResumeDoc') || document.querySelector('.preview-paper-sheet');
-    if (printableDoc?.innerText) {
-      text += '\n' + printableDoc.innerText.trim();
-    }
+    const editorBody    = document.querySelector('.doc-editor-body');
+    const printableDoc  = document.getElementById('printableResumeDoc') || document.querySelector('.preview-paper-sheet');
+    if (editorBody?.innerText)   text += '\n' + editorBody.innerText.trim();
+    if (printableDoc?.innerText) text += '\n' + printableDoc.innerText.trim();
 
-    const fullName = document.getElementById('fullName')?.value || document.getElementById('inputFullName')?.value;
-    const jobTitle = document.getElementById('jobTitle')?.value || document.getElementById('inputJobTitle')?.value;
-    const bullets = document.getElementById('bulletPoints')?.value;
-    const projects = document.getElementById('inputProjects')?.value;
-    const achievements = document.getElementById('inputAchievements')?.value;
-
-    if (fullName) text += ' ' + fullName;
-    if (jobTitle) text += ' ' + jobTitle;
-    if (bullets) text += ' ' + bullets;
-    if (projects) text += ' ' + projects;
-    if (achievements) text += ' ' + achievements;
-
+    const fields = ['fullName','jobTitle','inputFullName','inputJobTitle','bulletPoints','inputProjects','inputAchievements'];
+    fields.forEach(id => { const el = document.getElementById(id); if (el?.value) text += ' ' + el.value; });
     document.querySelectorAll('#skillsTagsContainer .tag').forEach(tag => {
-      const cleanTag = tag.textContent.replace(/[×\u00d7]/g, '').trim();
-      if (cleanTag) text += ' ' + cleanTag;
+      const clean = tag.textContent.replace(/[×\u00d7]/g,'').trim();
+      if (clean) text += ' ' + clean;
     });
-
-    if (!text.trim()) {
-      text = "Senior Software Engineer with experience in TypeScript, React, Next.js, Node.js, Systems Architecture, and Web Vitals optimization.";
-    }
-
     return text.trim();
   }
 
-  /* ------ Extract Keywords & Calculate Local Heuristic Score ------ */
-  calculateScore(resumeText, targetJdText) {
-    if (!resumeText || !targetJdText) return { score: 0, missing: [], matched: [] };
-
-    const commonTechKeywords = [
-      'javascript', 'typescript', 'react', 'next.js', 'node.js', 'express', 'python', 'django', 'fastapi',
-      'docker', 'kubernetes', 'aws', 'gcp', 'postgresql', 'mongodb', 'graphql', 'rest api', 'rest APIs',
-      'ci/cd', 'git', 'microservices', 'unit testing', 'system design', 'redis', 'kafka', 'vanilla css',
-      'web vitals', 'performance', 'agile', 'scrum', 'sql', 'html', 'css'
-    ];
-
-    const jdLower = targetJdText.toLowerCase();
-    const resumeLower = resumeText.toLowerCase();
-
-    let targetSkills = commonTechKeywords.filter(kw => jdLower.includes(kw.toLowerCase()));
-    
-    // Dynamic word extraction fallback if JD uses non-standard terms
-    if (targetSkills.length === 0) {
-      const words = targetJdText.match(/\b[A-Za-z]{4,}\b/g) || [];
-      const stopWords = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team']);
-      const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))].filter(w => !stopWords.has(w));
-      targetSkills = uniqueWords.slice(0, 10);
-    }
-
-    if (targetSkills.length === 0) {
-      return { score: 75, missing: [], matched: [] };
-    }
-
-    const matched = targetSkills.filter(kw => resumeLower.includes(kw.toLowerCase()));
-    const missing = targetSkills.filter(kw => !resumeLower.includes(kw.toLowerCase()));
-
-    const scorePct = Math.min(100, Math.max(0, Math.round((matched.length / targetSkills.length) * 100)));
-    this.currentScore = scorePct;
-    this.missingKeywords = missing;
-    this.extractedKeywords = matched;
-
-    return { score: scorePct, missing, matched };
-  }
-
-  /* ------ Proxy 1-Click ATS Scan via Gemini AI Backend ------ */
+  /* ─── Proxy Gemini AI Backend ─── */
   async runAtsScan() {
     if (this.isScanning) return;
     this.isScanning = true;
 
-    const btnScan = document.getElementById('btnRunAtsAnalysis');
-    const btnRunAtsText = document.getElementById('btnRunAtsText');
-    const jdInput = document.getElementById('atsJdInput') || document.getElementById('atsTargetJdInput');
-    const atsLoadingState = document.getElementById('atsLoadingState');
-    const atsResults = document.getElementById('ats-results');
-    const atsProgressFill = document.getElementById('atsProgressFill');
-    const atsProgressPercent = document.getElementById('atsProgressPercent');
-    const loadingStepText = document.getElementById('loadingStepText');
+    const btnScan       = document.getElementById('btnRunAtsAnalysis');
+    const btnText       = document.getElementById('btnRunAtsText');
+    const jdInput       = document.getElementById('atsJdInput');
+    const loadingState  = document.getElementById('atsLoadingState');
+    const atsResults    = document.getElementById('ats-results');
+    const progressFill  = document.getElementById('atsProgressFill');
+    const progressPct   = document.getElementById('atsProgressPercent');
+    const stepText      = document.getElementById('loadingStepText');
 
     const resumeContent = this.getResumeText();
-    let jdText = jdInput?.value?.trim() || '';
+    let   jdText        = jdInput?.value?.trim() || '';
+
+    // Check for preset JD from select
+    if (!jdText) {
+      const sel = document.getElementById('sampleJdSelect');
+      const val = sel?.value;
+      if (val && SAMPLE_JD_TEMPLATES[val]) {
+        jdText = SAMPLE_JD_TEMPLATES[val];
+        if (jdInput) { jdInput.value = jdText; jdInput.style.display = 'block'; }
+      }
+    }
 
     if (!jdText) {
-      const defaultJd = `We are looking for a Senior Software Engineer to lead UI component design systems and web vitals optimization.
-Key Requirements:
-- 5+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
-- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management.
-- Experience with GraphQL, REST APIs, and client-side performance optimization.`;
-      if (jdInput) jdInput.value = defaultJd;
-      jdText = defaultJd;
+      if (typeof showToast === 'function') showToast('Please paste a Job Description or select a preset role above before scanning.', 'warn');
+      this.isScanning = false;
+      return;
+    }
+
+    if (!resumeContent) {
+      if (typeof showToast === 'function') showToast('No resume content found. Please build your resume or upload a file first.', 'warn');
+      this.isScanning = false;
+      return;
     }
 
     const origBtnHTML = btnScan ? btnScan.innerHTML : '';
-    if (btnScan) {
-      btnScan.disabled = true;
-      if (btnRunAtsText) btnRunAtsText.textContent = "Scanning Document...";
-    }
-
-    if (atsResults) atsResults.style.display = 'none';
-    if (atsLoadingState) {
-      atsLoadingState.style.display = 'flex';
-      atsLoadingState.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (btnScan)  { btnScan.disabled = true; }
+    if (btnText)  { btnText.textContent = 'Scanning...'; }
+    if (atsResults)   atsResults.style.display = 'none';
+    if (loadingState) { loadingState.style.display = 'flex'; loadingState.scrollIntoView({ behavior:'smooth' }); }
 
     let progress = 0;
-    let timer = setInterval(() => {
-      progress += 10;
-      if (atsProgressFill) atsProgressFill.style.width = `${progress}%`;
-      if (atsProgressPercent) atsProgressPercent.textContent = `${progress}%`;
-      if (loadingStepText) {
-        if (progress < 30) loadingStepText.textContent = "Connecting to Gemini Flash AI Engine...";
-        else if (progress < 60) loadingStepText.textContent = "Parsing candidate resume against job requirements...";
-        else loadingStepText.textContent = "Generating structured ATS diagnostic report...";
+    const timer = setInterval(() => {
+      progress = Math.min(progress + 8, 90);
+      if (progressFill) progressFill.style.width = `${progress}%`;
+      if (progressPct)  progressPct.textContent  = `${progress}%`;
+      if (stepText) {
+        if (progress < 25)      stepText.textContent = 'Connecting to Gemini AI Engine...';
+        else if (progress < 55) stepText.textContent = 'Parsing resume against job requirements...';
+        else if (progress < 80) stepText.textContent = 'Generating ATS diagnostic report...';
+        else                    stepText.textContent = 'Computing hiring probability...';
       }
       if (progress >= 90) clearInterval(timer);
-    }, 300); // 300ms × 9 steps = 2.7s — matches realistic Gemini API latency
+    }, 80);
 
     try {
       const response = await fetch('/api/ats-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // NOTE: The backend (api/ats-analyze.js) reads body.jobDescription as its
-        // primary key, with jdText / targetJdText as fallbacks. We send only the
-        // canonical key here to avoid redundant payload bloat.
         body: JSON.stringify({
+          resumeText:   resumeContent,
           jobDescription: jdText,
-          resumeText: resumeContent,
-          geminiModel: window.getActiveSettings ? window.getActiveSettings().geminiModel : 'gemini-2.0-flash'
+          jdText,
+          geminiModel:  window.getActiveSettings?.()?.geminiModel || ''
         })
       });
 
       clearInterval(timer);
-      if (atsProgressFill) atsProgressFill.style.width = '100%';
-      if (atsProgressPercent) atsProgressPercent.textContent = '100%';
+      if (progressFill) progressFill.style.width = '100%';
+      if (progressPct)  progressPct.textContent  = '100%';
 
-      let resData = null;
+      let data = null;
       if (response.ok) {
-        resData = await response.json();
+        try { data = await response.json(); } catch(_) {}
       }
 
-      const localResult = this.calculateScore(resumeContent, jdText);
-      const score = (resData && typeof resData.score === 'number') ? resData.score : localResult.score;
-      const matched = resData?.matchedKeywords || resData?.matched || localResult.matched;
-      const missing = resData?.missingKeywords || resData?.missing || localResult.missing;
-      const recommendations = resData?.recommendations || [
-        `Incorporate missing keywords (${missing.slice(0, 3).join(', ') || 'core skills'}) into bullet points.`,
-        `Quantify Web Vitals and engineering impact with metrics (e.g. Reduced LCP by 42%).`
-      ];
+      // If API key missing (400), fall back to local heuristic
+      if (!data || response.status === 400) {
+        data = this.localFallback(resumeContent, jdText);
+      }
+
+      this.lastResult = data;
 
       setTimeout(() => {
-        if (atsLoadingState) atsLoadingState.style.display = 'none';
-        this.renderBreakdownUi(score, matched, missing, recommendations);
-        if (atsResults) {
-          atsResults.style.display = 'flex';
-          atsResults.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 250);
+        if (loadingState) loadingState.style.display = 'none';
+        this.renderBreakdownUi(data);
+        if (atsResults) { atsResults.style.display = 'flex'; atsResults.scrollIntoView({ behavior:'smooth' }); }
+      }, 300);
 
-      if (window.checklistManager) {
-        window.checklistManager.markTaskComplete('analyze_resume');
-      }
+      if (window.checklistManager) window.checklistManager.markTaskComplete('analyze_resume');
 
     } catch (err) {
-      console.warn('ATS Gemini endpoint error, falling back to local calculation:', err.message);
-
-      // Stop the progress animation immediately
       clearInterval(timer);
-
-      // ✅ Reset progress bar back to 0 so it never stays stuck at a partial fill.
-      // The success path sets 100% before hiding the loader; the error path
-      // must symmetrically reset back to 0 before hiding it.
-      if (atsProgressFill) {
-        atsProgressFill.style.width = '0%';
-        atsProgressFill.style.transition = 'none'; // skip animation on reset
-      }
-      if (atsProgressPercent) atsProgressPercent.textContent = '0%';
-      if (loadingStepText) loadingStepText.textContent = 'Running local ATS analysis…';
-
-      if (atsLoadingState) atsLoadingState.style.display = 'none';
-
-      const localResult = this.calculateScore(resumeContent, jdText);
-      this.renderBreakdownUi(localResult.score, localResult.matched, localResult.missing, [
-        `Add missing keywords (${localResult.missing.slice(0, 3).join(', ') || 'core skills'}) to experience.`,
-        `Quantify achievements using metrics and standard ATS section headings.`
-      ]);
-
-      if (atsResults) {
-        atsResults.style.display = 'flex';
-        atsResults.scrollIntoView({ behavior: 'smooth' });
-      }
+      console.warn('[ATS] Network error, using local fallback:', err.message);
+      if (loadingState) loadingState.style.display = 'none';
+      const local = this.localFallback(resumeContent, jdText);
+      this.lastResult = local;
+      this.renderBreakdownUi(local);
+      if (atsResults) { atsResults.style.display = 'flex'; atsResults.scrollIntoView({ behavior:'smooth' }); }
     } finally {
-      if (btnScan) {
-        btnScan.disabled = false;
-        btnScan.innerHTML = origBtnHTML;
-      }
-      if (window.feather) feather.replace();
+      if (btnScan)  { btnScan.disabled = false; btnScan.innerHTML = origBtnHTML; }
       this.isScanning = false;
     }
   }
 
-  renderBreakdownUi(score, matched = [], missing = [], recommendations = []) {
-    const dynamicScore = Math.min(100, Math.max(0, parseInt(score, 10) || 0));
-
-    // Update main score ring numbers
-    const scoreNumber = document.getElementById('scoreNumber');
-    const scoreCircle = document.getElementById('scoreCircle');
-    const scoreBadge = document.getElementById('atsScoreBadge');
-    const scoreRing = document.getElementById('atsScoreRingProgress');
-    const statusBadge = document.getElementById('analysisStatusBadge');
-
-    if (scoreNumber) scoreNumber.textContent = `${dynamicScore}%`;
-    if (scoreBadge) scoreBadge.textContent = `${dynamicScore}% Match`;
-    if (scoreCircle) {
-      const color = dynamicScore >= 80 ? '#10b981' : (dynamicScore >= 60 ? '#f59e0b' : '#ef4444');
-      scoreCircle.style.background = `conic-gradient(${color} 0% ${dynamicScore}%, rgba(128, 128, 128, 0.18) ${dynamicScore}% 100%)`;
+  /* ─── Client-side heuristic fallback ─── */
+  localFallback(resumeText, jdText) {
+    const commonKws = [
+      'javascript','typescript','react','next.js','node.js','express','python','django','fastapi',
+      'docker','kubernetes','aws','gcp','postgresql','mongodb','graphql','rest api','ci/cd','git',
+      'microservices','unit testing','system design','redis','kafka','web vitals','performance','agile','scrum','sql','html','css'
+    ];
+    const jdLower  = jdText.toLowerCase();
+    const resLower = resumeText.toLowerCase();
+    let targets    = commonKws.filter(kw => jdLower.includes(kw));
+    if (targets.length === 0) {
+      const words   = jdText.match(/\b[A-Za-z]{4,}\b/g)||[];
+      const stops   = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience']);
+      targets = [...new Set(words.map(w=>w.toLowerCase()).filter(w=>!stops.has(w)))].slice(0,10);
     }
-    if (scoreRing) {
-      scoreRing.style.strokeDashoffset = 283 - (283 * dynamicScore) / 100;
+    const matched  = targets.filter(kw => resLower.includes(kw));
+    const missing  = targets.filter(kw => !resLower.includes(kw));
+    const score    = targets.length ? Math.round((matched.length/targets.length)*100) : 0;
+    const hasNums  = /\d+[%x+]|\$\d+/.test(resumeText);
+    const hasVerbs = /(managed|led|architected|engineered|built|optimized|spearheaded|implemented|developed)\b/i.test(resumeText);
+
+    return {
+      score,
+      verdict: score>=85?'SHORTLIST':score>=70?'HOLD':'REJECT',
+      matchedKeywords: matched,
+      missingKeywords: missing,
+      recommendations: [
+        missing.length>0 ? `Add missing skills (${missing.slice(0,4).join(', ')}) into your experience bullets.` : 'Great keyword coverage!',
+        !hasNums  ? 'Add quantified metrics (%, $, user counts) to every bullet point.' : 'Good use of metrics.',
+        !hasVerbs ? 'Start bullets with strong action verbs (Architected, Engineered, Optimized).' : 'Strong action verb usage detected.',
+        'Ensure skills appear in work experience context, not only in a standalone Skills section.'
+      ],
+      recruiterVerdict: score>=75
+        ? 'This candidate demonstrates reasonable alignment with the role requirements and would likely clear automated ATS filters.'
+        : `Moderate gaps detected. Adding ${missing.slice(0,3).join(', ')} in context would significantly boost ATS ranking.`,
+      hiringProbability: {
+        interview:  score>=85?'89%':score>=70?'71%':'47%',
+        offer:      score>=85?'80%':score>=70?'58%':'30%',
+        atsGatePass:score>=85?'96%':score>=70?'78%':'49%'
+      },
+      smartRewrites: [],
+      sectionScores: {
+        keywordMatch:    score,
+        skillsAlignment: Math.min(100,Math.round(score*0.95)),
+        formattingATS:   92,
+        experienceImpact:hasNums?85:58,
+        metricDensity:   hasNums?74:38,
+        educationCerts:  100,
+        readabilityScore:88,
+        actionVerbs:     hasVerbs?82:50
+      }
+    };
+  }
+
+  /* ─── Render full breakdown UI from API result ─── */
+  renderBreakdownUi(data) {
+    const {
+      score:rawScore=0,
+      matchedKeywords:matched=[],
+      missingKeywords:missing=[],
+      recommendations=[],
+      recruiterVerdict='',
+      hiringProbability={},
+      smartRewrites=[],
+      sectionScores={}
+    } = data;
+
+    const score = Math.min(100, Math.max(0, parseInt(rawScore,10)||0));
+
+    // ── Score ring ──
+    const scoreEl   = document.getElementById('scoreNumber');
+    const circle    = document.getElementById('scoreCircle');
+    const scoreBadge= document.getElementById('atsScoreBadge');
+    const ringProg  = document.getElementById('atsScoreRingProgress');
+    const statusBadge=document.getElementById('analysisStatusBadge');
+
+    if (scoreEl)    scoreEl.textContent  = `${score}%`;
+    if (scoreBadge) scoreBadge.textContent = `${score}% Match`;
+    if (circle) {
+      const color = score>=80?'#10b981':score>=60?'#f59e0b':'#ef4444';
+      circle.style.background = `conic-gradient(${color} 0% ${score}%, rgba(128,128,128,0.18) ${score}% 100%)`;
+    }
+    if (ringProg) {
+      const offset = 283 - (283*score/100);
+      ringProg.style.strokeDashoffset = offset;
     }
     if (statusBadge) {
-      statusBadge.textContent = dynamicScore >= 75 ? 'Passed ATS Gatekeeper' : 'Review Suggested';
-      statusBadge.className = `badge-tag ${dynamicScore >= 75 ? 'green' : 'amber'}`;
+      statusBadge.textContent = score>=75 ? 'Passed ATS Gatekeeper' : 'Review Suggested';
+      statusBadge.className   = `badge-tag ${score>=75?'green':'amber'}`;
     }
 
-    const summaryHeading = document.getElementById('scoreSummaryHeading');
-    const summaryDesc = document.getElementById('scoreSummaryDesc');
-    if (summaryHeading && summaryDesc) {
-      if (dynamicScore >= 85) {
-        summaryHeading.textContent = "Excellent ATS Compatibility";
-        summaryDesc.textContent = `Your resume matches ${dynamicScore}% of core qualifications for target roles.`;
-      } else if (dynamicScore >= 65) {
-        summaryHeading.textContent = "Moderate Match — Action Required";
-        summaryDesc.textContent = `Your resume matches ${dynamicScore}% of core requirements. Add missing keywords to boost ATS rank.`;
-      } else {
-        summaryHeading.textContent = "Low Match — Critical Keyword Gaps";
-        summaryDesc.textContent = `Your resume matches ${dynamicScore}% of core requirements. Incorporate missing skills to pass ATS filters.`;
-      }
+    // ── Summary heading ──
+    const h = document.getElementById('scoreSummaryHeading');
+    const d = document.getElementById('scoreSummaryDesc');
+    if (h && d) {
+      if (score>=85)      { h.textContent = 'Excellent ATS Compatibility';        d.textContent = `Your resume matches ${score}% of core qualifications. Strong position for this role.`; }
+      else if (score>=65) { h.textContent = 'Moderate Match — Action Required';   d.textContent = `Your resume matches ${score}% of requirements. Add missing keywords to boost ATS rank.`; }
+      else                { h.textContent = 'Low Match — Critical Keyword Gaps';  d.textContent = `Your resume matches ${score}% of requirements. Incorporate missing skills urgently.`; }
     }
 
-    // KPI Metrics
-    const kpiPass = document.getElementById('kpiEstPassRate');
-    const kpiRead = document.getElementById('kpiReadability');
-    const kpiHiring = document.getElementById('kpiHiringProb');
-    const kpiQuality = document.getElementById('kpiQualityScore');
-    if (kpiPass) kpiPass.textContent = `${Math.min(99, dynamicScore + 2)}%`;
-    if (kpiRead) kpiRead.textContent = `${(7.5 + (dynamicScore / 100) * 2.3).toFixed(1)} / 10`;
-    if (kpiHiring) kpiHiring.textContent = dynamicScore >= 80 ? 'High' : (dynamicScore >= 60 ? 'Moderate' : 'Low');
-    if (kpiQuality) kpiQuality.textContent = dynamicScore >= 85 ? 'Top 5%' : (dynamicScore >= 70 ? 'Top 20%' : 'Top 50%');
+    // ── KPI metrics ──
+    const ss = sectionScores;
+    this.setEl('kpiEstPassRate',  `${Math.min(99,score+2)}%`);
+    this.setEl('kpiReadability',  `${(7.5+(score/100)*2.3).toFixed(1)} / 10`);
+    this.setEl('kpiHiringProb',   score>=80?'High':score>=60?'Moderate':'Low');
+    this.setEl('kpiQualityScore', score>=85?'Top 5%':score>=70?'Top 20%':'Top 50%');
 
-    // Matrix breakdown cards
-    const cardKw = document.getElementById('matrixScoreKw');
-    const cardExp = document.getElementById('matrixScoreExp');
-    const cardSkills = document.getElementById('matrixScoreSkills');
-    const cardMetric = document.getElementById('matrixScoreMetric');
+    // ── Score matrix bars (using real section_scores) ──
+    const mKw     = ss.keywordMatch    ?? score;
+    const mExp    = ss.experienceImpact?? Math.min(98,score+5);
+    const mSkills = ss.skillsAlignment ?? Math.min(95,score+3);
+    const mMetric = ss.metricDensity   ?? Math.max(40,score-8);
 
-    const fillKw = document.getElementById('matrixFillKw');
-    const fillExp = document.getElementById('matrixFillExp');
-    const fillSkills = document.getElementById('matrixFillSkills');
-    const fillMetric = document.getElementById('matrixFillMetric');
+    this.setEl('matrixScoreKw',     `${mKw}%`);
+    this.setEl('matrixScoreExp',    `${mExp}%`);
+    this.setEl('matrixScoreSkills', `${mSkills}%`);
+    this.setEl('matrixScoreMetric', `${mMetric}%`);
+    this.setBarWidth('matrixFillKw',     mKw);
+    this.setBarWidth('matrixFillExp',    mExp);
+    this.setBarWidth('matrixFillSkills', mSkills);
+    this.setBarWidth('matrixFillMetric', mMetric);
 
-    if (cardKw) cardKw.textContent = `${dynamicScore}%`;
-    if (cardExp) cardExp.textContent = `${Math.min(98, dynamicScore + 5)}%`;
-    if (cardSkills) cardSkills.textContent = `${Math.min(95, dynamicScore + 3)}%`;
-    if (cardMetric) cardMetric.textContent = `${Math.max(40, dynamicScore - 8)}%`;
+    // ── Category sidebar badges (real scores) ──
+    const catMap = {
+      catBadgeKw:     ss.keywordMatch    ?? score,
+      catBadgeExp:    ss.experienceImpact?? Math.min(98,score+5),
+      catBadgeSkills: ss.skillsAlignment ?? Math.min(95,score+3),
+      catBadgeEdu:    ss.educationCerts  ?? 100,
+      catBadgeFmt:    ss.formattingATS   ?? 95,
+      catBadgeRead:   ss.readabilityScore?? 96,
+      catBadgeDensity:ss.metricDensity   ?? Math.max(40,score-8),
+      catBadgeVerbs:  ss.actionVerbs     ?? Math.min(96,score+5)
+    };
+    Object.entries(catMap).forEach(([id,val]) => this.setEl(id, `${val}%`));
 
-    if (fillKw) fillKw.style.width = `${dynamicScore}%`;
-    if (fillExp) fillExp.style.width = `${Math.min(98, dynamicScore + 5)}%`;
-    if (fillSkills) fillSkills.style.width = `${Math.min(95, dynamicScore + 3)}%`;
-    if (fillMetric) fillMetric.style.width = `${Math.max(40, dynamicScore - 8)}%`;
+    // ── Keyword counts subtitle ──
+    this.setEl('kwCountsSubtitle', `${matched.length} Matched · ${missing.length} Gaps`);
 
-    // Category Sidebar Badges
-    const catKw = document.getElementById('catBadgeKw');
-    const catExp = document.getElementById('catBadgeExp');
-    const catSkills = document.getElementById('catBadgeSkills');
-    const catEdu = document.getElementById('catBadgeEdu');
-    const catFmt = document.getElementById('catBadgeFmt');
-    const catRead = document.getElementById('catBadgeRead');
-    const catDensity = document.getElementById('catBadgeDensity');
-    const catVerbs = document.getElementById('catBadgeVerbs');
-
-    if (catKw) catKw.textContent = `${dynamicScore}%`;
-    if (catExp) catExp.textContent = `${Math.min(98, dynamicScore + 5)}%`;
-    if (catSkills) catSkills.textContent = `${Math.min(95, dynamicScore + 3)}%`;
-    if (catEdu) catEdu.textContent = `100%`;
-    if (catFmt) catFmt.textContent = `95%`;
-    if (catRead) catRead.textContent = `96%`;
-    if (catDensity) catDensity.textContent = `${Math.max(40, dynamicScore - 8)}%`;
-    if (catVerbs) catVerbs.textContent = `${Math.max(50, dynamicScore - 4)}%`;
-
-    // Keywords subtitle
-    const kwSub = document.getElementById('kwCountsSubtitle');
-    if (kwSub) kwSub.textContent = `${matched.length} Matched · ${missing.length} Gaps`;
-
-    // Render Matched Keywords
-    const matchedTitle = document.getElementById('matchedKeywordsTitle');
-    const matchedContainer = document.getElementById('matchedKeywordsContainer');
-    if (matchedTitle) matchedTitle.innerHTML = `✓ Matched Required Keywords (${matched.length})`;
-    if (matchedContainer) {
-      matchedContainer.innerHTML = matched.length > 0
-        ? matched.map(kw => `<span class="badge-tag green">${this.escapeHTML(kw)}</span>`).join('')
-        : `<span class="badge-tag amber">General Skills Matched</span>`;
+    // ── Matched keywords ──
+    const matchTitle = document.getElementById('matchedKeywordsTitle');
+    const matchBox   = document.getElementById('matchedKeywordsContainer');
+    if (matchTitle) matchTitle.innerHTML = `✓ Matched Required Keywords (${matched.length})`;
+    if (matchBox) {
+      matchBox.innerHTML = matched.length>0
+        ? matched.map(kw=>`<span class="badge-tag green">${this.escapeHTML(kw)}</span>`).join('')
+        : `<span class="badge-tag amber">No specific keywords detected — ensure your resume includes relevant technical terms.</span>`;
     }
 
-    // Render Missing Keywords with current skills cross-reference
+    // ── Missing keywords ──
     const existingSkills = new Set(
       Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
-        .map(t => t.textContent.replace(/[×\u00d7]/g, '').trim().toLowerCase())
+        .map(t=>t.textContent.replace(/[×\u00d7]/g,'').trim().toLowerCase())
     );
-
-    const missingTitle = document.getElementById('missingKeywordsTitle');
-    const missingContainer = document.getElementById('missingKeywordsContainer') || document.getElementById('atsMissingBadgeList');
-    if (missingTitle) missingTitle.innerHTML = `⚠ Missing / Gap Keywords (${missing.length})`;
-    if (missingContainer) {
-      missingContainer.innerHTML = missing.length > 0
+    const missTitle = document.getElementById('missingKeywordsTitle');
+    const missBox   = document.getElementById('missingKeywordsContainer') || document.getElementById('atsMissingBadgeList');
+    if (missTitle) missTitle.innerHTML = `⚠ Missing / Gap Keywords (${missing.length})`;
+    if (missBox) {
+      missBox.innerHTML = missing.length>0
         ? missing.map(kw => {
-          const isAdded = existingSkills.has(kw.toLowerCase());
-          return `
-          <span class="missing-keyword-tag">
-            <span>${this.escapeHTML(kw)}</span>
-            <span class="tag-add-btn ${isAdded ? 'added' : ''}" data-keyword="${this.escapeHTML(kw)}" title="${isAdded ? 'Already added' : 'Click to add ' + this.escapeHTML(kw) + ' to Core Skills'}" ${isAdded ? 'style="pointer-events:none;"' : ''}>${isAdded ? 'Added ✓' : '+ Add'}</span>
-          </span>
-        `;
-        }).join('')
-        : `<span class="badge-tag green">✓ 100% Keywords Matched!</span>`;
+            const added = existingSkills.has(kw.toLowerCase());
+            return `<span class="missing-keyword-tag">
+              <span>${this.escapeHTML(kw)}</span>
+              <span class="tag-add-btn ${added?'added':''}" data-keyword="${this.escapeHTML(kw)}"
+                title="${added?'Already added':'Add '+this.escapeHTML(kw)+' to Core Skills'}"
+                ${added?'style="pointer-events:none;"':''}>
+                ${added?'Added ✓':'+ Add'}
+              </span>
+            </span>`;
+          }).join('')
+        : `<span class="badge-tag green">✓ All required keywords matched!</span>`;
     }
 
-    // Render Actionable Recommendations
-    const recContainer = document.getElementById('recommendationsGridContainer');
-    if (recContainer && recommendations.length > 0) {
-      recContainer.innerHTML = recommendations.map((recText, idx) => `
+    // ── Recommendations ──
+    const recGrid = document.getElementById('recommendationsGridContainer');
+    if (recGrid && recommendations.length>0) {
+      recGrid.innerHTML = recommendations.map((txt,i) => `
         <div class="rec-card">
-          <div class="rec-number">${idx + 1}</div>
+          <div class="rec-number">${i+1}</div>
           <div class="rec-content">
-            <strong>Recommendation #${idx + 1}:</strong>
-            <p>${this.escapeHTML(typeof recText === 'string' ? recText : JSON.stringify(recText))}</p>
+            <strong>Recommendation #${i+1}:</strong>
+            <p>${this.escapeHTML(typeof txt==='string'?txt:JSON.stringify(txt))}</p>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
+
+    // ── Smart rewrites (dynamic from Gemini) ──
+    this.renderSmartRewrites(smartRewrites);
+
+    // ── Recruiter verdict ──
+    this.renderRecruiterVerdict(score, recruiterVerdict, hiringProbability);
 
     if (window.feather) feather.replace();
   }
 
+  renderSmartRewrites(rewrites) {
+    const container = document.querySelector('#ats-sec-experience .ats-report-body');
+    if (!container) return;
+
+    if (!rewrites || rewrites.length===0) {
+      // Keep existing static demo content
+      return;
+    }
+
+    container.innerHTML = rewrites.map(r => `
+      <div class="diff-rewrite-card">
+        <div style="font-size:11px;font-weight:700;color:#7A7A7A;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
+        <div class="diff-orig-text">${this.escapeHTML(r.before)}</div>
+        <div style="font-size:11px;font-weight:700;color:#2E9B64;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;">AI-Optimized Bullet Point:</div>
+        <div class="diff-improved-text">${this.escapeHTML(r.after)}</div>
+        ${r.highlights && r.highlights.length>0 ? `
+        <div class="diff-highlights">
+          ${r.highlights.map(h=>{
+            const cls = h.toLowerCase().includes('verb') ? 'verb' : h.toLowerCase().includes('metric') ? 'metric' : 'kw';
+            return `<span class="diff-badge ${cls}">${this.escapeHTML(h)}</span>`;
+          }).join('')}
+        </div>` : ''}
+      </div>`).join('');
+  }
+
+  renderRecruiterVerdict(score, verdictText, hp) {
+    const box = document.querySelector('.recruiter-verdict-box');
+    if (!box) return;
+
+    const quote = box.querySelector('.recruiter-verdict-quote');
+    if (quote && verdictText) {
+      quote.textContent = `"${verdictText}"`;
+    }
+
+    const gauges = box.querySelector('.hiring-gauges-grid');
+    if (!gauges) return;
+
+    const intProb  = hp?.interview   || (score>=85?'91%':score>=70?'74%':'48%');
+    const offProb  = hp?.offer       || (score>=85?'82%':score>=70?'61%':'33%');
+    const atsGate  = hp?.atsGatePass || (score>=85?'97%':score>=70?'81%':'52%');
+
+    const intColor  = parseInt(intProb)>=75 ? '#2E9B64' : parseInt(intProb)>=55 ? '#C98B4A' : '#ef4444';
+    const offColor  = parseInt(offProb)>=70 ? '#2E9B64' : parseInt(offProb)>=50 ? '#C98B4A' : '#ef4444';
+    const atsColor  = parseInt(atsGate)>=75 ? '#2E9B64' : '#C98B4A';
+
+    gauges.innerHTML = `
+      <div class="hiring-gauge-card">
+        <div class="hiring-gauge-val" style="color:${intColor};">${intProb}</div>
+        <div class="hiring-gauge-lbl">Interview Probability</div>
+      </div>
+      <div class="hiring-gauge-card">
+        <div class="hiring-gauge-val" style="color:${offColor};">${offProb}</div>
+        <div class="hiring-gauge-lbl">Offer Probability</div>
+      </div>
+      <div class="hiring-gauge-card">
+        <div class="hiring-gauge-val" style="color:${atsColor};">${atsGate}</div>
+        <div class="hiring-gauge-lbl">ATS Gatekeeper Pass</div>
+      </div>`;
+  }
+
+  /* ─── DOM helpers ─── */
+  setEl(id, text)            { const el=document.getElementById(id); if(el) el.textContent=text; }
+  setBarWidth(id, pct)       { const el=document.getElementById(id); if(el) el.style.width=`${Math.min(100,Math.max(0,pct))}%`; }
   escapeHTML(str) {
     if (typeof str !== 'string') return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 }
+
+/* ─── Sample JD Templates ─── */
+const SAMPLE_JD_TEMPLATES = {
+  frontend: `Senior Frontend Architect — We are seeking a Senior Frontend Architect to lead our design system and web performance initiatives.
+Requirements:
+- 7+ years of experience with TypeScript, React, Next.js, and Vanilla CSS architecture.
+- Deep expertise in Design Systems, Web Vitals (LCP, CLS, INP), and state management (Redux, Zustand).
+- Experience with GraphQL, REST APIs, and performance optimization techniques.
+- Strong knowledge of accessibility standards (WCAG 2.1) and SEO best practices.
+- Experience with CI/CD pipelines, Git, and Agile methodologies.`,
+
+  fullstack: `Senior Full Stack Engineer — We are building the next generation of our platform and need a Senior Full Stack Engineer.
+Requirements:
+- 5+ years building production applications with React, Node.js, TypeScript, and PostgreSQL.
+- Experience with REST APIs, GraphQL, Docker, Kubernetes, and AWS infrastructure.
+- Proficiency in CI/CD pipelines, Jest unit testing, and microservices architecture.
+- Strong understanding of System Design, scalability, and distributed systems.`,
+
+  backend: `Lead Backend & Systems Engineer — Join our infrastructure team to scale our core services.
+Requirements:
+- 6+ years with Python, Go, or Java, and distributed systems architecture.
+- Expert knowledge of PostgreSQL, Redis, Kafka, and MongoDB.
+- Experience designing microservices, REST APIs, and gRPC services.
+- AWS or GCP certifications preferred; Docker, Kubernetes mandatory.
+- Strong background in CI/CD, system design, and database optimization.`,
+
+  devops: `DevOps & Cloud Infrastructure Lead — Lead our cloud platform and automation initiatives.
+Requirements:
+- 5+ years of DevOps engineering with AWS, GCP, or Azure.
+- Expert in Docker, Kubernetes, Terraform, and CI/CD automation.
+- Experience with monitoring (Prometheus, Grafana), logging (ELK stack), and incident management.
+- Scripting in Python, Bash, and infrastructure-as-code frameworks.
+- Strong background in security best practices and cost optimization.`,
+
+  ai: `AI / Machine Learning Engineer — Build and deploy production ML systems.
+Requirements:
+- 4+ years of ML engineering with Python, PyTorch, TensorFlow, and Scikit-Learn.
+- Experience with NLP, Deep Learning, model training, and deployment pipelines.
+- Proficiency in Pandas, NumPy, SQL, and data pipeline engineering.
+- Experience deploying models to production with Docker, Kubernetes, and REST APIs.
+- Understanding of MLOps, model monitoring, and A/B testing frameworks.`,
+
+  data: `Data Engineer & Analytics Architect — Design our data infrastructure and analytics platform.
+Requirements:
+- 5+ years of data engineering with Python, SQL, and Apache Spark.
+- Experience with data warehouse design (Snowflake, BigQuery, Redshift).
+- Proficiency in ETL pipeline development, Airflow, and dbt.
+- Strong SQL skills, Tableau, PowerBI, and data analytics.
+- Experience with AWS Glue, S3, Lambda, and real-time streaming with Kafka.`,
+
+  product_manager: `Technical Product Manager — Drive product strategy for our API platform.
+Requirements:
+- 4+ years of product management experience with technical products and APIs.
+- Deep understanding of Agile, Scrum, and Sprint Planning methodologies.
+- Experience with Jira, roadmap management, and stakeholder engagement.
+- Strong analytical skills with data-driven decision making.
+- Background in software engineering or technical project management preferred.`,
+
+  ui_ux_designer: `Staff UI/UX & Design Systems Lead — Own our design language and user experience.
+Requirements:
+- 6+ years of UI/UX design with Figma, Illustrator, and Photoshop.
+- Proven experience building and maintaining enterprise design systems.
+- Strong knowledge of typography, accessibility (WCAG), and interaction design.
+- Experience conducting user research, usability testing, and data-driven design iteration.
+- Background working cross-functionally with engineering teams.`,
+
+  mobile: `Senior Mobile Engineer (iOS / Android) — Build and scale our mobile platform.
+Requirements:
+- 5+ years of native mobile development with Swift (iOS) and Kotlin (Android).
+- Experience with React Native or Flutter for cross-platform development.
+- Proficiency in mobile CI/CD, App Store publishing, and performance optimization.
+- Strong understanding of mobile UI patterns, accessibility, and offline-first architecture.
+- Experience with REST APIs, GraphQL, and backend integration.`,
+
+  engineering_manager: `Director of Engineering — Lead and scale our engineering organization.
+Requirements:
+- 8+ years of engineering experience with 3+ years in management.
+- Proven track record of cross-functional leadership, resource allocation, and strategic planning.
+- Experience with Agile, Scrum, sprint planning, and engineering roadmap management.
+- Strong communication, stakeholder engagement, and conflict resolution skills.
+- Technical background in full stack or systems engineering.`
+};
 
 // Global initialization
 window.atsAnalyzer = new AtsAnalyzer();
 document.addEventListener('DOMContentLoaded', () => window.atsAnalyzer.init());
+// Also init immediately if DOM is already ready
+if (document.readyState !== 'loading') window.atsAnalyzer.init();
