@@ -13,6 +13,36 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Toast Notifications Engine — defined & bound early to avoid race conditions
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-item ${type}`;
+
+    let iconName = 'check-circle';
+    if (type === 'info') iconName = 'info';
+    else if (type === 'warning') iconName = 'alert-triangle';
+    else if (type === 'error') iconName = 'alert-octagon';
+
+    toast.innerHTML = `
+      <span class="toast-icon ${type}"><i data-feather="${iconName}"></i></span>
+      <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    if (window.feather) feather.replace();
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }, 3000);
+  }
+  window.showToast = showToast;
+
   // Global Error Boundary & Monitoring Hooks
   window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.error('[ResuAI Error Boundary]', { msg, url, lineNo, columnNo, error });
@@ -4128,36 +4158,6 @@ Key Requirements:
     });
   }
 
-  // --- Toast Notifications Engine ---
-  function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `toast-item ${type}`;
-
-    let iconName = 'check-circle';
-    if (type === 'info') iconName = 'info';
-    else if (type === 'warning') iconName = 'alert-triangle';
-    else if (type === 'error') iconName = 'alert-octagon';
-
-    toast.innerHTML = `
-      <span class="toast-icon ${type}"><i data-feather="${iconName}"></i></span>
-      <span>${message}</span>
-    `;
-    
-    container.appendChild(toast);
-    if (window.feather) feather.replace();
-
-    setTimeout(() => {
-      toast.classList.add('fade-out');
-      setTimeout(() => {
-        toast.remove();
-      }, 300);
-    }, 3000);
-  }
-  window.showToast = showToast;
-
   // Visual feedback for save buttons
   function handleSettingsSaveFeedback(buttonEl, label) {
     savePlatformSettings();
@@ -4983,6 +4983,41 @@ Key Requirements:
       }
     });
   });
+
+  // --- Editor Panels Toggle Engine (Tablet/Mobile Overlay & Desktop Collapsible) ---
+  const btnToggleRightPanel = document.getElementById('btnToggleRightPanel');
+  const btnCloseRightPanel = document.getElementById('btnCloseRightPanel');
+  const editorRightPanel = document.getElementById('editorRightPanel');
+
+  if (btnToggleRightPanel && editorRightPanel) {
+    btnToggleRightPanel.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) {
+        editorRightPanel.classList.toggle('open');
+      } else {
+        editorRightPanel.classList.toggle('collapsed');
+      }
+    });
+  }
+
+  if (btnCloseRightPanel && editorRightPanel) {
+    btnCloseRightPanel.addEventListener('click', () => {
+      editorRightPanel.classList.remove('open');
+      editorRightPanel.classList.add('collapsed');
+    });
+  }
+
+  const btnToggleLeftPanel = document.getElementById('btnToggleLeftPanel');
+  const editorLeftPanel = document.querySelector('.editor-left-panel');
+
+  if (btnToggleLeftPanel && editorLeftPanel) {
+    btnToggleLeftPanel.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        editorLeftPanel.classList.toggle('open');
+      } else {
+        editorLeftPanel.classList.toggle('collapsed');
+      }
+    });
+  }
 
   // Load saved settings on startup
   loadPlatformSettings();
