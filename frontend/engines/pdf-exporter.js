@@ -85,11 +85,6 @@ class PdfExporter {
       return;
     }
 
-    // Trigger Getting Started Checklist task completion
-    if (window.checklistManager) {
-      window.checklistManager.markTaskComplete('download_resume');
-    }
-
     const styles = this.getStyles();
     const resumeHTML = resumeDoc.outerHTML;
 
@@ -117,7 +112,7 @@ class PdfExporter {
   <title>Resume — ${document.getElementById('previewName')?.textContent || 'Resume'}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="${styles.fontLink}" rel="stylesheet" />
-  <link rel="stylesheet" href="/src/client/styles/styles.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/styles/styles.css?v=2.5" />
   <style>
     ${styles.pageSizeCss}
     *, *::before, *::after {

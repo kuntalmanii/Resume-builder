@@ -1712,7 +1712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return (tagEl.childNodes[0]?.textContent || tagEl.textContent || '').trim();
   }
 
-  const btnDraftSaveFooter = document.getElementById('btnDraftSaveFooter');
+
   const btnNextStep = document.getElementById('btnNextStep');
   const btnPrintPdf = document.getElementById('btnPrintPdf');
   const btnAutoOptimize = document.getElementById('btnAutoOptimize');
@@ -2144,30 +2144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const faangLevelChips = document.getElementById('faangLevelChips');
-  if (faangLevelChips) {
-    faangLevelChips.addEventListener('click', (e) => {
-      const chip = e.target.closest('.level-chip');
-      if (!chip) return;
 
-      faangLevelChips.querySelectorAll('.level-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-
-      const lvl = chip.dataset.level;
-      if (LEVEL_TEMPLATES[lvl]) {
-        const data = LEVEL_TEMPLATES[lvl];
-        if (inputJobTitle) inputJobTitle.value = data.title;
-        if (inputSummary) inputSummary.value = data.summary;
-        if (bulletPoints) bulletPoints.value = data.bullets;
-
-        autoSaveFormFields();
-        updateCharCounter();
-        updateGoogleXyzMeter();
-        calculateProfileStrength();
-        showToast(`Loaded ${lvl} FAANG ${data.title} template!`, 'success');
-      }
-    });
-  }
 
   function syncLiveSkills() {
     if (!previewSkills) return;
@@ -2614,21 +2591,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Save Draft button visual feedback
-  function handleManualSave(buttonEl) {
-    autoSaveFormFields();
-    if (buttonEl) {
-      const originalText = buttonEl.innerHTML;
-      buttonEl.innerHTML = `<i data-feather="check"></i> <span>Draft Saved!</span>`;
-      if (window.feather) feather.replace();
-      setTimeout(() => {
-        buttonEl.innerHTML = originalText;
-        if (window.feather) feather.replace();
-      }, 2000);
-    }
-  }
 
-  if (btnDraftSaveFooter) btnDraftSaveFooter.addEventListener('click', () => handleManualSave(btnDraftSaveFooter));
 
   // Step Progress Bar (Step 1 -> 2 -> 3)
   function setStep(stepNumber) {

@@ -2,9 +2,13 @@
   "version": 2,
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/api/analyze", "destination": "/api/ats-analyze" },
-    { "source": "/api/analyze-ats", "destination": "/api/ats-analyze" },
-    { "source": "/src/(.*)", "destination": "/public/src/$1" },
-    { "source": "/(.*)", "destination": "/public/index.html" }
+    { "source": "/api/analyze", "destination": "/backend/api/ats-analyze.js" },
+    { "source": "/api/analyze-ats", "destination": "/backend/api/ats-analyze.js" },
+    { "source": "/api/ats-analyze", "destination": "/backend/api/ats-analyze.js" },
+    { "source": "/api/ats-chat", "destination": "/backend/api/ats-chat.js" },
+    { "source": "/api/login", "destination": "/backend/api/login.js" },
+    { "source": "/api/optimize-resume", "destination": "/backend/api/optimize-resume.js" },
+    { "source": "/api/parse-resume", "destination": "/backend/api/parse-resume.js" },
+    { "source": "/(.*)", "destination": "/frontend/index.html" }
   ]
 }

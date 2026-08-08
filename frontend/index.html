@@ -70,14 +70,12 @@
     integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"
     crossorigin="anonymous"
   ></script>
-  <link rel="stylesheet" href="/src/client/styles/styles.css?v=2.5" />
-  <link rel="stylesheet" href="/src/client/components/help-center.css?v=2.5" />
-  <link rel="stylesheet" href="/src/client/components/contextual-tips.css?v=2.5" />
-  <link rel="stylesheet" href="/src/client/components/checklist.css?v=2.5" />
-  <link rel="stylesheet" href="/src/client/components/command-palette.css?v=2.5" />
-  <link rel="stylesheet" href="/src/client/styles/empty-states.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/styles/styles.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/components/help-center.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/components/command-palette.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/styles/empty-states.css?v=2.5" />
   <!-- Supabase Browser Client (ES Module — must load before script.js) -->
-  <script type="module" src="/src/client/engines/supabase-client.js"></script>
+  <script type="module" src="/frontend/engines/supabase-client.js"></script>
 </head>
 <body data-theme="sunset-amber">
   
@@ -468,13 +466,7 @@
               <span id="strengthTip"></span>
               <span id="xyzMeterScore">0% Metrics Compliance (0/0 Bullets)</span>
               <span id="charCounter">0 / 2000 characters</span>
-              <!-- FAANG chips -->
-              <div id="faangLevelChips">
-                <button type="button" class="level-chip" data-level="L4"><span class="level-code">L4</span><span class="level-name">SWE II</span><span class="level-yoe">2-4 yrs</span></button>
-                <button type="button" class="level-chip active" data-level="L5"><span class="level-code">L5</span><span class="level-name">Senior Eng</span><span class="level-yoe">5-8 yrs</span></button>
-                <button type="button" class="level-chip" data-level="L6"><span class="level-code">L6</span><span class="level-name">Staff / TL</span><span class="level-yoe">8-12 yrs</span></button>
-                <button type="button" class="level-chip" data-level="L7"><span class="level-code">L7</span><span class="level-name">Principal</span><span class="level-yoe">12+ yrs</span></button>
-              </div>
+
               <!-- XYZ verb chips -->
               <div class="verb-chips-container" id="verbChipsContainer">
                 <button type="button" class="verb-chip" data-verb="Architected high-throughput microservices using Go &amp; gRPC, scaling system capacity by 350% to 50,000 req/sec.">Scaled 50k req/sec</button>
@@ -483,9 +475,7 @@
                 <button type="button" class="verb-chip" data-verb="Spearheaded cross-functional team of 12 engineers, delivering zero-downtime CI/CD deployment pipelines.">Led 12 Engineers</button>
                 <button type="button" class="verb-chip" data-verb="Automated test suite coverage from 40% to 92%, decreasing production release bugs by 68%.">Tests 40→92%</button>
               </div>
-              <!-- Action buttons (triggered by new UI via proxy calls) -->
               <button id="btnAutoOptimize" type="button">Auto-Optimize</button>
-              <button id="btnDraftSaveFooter" type="button">Save Draft</button>
               <button id="btnNextStep" type="button">Next Step</button>
               <button id="btnXyzTransform" type="button">Transform XYZ</button>
               <button id="btnSuggestAiSkills" type="button">AI Suggest Skills</button>
@@ -536,10 +526,7 @@
               </button>
               <input type="file" id="importResumeFileInput" accept=".pdf,.txt" style="display:none;" />
 
-              <button class="topbar-action-btn" id="topbarSaveDraftBtn" title="Save Draft" onclick="document.getElementById('btnDraftSaveFooter')?.click()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                <span>Save Draft</span>
-              </button>
+
 
 
 
@@ -564,16 +551,7 @@
                   <span class="editor-left-title">Document Outline</span>
                 </div>
 
-                <!-- FAANG Level Strip -->
-                <div class="faang-strip">
-                  <div class="faang-strip-label">Seniority Level</div>
-                  <div class="faang-strip-chips" id="faangStripChips">
-                    <button type="button" class="level-chip" data-level="L4" onclick="syncFaangChip(this)"><span class="level-code">L4</span><span class="level-name">SWE II</span><span class="level-yoe">2-4 yrs</span></button>
-                    <button type="button" class="level-chip active" data-level="L5" onclick="syncFaangChip(this)"><span class="level-code">L5</span><span class="level-name">Senior</span><span class="level-yoe">5-8 yrs</span></button>
-                    <button type="button" class="level-chip" data-level="L6" onclick="syncFaangChip(this)"><span class="level-code">L6</span><span class="level-name">Staff</span><span class="level-yoe">8-12 yrs</span></button>
-                    <button type="button" class="level-chip" data-level="L7" onclick="syncFaangChip(this)"><span class="level-code">L7</span><span class="level-name">Principal</span><span class="level-yoe">12+ yrs</span></button>
-                  </div>
-                </div>
+
 
                 <!-- Section Nav -->
                 <nav class="section-nav" id="sectionNav">
@@ -1036,14 +1014,14 @@
                     <!-- Zoom controls -->
                     <div class="preview-rpanel-controls">
                       <button class="preview-zoom-btn" id="previewZoomOut" onclick="adjustPreviewZoom(-10)">−</button>
-                      <span class="preview-scale-label" id="previewScaleLabel">65%</span>
+                      <span class="preview-scale-label" id="previewScaleLabel">75%</span>
                       <button class="preview-zoom-btn" id="previewZoomIn" onclick="adjustPreviewZoom(10)">+</button>
                       <div class="preview-rpanel-spacer"></div>
 
                     </div>
                     <!-- A4 Preview Paper -->
                     <div class="preview-rpanel-scroll">
-                      <div class="preview-rpanel-paper" id="previewRpanelPaper" style="transform:scale(0.65);">
+                      <div class="preview-rpanel-paper" id="previewRpanelPaper" style="transform:scale(0.75);">
                         <!-- Live preview sheet -->
                         <div class="preview-paper-workspace" id="previewCardSection">
                           <div class="preview-paper-sheet" id="printableResumeDoc">
@@ -1382,7 +1360,7 @@
               };
 
               /* ── 9. PREVIEW ZOOM ── */
-              var previewScale = 65;
+              var previewScale = 75;
               window.adjustPreviewZoom = function(delta) {
                 previewScale = Math.max(30, Math.min(120, previewScale + delta));
                 var paper = document.getElementById('previewRpanelPaper');
@@ -1419,23 +1397,7 @@
                 }, 1200);
               }
 
-              /* ── 12. FAANG CHIP SYNC ── */
-              window.syncFaangChip = function(btn) {
-                var level = btn.dataset.level;
-                // Sync to hidden chip with same level
-                document.querySelectorAll('#faangLevelChips .level-chip').forEach(function(c){
-                  if (c.dataset.level === level) {
-                    c.classList.add('active');
-                    c.click();
-                  } else {
-                    c.classList.remove('active');
-                  }
-                });
-                // Update visible strip
-                document.querySelectorAll('#faangStripChips .level-chip').forEach(function(c){
-                  c.classList.toggle('active', c.dataset.level === level);
-                });
-              };
+
 
               /* ── 13. SECTION COMPLETION PERCENTAGES ── */
               function updateNavPct(section, pct) {
@@ -1638,7 +1600,6 @@
               document.addEventListener('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                   e.preventDefault();
-                  document.getElementById('btnDraftSaveFooter')?.click();
                   updateAutosave();
                 }
               });
@@ -2834,15 +2795,13 @@
     </div>
   </div>
 
-  <script src="/src/client/engines/editor-engine.js?v=2.5"></script>
-  <script src="/src/client/engines/ats-analyzer.js?v=2.5"></script>
-  <script src="/src/client/engines/job-tracker.js?v=2.5"></script>
-  <script src="/src/client/engines/pdf-exporter.js?v=2.5"></script>
-  <script src="/src/client/engines/script.js?v=2.5"></script>
-  <script src="/src/client/components/help-center.js?v=2.5"></script>
-  <script src="/src/client/components/contextual-tips.js?v=2.5"></script>
-  <script src="/src/client/components/checklist.js?v=2.5"></script>
-  <script src="/src/client/components/command-palette.js?v=2.5"></script>
+  <script src="/frontend/engines/editor-engine.js?v=2.5"></script>
+  <script src="/frontend/engines/ats-analyzer.js?v=2.5"></script>
+  <script src="/frontend/engines/job-tracker.js?v=2.5"></script>
+  <script src="/frontend/engines/pdf-exporter.js?v=2.5"></script>
+  <script src="/frontend/engines/script.js?v=2.5"></script>
+  <script src="/frontend/components/help-center.js?v=2.5"></script>
+  <script src="/frontend/components/command-palette.js?v=2.5"></script>
 </body>
 </html>
 

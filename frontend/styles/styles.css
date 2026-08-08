@@ -2698,46 +2698,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
 }
 .editor-new-section-btn svg { width: 12px; height: 12px; }
 
-/* Editor left FAANG level strip */
-.faang-strip {
-  padding: 8px 8px 4px;
-  border-bottom: 1px solid #F0EDE8;
-}
-.faang-strip-label {
-  font-size: 9px;
-  font-weight: 700;
-  color: #B0AAA2;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-.faang-strip-chips {
-  display: flex;
-  gap: 3px;
-}
-.faang-strip-chips .level-chip {
-  flex: 1;
-  padding: 3px 4px;
-  font-size: 10px;
-  border-radius: 4px;
-  text-align: center;
-  border: 1px solid #ECE8E1;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.1s;
-  font-family: var(--font-body);
-}
-.faang-strip-chips .level-chip .level-code {
-  display: block;
-  font-size: 10px;
-  font-weight: 700;
-  color: #5E5E5E;
-}
-.faang-strip-chips .level-chip .level-name,
-.faang-strip-chips .level-chip .level-yoe { display: none; }
-.faang-strip-chips .level-chip.active { background: #111111; border-color: #111111; }
-.faang-strip-chips .level-chip.active .level-code { color: #FFFFFF; }
-.faang-strip-chips .level-chip:hover:not(.active) { border-color: #B9824A; }
+
 
 /* ────────────────────────────────────
    CENTER PANEL — Document Editor
@@ -3090,8 +3051,6 @@ i[data-feather] svg { width: 1em; height: 1em; }
   word-break: normal !important;
   white-space: pre-wrap !important;
   display: inline-block !important;
-}
-
   cursor: text;
   word-break: break-all;
   transition: background 0.12s;

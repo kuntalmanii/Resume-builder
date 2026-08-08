@@ -11,8 +11,8 @@ const path = require('path');
 // ============================================================================
 // 1. CONFIGURATION & ENVIRONMENT LOAD
 // ============================================================================
-const envPath = fs.existsSync(path.resolve(__dirname, '../../.env'))
-  ? path.resolve(__dirname, '../../.env')
+const envPath = fs.existsSync(path.resolve(__dirname, '../.env'))
+  ? path.resolve(__dirname, '../.env')
   : path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
   try {
@@ -54,7 +54,7 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const { GEMINI_MODELS, SHARED_TAXONOMY_KEYWORDS } = require('../../api/_shared');
+const { GEMINI_MODELS, SHARED_TAXONOMY_KEYWORDS } = require('./api/_shared');
 
 // ============================================================================
 // 2. LOGGING SERVICE
@@ -257,42 +257,7 @@ async function callGeminiWithModelFallback(promptText, preferredModel) {
   throw lastErr || new Error("All Gemini models failed");
 }
 
-function callGeminiApi(jdText, resumeText, preferredModel, atsEngine) {
-  const engineConstraint = atsEngine ? `TARGET ATS ENGINE PROFILE: ${atsEngine}` : '';
 
-  const prompt = `You are an expert Senior Technical Recruiter and ATS parser with 15+ years of FAANG-level hiring experience.
-Analyze the Candidate Resume against the Job Description for comprehensive ATS compatibility.
-
-${engineConstraint}
-
-JOB DESCRIPTION:
-${jdText}
-
-CANDIDATE RESUME:
-${resumeText}
-
-Respond STRICTLY with a single valid JSON object — no markdown, no prose outside JSON:
-{
-  "score": <integer 0-100>,
-  "verdict": <"SHORTLIST"|"HOLD"|"REJECT">,
-  "matchedKeywords": [<skills found in both>],
-  "missingKeywords": [<required skills missing in resume>],
-  "recommendations": [<4-6 specific actionable strings>],
-  "recruiter_verdict": "<2-3 sentence direct recruiter assessment>",
-  "hiring_probability": { "interview": "<e.g. 87%>", "offer": "<e.g. 72%>", "ats_gate_pass": "<e.g. 94%>" },
-  "smart_rewrites": [
-    { "before": "<weak bullet>", "after": "<ATS-optimized rewrite>", "highlights": ["Verb: X","Metric: Y","Keyword: Z"] },
-    { "before": "<weak bullet 2>", "after": "<ATS-optimized rewrite 2>", "highlights": ["Verb: A","Metric: B"] }
-  ],
-  "section_scores": {
-    "keyword_match": <0-100>, "skills_alignment": <0-100>, "formatting_ats": <0-100>,
-    "experience_impact": <0-100>, "metric_density": <0-100>, "education_certs": <0-100>,
-    "readability_score": <0-100>, "action_verbs": <0-100>
-  }
-}`;
-
-  return callGeminiWithModelFallback(prompt, preferredModel);
-}
 
 function callGeminiOptimize(jobTitle, experienceText, skills, preferredModel, sensitivity) {
   const sensVal = parseFloat(sensitivity);
@@ -379,49 +344,7 @@ Instructions:
 // ============================================================================
 // 6. HEURISTIC ENGINE SERVICE (OFFLINE / FALLBACK)
 // ============================================================================
-function runServerFallbackAnalysis(jdText, resumeText) {
-  const jdLower = (jdText || "").toLowerCase();
-  const candidateLower = (resumeText || "").toLowerCase();
 
-  let jdKeywordsPresent = SHARED_TAXONOMY_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
-  if (jdKeywordsPresent.length < 2 && jdText && jdText.length > 15) {
-    const words = jdText.match(/\b[A-Za-z]{4,}\b/g) || [];
-    const stopWords = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team']);
-    const unique = [...new Set(words.map(w => w.toLowerCase()))].filter(w => !stopWords.has(w));
-    if (unique.length > 0) {
-      jdKeywordsPresent = unique.slice(0, 8);
-    }
-  }
-
-  const activeJdKeywords = jdKeywordsPresent.length > 0 ? jdKeywordsPresent : 
-    ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
-
-  const matched = [];
-  const missing = [];
-
-  activeJdKeywords.forEach(kw => {
-    if (candidateLower.includes(kw.toLowerCase())) {
-      matched.push(kw);
-    } else {
-      missing.push(kw);
-    }
-  });
-
-  const total = activeJdKeywords.length || 1;
-  const dynamicScore = Math.min(100, Math.max(0, Math.round((matched.length / total) * 100)));
-  const topMissing = missing.slice(0, 2).join(', ') || 'core skills';
-
-  return {
-    score: dynamicScore,
-    matchedKeywords: matched,
-    missingKeywords: missing,
-    recommendations: [
-      `Incorporate 1-2 instances of missing keywords (${topMissing}) under your experience bullet points.`,
-      `Quantify impact with explicit metrics (e.g. Improved performance by 35%).`,
-      `Maintain standard section headings like TECHNICAL EXPERTISE for 100% parsing accuracy in Lever & Greenhouse.`
-    ]
-  };
-}
 
 function runServerFallbackOptimization(jobTitle, experienceText) {
   return {
@@ -575,7 +498,7 @@ const server = http.createServer((req, res) => {
           return;
         }
         log('INFO', `Received /api/parse-resume request from IP ${clientIp}`);
-        const parseResumeHandler = require('../../api/parse-resume.js');
+        const parseResumeHandler = require('./api/parse-resume.js');
         const body = await readJsonBody(req, res);
         req.body = body;
         const resMock = {
@@ -613,7 +536,7 @@ const server = http.createServer((req, res) => {
         log('INFO', `Received ${pathname} request from IP ${clientIp}`);
 
         // Delegate entirely to api/ats-analyze.js — it owns the full prompt, Gemini calls, and rich fallback
-        const atsAnalyzeHandler = require('../../api/ats-analyze.js');
+        const atsAnalyzeHandler = require('./api/ats-analyze.js');
 
         // Build a minimal Express-compatible shim around Node's raw req/res
         const body = await readJsonBody(req, res);
@@ -636,7 +559,7 @@ const server = http.createServer((req, res) => {
         await atsAnalyzeHandler(req, resMock);
       } catch (err) {
         log('ERROR', `ATS Analyze handler catch error: ${err.message}`);
-        const atsAnalyzeHandler = require('../../api/ats-analyze.js');
+        const atsAnalyzeHandler = require('./api/ats-analyze.js');
         if (!res.headersSent) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Internal server error' }));
@@ -656,7 +579,7 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const atsChatHandler = require('../../api/ats-chat.js');
+        const atsChatHandler = require('./api/ats-chat.js');
         await atsChatHandler(req, res);
       } catch (err) {
         log('ERROR', `ATS Chat route error: ${err.message}`);
@@ -734,12 +657,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const rootDir = path.resolve(__dirname, '../../');
+  const rootDir = path.resolve(__dirname, '../');
   const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
   
   // Resolve target file path against root project directory
   let filePath = safePath === '/'
-    ? path.join(rootDir, 'public', 'index.html')
+    ? path.join(rootDir, 'frontend', 'index.html')
     : path.join(rootDir, safePath);
 
   if (!filePath.startsWith(rootDir)) {
@@ -758,13 +681,13 @@ const server = http.createServer((req, res) => {
     fs.readFile(targetPath, (err, content) => {
       if (err) {
         if (err.code === 'ENOENT') {
-          // Attempt fallback search across public/, src/client subdirectories
+          // Attempt fallback search across frontend subdirectories
           const basenm = path.basename(targetPath);
           const fallbacks = [
-            path.join(rootDir, 'public', basenm),
-            path.join(rootDir, 'src', 'client', 'components', basenm),
-            path.join(rootDir, 'src', 'client', 'engines', basenm),
-            path.join(rootDir, 'src', 'client', 'styles', basenm)
+            path.join(rootDir, 'frontend', basenm),
+            path.join(rootDir, 'frontend', 'components', basenm),
+            path.join(rootDir, 'frontend', 'engines', basenm),
+            path.join(rootDir, 'frontend', 'styles', basenm)
           ];
 
           let found = false;
@@ -790,7 +713,7 @@ const server = http.createServer((req, res) => {
               res.end(`404 Not Found: ${safePath}`);
               return;
             }
-            fs.readFile(path.join(rootDir, 'public', 'index.html'), (err2, htmlContent) => {
+            fs.readFile(path.join(rootDir, 'frontend', 'index.html'), (err2, htmlContent) => {
               res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, must-revalidate' });
               res.end(htmlContent, 'utf-8');
             });

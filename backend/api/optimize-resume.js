@@ -121,6 +121,7 @@ module.exports = async function handler(req, res) {
 Rewrite and optimize the candidate's ${section.toUpperCase()} section for maximum ATS parser score and executive impact.
 
 TARGET JOB TITLE: ${jobTitle || 'Software Engineer'}
+SKILLS: ${Array.isArray(skills) ? skills.join(', ') : (skills || 'TypeScript, React')}
 ACTION REQUEST: ${action}
 RAW INPUT TEXT:
 "${text || 'i worked for google for 3 years and then wored at amaoxx'}"
