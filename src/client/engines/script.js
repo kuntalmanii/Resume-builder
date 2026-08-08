@@ -4560,19 +4560,52 @@ Key Requirements:
 
   // Get Company Initial Avatar string
   function getCompanyInitials(name) {
-    if (!name) return 'JOB';
+    if (!name) return 'JO';
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
   }
 
-  // Render Tech Pills Helper
+  // Map company name to avatar gradient class
+  function getAvatarColorClass(name) {
+    const palettes = ['ca-blue', 'ca-indigo', 'ca-purple', 'ca-teal', 'ca-green', 'ca-orange', 'ca-red', 'ca-pink', 'ca-slate'];
+    if (!name) return palettes[0];
+    const seed = name.trim().toUpperCase().charCodeAt(0) + (name.length || 0);
+    return palettes[seed % palettes.length];
+  }
+
+  // Render company avatar HTML
+  function renderCompanyAvatar(name) {
+    const initials = getCompanyInitials(name);
+    const colorClass = getAvatarColorClass(name);
+    return `<div class="company-avatar ${colorClass}">${initials}</div>`;
+  }
+
+  // Render Tech Tag Pills Helper (matches new .tech-tag CSS)
   function renderTechPills(tags) {
     if (!tags || !Array.isArray(tags) || !tags.length) return '';
-    const colorClasses = ['pill-blue', 'pill-purple', 'pill-emerald', 'pill-orange', 'pill-slate'];
-    return `<div class="tech-pills-row">
-      ${tags.map((tag, idx) => `<span class="tech-pill ${colorClasses[idx % colorClasses.length]}">${escapeHTML(tag)}</span>`).join('')}
+    return `<div class="tech-tags-row">
+      ${tags.slice(0, 4).map(tag => `<span class="tech-tag">${escapeHTML(tag)}</span>`).join('')}
     </div>`;
+  }
+
+  // Render ATS donut ring SVG
+  function renderAtsDonut(score) {
+    if (!score && score !== 0) return `<span style="font-size:12px;color:var(--text-muted);">N/A</span>`;
+    const r = 16; const circ = 2 * Math.PI * r;
+    const pct = Math.min(100, Math.max(0, Number(score)));
+    const offset = circ - (pct / 100) * circ;
+    const threshClass = pct >= 85 ? 'ats-high' : pct >= 70 ? 'ats-mid' : 'ats-low';
+    return `
+      <div class="ats-donut-wrapper ${threshClass}">
+        <svg viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+          <circle class="ats-donut-bg" cx="21" cy="21" r="${r}"/>
+          <circle class="ats-donut-fill" cx="21" cy="21" r="${r}"
+            stroke-dasharray="${circ.toFixed(2)}"
+            stroke-dashoffset="${offset.toFixed(2)}"/>
+        </svg>
+        <div class="ats-donut-text">${pct}%</div>
+      </div>`;
   }
 
   const NEXT_STAGE_LABEL_MAP = {
@@ -4702,36 +4735,56 @@ Key Requirements:
 
     filteredList.forEach(job => {
       const tr = document.createElement('tr');
-      const atsClass = (job.atsScore >= 90) ? 'ats-high' : (job.atsScore >= 75) ? 'ats-med' : 'ats-low';
+
+      // Stage label display
+      const stageLabels = {
+        wishlist: 'Wishlist', applied: 'Applied',
+        interview: 'Interviewing', offer: 'Offer', rejected: 'Rejected'
+      };
+      const stageDisplay = stageLabels[job.stage] || job.stage;
 
       tr.innerHTML = `
         <td>
-          <div style="display:flex; align-items:center; gap:0.65rem;">
-            <div class="company-logo-avatar">${getCompanyInitials(job.company)}</div>
-            <div>
-              <strong style="color:var(--text-primary); font-size:0.9rem;">${escapeHTML(job.company)}</strong>
-              <div style="font-size:0.78rem; color:var(--text-muted);">${escapeHTML(job.title)}</div>
+          <div class="company-cell-wrapper">
+            ${renderCompanyAvatar(job.company)}
+            <div class="company-info-block">
+              <div class="company-name-text">${escapeHTML(job.company)}</div>
+              <div class="company-role-text">${escapeHTML(job.title)}</div>
               ${renderTechPills(job.tags)}
             </div>
           </div>
         </td>
-        <td class="text-center"><span class="stage-pill stage-${job.stage}">${escapeHTML(job.stage)}</span></td>
-        <td class="text-center"><span class="date-cell">${escapeHTML(formatDateNice(job.date))}</span></td>
-        <td class="text-center"><span class="salary-cell">${escapeHTML(job.salary || 'Unspecified')}</span></td>
-        <td class="text-center">${job.atsScore ? `<span class="ats-score-pill ${atsClass}">${job.atsScore}%</span>` : 'N/A'}</td>
-        <td class="text-right">
-          <div class="table-actions-cell">
-            <button class="btn-edit-job" data-id="${job.id}" title="Edit"><i data-feather="edit-2"></i> Edit</button>
-            ${job.jdText ? `<button class="btn-scan-ats" data-id="${job.id}" title="Run ATS Scan" style="color:var(--primary);"><i data-feather="sparkles"></i> Scan</button>` : ''}
-            <button class="btn-delete-job" data-id="${job.id}" title="Delete" style="color:#ef4444;"><i data-feather="trash-2"></i> Delete</button>
+        <td class="text-center">
+          <span class="stage-badge stage-${job.stage}">${escapeHTML(stageDisplay)}</span>
+        </td>
+        <td class="text-center">
+          <span class="date-text">${escapeHTML(formatDateNice(job.date))}</span>
+        </td>
+        <td class="text-center">
+          <span class="salary-text">${escapeHTML(job.salary || '—')}</span>
+        </td>
+        <td class="text-center ats-score-cell">
+          ${renderAtsDonut(job.atsScore)}
+        </td>
+        <td>
+          <div class="job-actions-cell">
+            <button class="job-action-btn edit-btn btn-edit-job" data-id="${job.id}" title="Edit Application">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            ${job.jdText ? `<button class="job-action-btn scan-btn btn-scan-ats" data-id="${job.id}" title="Run ATS Scan">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </button>` : `<button class="job-action-btn scan-btn btn-scan-ats" data-id="${job.id}" title="ATS Scan">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </button>`}
+            <button class="job-action-btn delete-btn btn-delete-job" data-id="${job.id}" title="Delete Application">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
           </div>
         </td>
       `;
 
       tableBody.appendChild(tr);
     });
-
-    if (window.feather) window.feather.replace();
   }
 
   function renderPipelineViews() {

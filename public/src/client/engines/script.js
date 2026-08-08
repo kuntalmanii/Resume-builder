@@ -12,6 +12,30 @@
  * 7. ATS Analyzer Diagnostic Report & Scanner Engine
  */
 
+/**
+ * escapeHTML — Global XSS-safe HTML escape helper.
+ *
+ * Defined here in global scope (outside DOMContentLoaded) so it is
+ * accessible to all functions throughout this file that build innerHTML
+ * strings (renderCustomSectionInputs, renderCustomSectionsPreview,
+ * renderVersionProfilesModal, etc.).
+ *
+ * NOTE: ats-analyzer.js has its own identical copy as a class method
+ * (this.escapeHTML). This standalone version is for script.js only.
+ *
+ * @param {*} str - Value to escape. Non-strings return ''.
+ * @returns {string} HTML-escaped string safe for innerHTML insertion.
+ */
+function escapeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Toast Notifications Engine — defined & bound early to avoid race conditions
   function showToast(message, type = 'success') {
@@ -52,9 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   };
 
-  window.onunhandledrejection = function (event) {
+  window.addEventListener('unhandledrejection', function (event) {
     console.error('[ResuAI Unhandled Rejection]', event.reason);
-  };
+  });
+
+  // Storage Keys & Core Constants
+  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
 
   // Initialize Feather Vector Icons
   if (window.feather) {
@@ -311,6 +338,11 @@ document.addEventListener('DOMContentLoaded', () => {
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever'
     };
   }
+  // Exposed on window so external modules (ats-analyzer.js, pdf-exporter.js)
+  // can retrieve the active Gemini model and ATS engine settings at call time.
+  // Without this, window.getActiveSettings is always undefined and all
+  // backend AI calls silently fall back to empty-string defaults.
+  window.getActiveSettings = getActiveSettings;
 
   let isSigningOut = false;
 
@@ -372,7 +404,11 @@ document.addEventListener('DOMContentLoaded', () => {
       authCard.classList.add('auth-card-shake');
       setTimeout(() => authCard.classList.remove('auth-card-shake'), 500);
     }
-    showToast(msg, 'error');
+    // Guard required: showAuthError() is called from async Supabase auth
+    // callbacks that can fire before DOMContentLoaded fully executes.
+    // window.showToast is set later at line ~4201; the typeof guard ensures
+    // we never throw a ReferenceError if the callback fires too early.
+    if (typeof showToast === 'function') showToast(msg, 'error');
   }
 
   function clearAuthError() {
@@ -1370,8 +1406,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      5. Automatic Form Persistence (LocalStorage Auto-Save)
      ========================================================================== */
-  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
-
   const inputFullName = document.getElementById('inputFullName');
   const inputJobTitle = document.getElementById('inputJobTitle');
   const inputEmail = document.getElementById('inputEmail');
@@ -2935,6 +2969,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderVersionProfilesModal();
     modal.style.display = 'flex';
     if (window.feather) feather.replace();
+
+    // Scroll the active profile card into view after the modal is painted.
+    // requestAnimationFrame ensures the browser has completed layout for
+    // the newly visible flex modal before scrollIntoView calculates position.
+    requestAnimationFrame(() => {
+      const grid = document.getElementById('versionProfilesGrid');
+      if (grid) grid.scrollTop = 0; // always reset first so active card scroll is predictable
+      const activeCard = modal.querySelector('.version-profile-card.active');
+      if (activeCard) activeCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
   }
 
   function closeVersionModal() {
@@ -3157,7 +3201,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const missingKeywordsContainer = document.getElementById('missingKeywordsContainer');
   const recommendationsGridContainer = document.getElementById('recommendationsGridContainer');
 
-  // Exposed on window so ats-analyzer.js can read uploaded PDF/TXT content
+  // Exposed on window so ats-analyzer.js (a separate module) can read the
+  // uploaded PDF/TXT content via window.uploadedFileText in getResumeText().
   window.uploadedFileText = "";
 
   // Configure PDF.js worker URL if library is loaded
@@ -4120,6 +4165,14 @@ Key Requirements:
   const btnSaveAiSettings               = document.getElementById('btnSaveAiSettings');
 
   const settingAtsEngine                = document.getElementById('settingAtsEngine');
+  const settingSeniority                = document.getElementById('settingSeniority');
+  const settingKeywordMatchStrategy     = document.getElementById('settingKeywordMatchStrategy');
+  const btnSaveAtsSettings              = document.getElementById('btnSaveAtsSettings');
+
+  const settingPaperSize                = document.getElementById('settingPaperSize');
+  const settingTypography               = document.getElementById('settingTypography');
+  const btnSavePdfSettings              = document.getElementById('btnSavePdfSettings');
+
   const settingAutoSaveToggle           = document.getElementById('settingAutoSaveToggle');
   const btnExportAllData                = document.getElementById('btnExportAllData');
   const btnResetAllData                 = document.getElementById('btnResetAllData');
@@ -4141,6 +4194,10 @@ Key Requirements:
       geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.0-flash',
       sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever',
+      seniority: settingSeniority ? settingSeniority.value : 'senior',
+      matchStrategy: settingKeywordMatchStrategy ? settingKeywordMatchStrategy.value : 'semantic',
+      paperSize: settingPaperSize ? settingPaperSize.value : 'letter',
+      typography: settingTypography ? settingTypography.value : 'inter-jakarta',
       autoSave: settingAutoSaveToggle ? settingAutoSaveToggle.checked : true,
       savedAt: new Date().toISOString()
     };
@@ -4175,6 +4232,10 @@ Key Requirements:
         }
       }
       if (s.atsEngine && settingAtsEngine) settingAtsEngine.value = s.atsEngine;
+      if (s.seniority && settingSeniority) settingSeniority.value = s.seniority;
+      if (s.matchStrategy && settingKeywordMatchStrategy) settingKeywordMatchStrategy.value = s.matchStrategy;
+      if (s.paperSize && settingPaperSize) settingPaperSize.value = s.paperSize;
+      if (s.typography && settingTypography) settingTypography.value = s.typography;
       if (typeof s.autoSave === 'boolean' && settingAutoSaveToggle) settingAutoSaveToggle.checked = s.autoSave;
       
       applyTypographyToLivePreview();
@@ -4198,16 +4259,16 @@ Key Requirements:
     } catch(e) {}
 
     const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+    const diagPayloadSize = document.getElementById('diagPayloadSize');
+    if (diagPayloadSize) diagPayloadSize.textContent = `${sizeInKB} KB`;
+
     const percentUsed = Math.min(100, Math.max(0.01, (parseFloat(sizeInKB) / 5120) * 100));
     
-    // Optional UI diagnostic widgets (if present in DOM)
-    ['diagPayloadSize', 'storagePercentText', 'storageProgressFill'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (id === 'diagPayloadSize') el.textContent = `${sizeInKB} KB`;
-      else if (id === 'storagePercentText') el.textContent = `${percentUsed.toFixed(3)}% of 5MB limit`;
-      else if (id === 'storageProgressFill') el.style.width = `${percentUsed}%`;
-    });
+    const storagePercentText = document.getElementById('storagePercentText');
+    const storageProgressFill = document.getElementById('storageProgressFill');
+    
+    if (storagePercentText) storagePercentText.textContent = `${percentUsed.toFixed(3)}% of 5MB limit`;
+    if (storageProgressFill) storageProgressFill.style.width = `${percentUsed}%`;
   }
 
   // Visual feedback for save buttons
@@ -4230,11 +4291,19 @@ Key Requirements:
   }
 
   const aiEngineSettingsForm = document.getElementById('aiEngineSettingsForm');
+  const pdfExportSettingsForm = document.getElementById('pdfExportSettingsForm');
 
   if (aiEngineSettingsForm) {
     aiEngineSettingsForm.addEventListener('submit', (e) => {
       e.preventDefault();
       handleSettingsSaveFeedback(btnSaveAiSettings, 'AI Engine & Target Profile Saved!');
+    });
+  }
+
+  if (pdfExportSettingsForm) {
+    pdfExportSettingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSettingsSaveFeedback(btnSavePdfSettings, 'Typography & Export Formats Saved!');
     });
   }
 
@@ -4491,19 +4560,52 @@ Key Requirements:
 
   // Get Company Initial Avatar string
   function getCompanyInitials(name) {
-    if (!name) return 'JOB';
+    if (!name) return 'JO';
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
   }
 
-  // Render Tech Pills Helper
+  // Map company name to avatar gradient class
+  function getAvatarColorClass(name) {
+    const palettes = ['ca-blue', 'ca-indigo', 'ca-purple', 'ca-teal', 'ca-green', 'ca-orange', 'ca-red', 'ca-pink', 'ca-slate'];
+    if (!name) return palettes[0];
+    const seed = name.trim().toUpperCase().charCodeAt(0) + (name.length || 0);
+    return palettes[seed % palettes.length];
+  }
+
+  // Render company avatar HTML
+  function renderCompanyAvatar(name) {
+    const initials = getCompanyInitials(name);
+    const colorClass = getAvatarColorClass(name);
+    return `<div class="company-avatar ${colorClass}">${initials}</div>`;
+  }
+
+  // Render Tech Tag Pills Helper (matches new .tech-tag CSS)
   function renderTechPills(tags) {
     if (!tags || !Array.isArray(tags) || !tags.length) return '';
-    const colorClasses = ['pill-blue', 'pill-purple', 'pill-emerald', 'pill-orange', 'pill-slate'];
-    return `<div class="tech-pills-row">
-      ${tags.map((tag, idx) => `<span class="tech-pill ${colorClasses[idx % colorClasses.length]}">${escapeHTML(tag)}</span>`).join('')}
+    return `<div class="tech-tags-row">
+      ${tags.slice(0, 4).map(tag => `<span class="tech-tag">${escapeHTML(tag)}</span>`).join('')}
     </div>`;
+  }
+
+  // Render ATS donut ring SVG
+  function renderAtsDonut(score) {
+    if (!score && score !== 0) return `<span style="font-size:12px;color:var(--text-muted);">N/A</span>`;
+    const r = 16; const circ = 2 * Math.PI * r;
+    const pct = Math.min(100, Math.max(0, Number(score)));
+    const offset = circ - (pct / 100) * circ;
+    const threshClass = pct >= 85 ? 'ats-high' : pct >= 70 ? 'ats-mid' : 'ats-low';
+    return `
+      <div class="ats-donut-wrapper ${threshClass}">
+        <svg viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+          <circle class="ats-donut-bg" cx="21" cy="21" r="${r}"/>
+          <circle class="ats-donut-fill" cx="21" cy="21" r="${r}"
+            stroke-dasharray="${circ.toFixed(2)}"
+            stroke-dashoffset="${offset.toFixed(2)}"/>
+        </svg>
+        <div class="ats-donut-text">${pct}%</div>
+      </div>`;
   }
 
   const NEXT_STAGE_LABEL_MAP = {
@@ -4619,7 +4721,7 @@ Key Requirements:
               <h3 class="empty-state-headline">No job applications tracked yet</h3>
               <p class="empty-state-desc">Organize your job search across Wishlist, Applied, Interviewing, and Offer stages with real-time application pipelines.</p>
               <div class="empty-state-actions">
-                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddNewJob')?.click()">
+                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddAppModal')?.click()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Add First Application</span>
                 </button>
@@ -4633,38 +4735,49 @@ Key Requirements:
 
     filteredList.forEach(job => {
       const tr = document.createElement('tr');
-      const atsClass = (job.atsScore >= 90) ? 'ats-high' : (job.atsScore >= 75) ? 'ats-med' : 'ats-low';
+
+      // Stage label display
+      const stageLabels = {
+        wishlist: 'Wishlist', applied: 'Applied',
+        interview: 'Interviewing', offer: 'Offer', rejected: 'Rejected'
+      };
+      const stageDisplay = stageLabels[job.stage] || job.stage;
 
       tr.innerHTML = `
         <td>
-          <div style="display:flex; align-items:center; gap:0.65rem;">
-            <div class="company-logo-avatar">${getCompanyInitials(job.company)}</div>
-            <div>
-              <strong style="color:var(--text-primary); font-size:0.9rem;">${escapeHTML(job.company)}</strong>
-              <div style="font-size:0.78rem; color:var(--text-muted);">${escapeHTML(job.title)}</div>
+          <div class="company-cell-wrapper">
+            ${renderCompanyAvatar(job.company)}
+            <div class="company-info-block">
+              <div class="company-name-text">${escapeHTML(job.company)}</div>
+              <div class="company-role-text">${escapeHTML(job.title)}</div>
               ${renderTechPills(job.tags)}
             </div>
           </div>
         </td>
-        <td class="text-center"><span class="stage-pill stage-${job.stage}">${escapeHTML(job.stage)}</span></td>
-        <td class="text-center"><span class="date-cell">${escapeHTML(formatDateNice(job.date))}</span></td>
-        <td class="text-center"><span class="salary-cell">${escapeHTML(job.salary || 'Unspecified')}</span></td>
-        <td class="text-center">${job.atsScore ? `<span class="ats-score-pill ${atsClass}">${job.atsScore}%</span>` : 'N/A'}</td>
-        <td class="text-right">
-          <div class="table-actions-cell">
-            <button type="button" class="btn-edit-job" data-id="${job.id}" title="Edit Job Application">
-              <i data-feather="edit-2"></i>
-              <span>Edit</span>
+        <td class="text-center">
+          <span class="stage-badge stage-${job.stage}">${escapeHTML(stageDisplay)}</span>
+        </td>
+        <td class="text-center">
+          <span class="date-text">${escapeHTML(formatDateNice(job.date))}</span>
+        </td>
+        <td class="text-center">
+          <span class="salary-text">${escapeHTML(job.salary || '—')}</span>
+        </td>
+        <td class="text-center ats-score-cell">
+          ${renderAtsDonut(job.atsScore)}
+        </td>
+        <td>
+          <div class="job-actions-cell">
+            <button class="job-action-btn edit-btn btn-edit-job" data-id="${job.id}" title="Edit Application">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            ${job.jdText ? `
-              <button type="button" class="btn-scan-ats" data-id="${job.id}" title="Run ATS Scan">
-                <i data-feather="sparkles"></i>
-                <span>Scan</span>
-              </button>
-            ` : ''}
-            <button type="button" class="btn-delete-job" data-id="${job.id}" title="Delete Application">
-              <i data-feather="trash-2"></i>
-              <span>Delete</span>
+            ${job.jdText ? `<button class="job-action-btn scan-btn btn-scan-ats" data-id="${job.id}" title="Run ATS Scan">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </button>` : `<button class="job-action-btn scan-btn btn-scan-ats" data-id="${job.id}" title="ATS Scan">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </button>`}
+            <button class="job-action-btn delete-btn btn-delete-job" data-id="${job.id}" title="Delete Application">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
           </div>
         </td>
@@ -4672,8 +4785,6 @@ Key Requirements:
 
       tableBody.appendChild(tr);
     });
-
-    if (window.feather) window.feather.replace();
   }
 
   function renderPipelineViews() {
@@ -4964,19 +5075,7 @@ Key Requirements:
   if (jobSearchInput) jobSearchInput.addEventListener('input', renderPipelineViews);
   if (jobStageFilter) jobStageFilter.addEventListener('change', renderPipelineViews);
 
-  // Helper escape HTML string function
-  function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'"]/g, 
-      tag => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[tag] || tag)
-    );
-  }
+  // escapeHTML is defined as a global function at the top of this file.
 
   // Initialize pipeline
   loadJobApplications();
