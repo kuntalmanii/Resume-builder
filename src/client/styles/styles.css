@@ -3668,9 +3668,15 @@ i[data-feather] svg { width: 1em; height: 1em; }
   background: transparent;
   padding: 0;
   outline: none;
-  field-sizing: content;
+  width: 220px;
   min-width: 180px;
   max-width: 320px;
+}
+@supports (field-sizing: content) {
+  .ats-meta-input {
+    width: auto;
+    field-sizing: content;
+  }
 }
 .ats-meta-divider {
   font-size: 11.5px;
