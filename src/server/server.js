@@ -260,29 +260,34 @@ async function callGeminiWithModelFallback(promptText, preferredModel) {
 function callGeminiApi(jdText, resumeText, preferredModel, atsEngine) {
   const engineConstraint = atsEngine ? `TARGET ATS ENGINE PROFILE: ${atsEngine}` : '';
 
-  const prompt = `You are an expert Senior Technical Recruiter and Applicant Tracking System (ATS) Parser.
-Analyze the following Candidate Resume against the Target Job Description for ATS compatibility.
+  const prompt = `You are an expert Senior Technical Recruiter and ATS parser with 15+ years of FAANG-level hiring experience.
+Analyze the Candidate Resume against the Job Description for comprehensive ATS compatibility.
 
 ${engineConstraint}
 
 JOB DESCRIPTION:
 ${jdText}
 
-CANDIDATE RESUME & SKILLS TEXT:
+CANDIDATE RESUME:
 ${resumeText}
 
-Evaluate keyword overlap, hard technical requirements, and section formatting.
-Respond STRICTLY with a valid JSON object following this exact JSON schema:
+Respond STRICTLY with a single valid JSON object — no markdown, no prose outside JSON:
 {
-  "score": <number between 0 and 100 representing ATS match percentage>,
-  "matchedKeywords": [<array of technical skills, frameworks, and requirements matched in both>],
-  "missingKeywords": [<array of critical technical skills & qualifications present in JD but missing in Resume>],
-  "recommendations": [<array of formatting or ATS parsing recommendations>],
-  "sectionScores": {
-    "keywordMatch": <0-100>,
-    "skillsAlignment": <0-100>,
-    "formattingATS": <0-100>,
-    "experienceImpact": <0-100>
+  "score": <integer 0-100>,
+  "verdict": <"SHORTLIST"|"HOLD"|"REJECT">,
+  "matchedKeywords": [<skills found in both>],
+  "missingKeywords": [<required skills missing in resume>],
+  "recommendations": [<4-6 specific actionable strings>],
+  "recruiter_verdict": "<2-3 sentence direct recruiter assessment>",
+  "hiring_probability": { "interview": "<e.g. 87%>", "offer": "<e.g. 72%>", "ats_gate_pass": "<e.g. 94%>" },
+  "smart_rewrites": [
+    { "before": "<weak bullet>", "after": "<ATS-optimized rewrite>", "highlights": ["Verb: X","Metric: Y","Keyword: Z"] },
+    { "before": "<weak bullet 2>", "after": "<ATS-optimized rewrite 2>", "highlights": ["Verb: A","Metric: B"] }
+  ],
+  "section_scores": {
+    "keyword_match": <0-100>, "skills_alignment": <0-100>, "formatting_ats": <0-100>,
+    "experience_impact": <0-100>, "metric_density": <0-100>, "education_certs": <0-100>,
+    "readability_score": <0-100>, "action_verbs": <0-100>
   }
 }`;
 
@@ -570,32 +575,37 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const body = await readJsonBody(req, res);
-        const jd = body.jdText || body.targetJdText || body.jobDescription || body.job_description || '';
-        const resume = body.resumeText || body.resume_text || '';
-        const geminiModel = body.geminiModel || '';
-        const atsEngine = body.atsEngine || '';
         log('INFO', `Received ${pathname} request from IP ${clientIp}`);
 
-        if (GEMINI_API_KEY) {
-          try {
-            const result = await callGeminiApi(jd, resume, geminiModel, atsEngine);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(result));
-            return;
-          } catch (err) {
-            log('WARN', `Gemini ATS API call error, falling back to heuristic engine: ${err.message}`);
-          }
-        }
+        // Delegate entirely to api/ats-analyze.js — it owns the full prompt, Gemini calls, and rich fallback
+        const atsAnalyzeHandler = require('../../api/ats-analyze.js');
 
-        const fallbackResult = runServerFallbackAnalysis(jd, resume);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(fallbackResult));
+        // Build a minimal Express-compatible shim around Node's raw req/res
+        const body = await readJsonBody(req, res);
+        req.body = body;
+
+        const resMock = {
+          _statusCode: 200,
+          _headers: {},
+          _ended: false,
+          status(code) { this._statusCode = code; return this; },
+          json(data) {
+            if (this._ended) return;
+            this._ended = true;
+            res.writeHead(this._statusCode, { 'Content-Type': 'application/json', ...this._headers });
+            res.end(JSON.stringify(data));
+          },
+          setHeader(k, v) { this._headers[k] = v; }
+        };
+
+        await atsAnalyzeHandler(req, resMock);
       } catch (err) {
         log('ERROR', `ATS Analyze handler catch error: ${err.message}`);
-        const fallbackResult = runServerFallbackAnalysis('', '');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(fallbackResult));
+        const atsAnalyzeHandler = require('../../api/ats-analyze.js');
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Internal server error' }));
+        }
       }
     })();
     return;
