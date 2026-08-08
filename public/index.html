@@ -1483,69 +1483,88 @@
                 var area = document.getElementById('aiChatMessages');
                 var loadingDiv = document.createElement('div');
                 loadingDiv.className = 'ai-msg from-ai loading';
-                loadingDiv.innerHTML = '<div class="ai-msg-meta">AI Copilot</div><span class="pulse" style="font-style:italic;color:#6b7280;">Thinking and analyzing your request…</span>';
+                loadingDiv.innerHTML = '<div class="ai-msg-meta">AI Copilot</div><span class="pulse" style="font-style:italic;color:#6b7280;">Rewriting and optimizing text with AI…</span>';
                 if (area) {
                   area.appendChild(loadingDiv);
                   area.scrollTop = area.scrollHeight;
                 }
 
-                // Gather resume context
+                // Gather current document state
                 var name = (document.getElementById('docFieldName')?.innerText || '').trim();
                 var jobTitle = (document.getElementById('docFieldTitle')?.innerText || '').trim();
                 var summary = (document.getElementById('docFieldSummary')?.innerText || '').trim();
                 var experience = (document.getElementById('bulletPoints')?.value || '').trim();
-                var resumeText = [name, jobTitle, summary, experience].filter(Boolean).join('\n');
+
+                var targetSection = 'summary';
+                var targetText = summary;
+                if (/bullet|experience|work|quantify|rewrite/i.test(promptText)) {
+                  targetSection = 'experience';
+                  targetText = experience;
+                } else if (/skill/i.test(promptText)) {
+                  targetSection = 'skills';
+                  targetText = (document.getElementById('docFieldSkills')?.innerText || '').trim();
+                }
 
                 try {
-                  const resp = await fetch('/api/ats-chat', {
+                  // Call optimize endpoint to rewrite section text
+                  const optResp = await fetch('/api/optimize-resume', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      userMessage: promptText,
-                      resumeText: resumeText,
+                      section: targetSection,
+                      text: targetText,
+                      action: promptText,
                       jobTitle: jobTitle
                     })
                   });
 
-                  let aiReply = '';
-                  if (resp.ok) {
-                    const data = await resp.json();
-                    aiReply = data.reply || data.response || data.message || '';
-                  }
-
-                  if (!aiReply) {
-                    aiReply = `<b>AI Writing Suggestion:</b><br>
-                    • Use strong action verbs at the start of every bullet point (e.g. <i>Architected</i>, <i>Engineered</i>, <i>Spearheaded</i>).<br>
-                    • Include quantitative metrics like percentage improvements or scale (e.g. <i>"reduced load times by 42%"</i>).<br>
-                    • Highlight core technical skills directly in your work experience.`;
+                  let rewrittenText = '';
+                  if (optResp.ok) {
+                    const optData = await optResp.json();
+                    rewrittenText = optData.optimizedText || optData.optimizedBulletPoints || '';
                   }
 
                   if (loadingDiv && loadingDiv.parentNode) {
                     loadingDiv.parentNode.removeChild(loadingDiv);
                   }
-                  appendAiMsg(aiReply);
 
-                  // If user clicked summary action buttons, enhance summary directly
-                  if (/summary/i.test(promptText)) {
-                    const sumEl = document.getElementById('docFieldSummary');
-                    if (sumEl) {
-                      if (/shorten/i.test(promptText)) {
-                        const parts = (sumEl.innerText || summary).split('. ');
-                        if (parts.length > 1) {
-                          sumEl.innerText = parts.slice(0, 2).join('. ') + '.';
-                          if (typeof showToast === 'function') showToast('Summary shortened!', 'success');
+                  if (rewrittenText) {
+                    // Update document section directly
+                    if (targetSection === 'summary') {
+                      const sumEl = document.getElementById('docFieldSummary');
+                      if (sumEl) {
+                        sumEl.innerText = rewrittenText;
+                        if (typeof fireInputEvent === 'function') fireInputEvent(sumEl);
+                        else {
+                          sumEl.dispatchEvent(new Event('input', { bubbles: true }));
                         }
-                      } else if (/executive/i.test(promptText)) {
-                        sumEl.innerText = (sumEl.innerText || summary).replace(/^(.*)/, 'Strategic leader and $1');
-                        if (typeof showToast === 'function') showToast('Summary updated with executive tone!', 'success');
-                      } else if (/technical/i.test(promptText)) {
-                        sumEl.innerText = (sumEl.innerText || summary) + ' Specialized in high-performance cloud architecture, CI/CD automation, and scalable Web APIs.';
-                        if (typeof showToast === 'function') showToast('Summary updated with technical focus!', 'success');
-                      } else {
-                        sumEl.innerText = (sumEl.innerText || summary) + ' Proven track record optimizing systems and leading cross-functional engineering teams.';
-                        if (typeof showToast === 'function') showToast('Summary enhanced with AI writing!', 'success');
+                        if (typeof showToast === 'function') showToast('Professional Summary rewritten & optimized with AI!', 'success');
                       }
-                      fireInputEvent(sumEl);
+                    } else if (targetSection === 'experience') {
+                      const expEl = document.getElementById('bulletPoints');
+                      if (expEl) {
+                        expEl.value = rewrittenText;
+                        expEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        if (typeof window.setDocBullets === 'function') window.setDocBullets(rewrittenText);
+                        if (typeof showToast === 'function') showToast('Experience bullets rewritten with AI!', 'success');
+                      }
+                    }
+
+                    appendAiMsg(`<b>AI Rewritten Content:</b><br>${escapeHtml(rewrittenText).replace(/\n/g, '<br>')}<br><br><i>✓ Applied directly to your resume.</i>`);
+                  } else {
+                    // Fallback to chat advice if endpoint returned no text
+                    const chatResp = await fetch('/api/ats-chat', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userMessage: promptText,
+                        resumeText: [name, jobTitle, summary, experience].filter(Boolean).join('\n'),
+                        jobTitle: jobTitle
+                      })
+                    });
+                    if (chatResp.ok) {
+                      const chatData = await chatResp.json();
+                      appendAiMsg(chatData.reply || chatData.response || 'AI suggestion ready.');
                     }
                   }
                 } catch (err) {
@@ -1555,6 +1574,7 @@
                   appendAiMsg(`<b>AI Advice for "${escapeHtml(promptText)}":</b><br>• Focus on quantified outcomes: Add metrics (%, $, numbers) to each experience bullet.<br>• Use industry-standard terms matching target job descriptions.`);
                 }
               };
+
 
               window.submitAiChat = function() {
                 var input = document.getElementById('aiChatInput');
