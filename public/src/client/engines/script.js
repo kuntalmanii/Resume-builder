@@ -232,6 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
                      || user?.email?.split('@')[0]
                      || 'Developer';
     const email = user?.email || 'developer@resuai.dev';
+    const jobRole = user?.user_metadata?.job_title
+                 || user?.user_metadata?.role
+                 || user?.job_title
+                 || (document.getElementById('inputJobTitle')?.value?.trim())
+                 || email;
 
     const avatar = displayName.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0,2).join('').toUpperCase() || 'DV';
 
@@ -240,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const topUserRole   = document.getElementById('topUserRole');
     if (topUserAvatar) topUserAvatar.textContent = avatar;
     if (topUserName)   topUserName.textContent   = displayName;
-    if (topUserRole)   topUserRole.textContent   = email;
+    if (topUserRole)   topUserRole.textContent   = jobRole;
 
     // Persist session tokens locally for refresh resilience
     try {
