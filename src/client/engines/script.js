@@ -3771,13 +3771,13 @@ Key Requirements:
   }
 
   /**
-   * Calls secure Node.js backend endpoint /api/analyze (which communicates with Gemini API server-side).
+   * Calls secure Node.js backend endpoint /api/ats-analyze (which communicates with Gemini API server-side).
    * @param {string} jdText 
    * @param {string} resumeText 
    */
   async function fetchBackendAtsAnalysis(jdText, resumeText) {
     const activeSettings = getActiveSettings();
-    const response = await fetch('/api/analyze', {
+    const response = await fetch('/api/ats-analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jdText, resumeText, geminiModel: activeSettings.geminiModel, atsEngine: activeSettings.atsEngine })
