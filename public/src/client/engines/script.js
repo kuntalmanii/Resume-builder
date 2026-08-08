@@ -2821,7 +2821,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isActive = p.id === activeId;
       const skillsBadge = Array.isArray(p.skills) ? p.skills.slice(0, 4).join(', ') : '';
       return `
-        <div class="version-profile-card ${isActive ? 'active' : ''}" data-profile-id="${p.id}" style="padding: 12px 14px; border: 1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-color)'}; background: ${isActive ? 'var(--bg-active)' : 'var(--bg-surface)'}; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease;">
+        <div class="version-profile-card ${isActive ? 'active' : ''}" data-profile-id="${p.id}" style="padding: 12px 14px; border: 1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border)'}; background: ${isActive ? 'var(--bg-active)' : 'var(--bg-surface)'}; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <strong style="font-size: 0.92rem; color: var(--text-primary);">${escapeHTML(p.name || p.title)}</strong>
@@ -3217,7 +3217,7 @@ document.addEventListener('DOMContentLoaded', () => {
       atsDropZone.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        atsDropZone.style.borderColor = 'var(--border-color)';
+        atsDropZone.style.borderColor = 'var(--border)';
         atsDropZone.style.backgroundColor = 'var(--bg-hover)';
       }, false);
     });
@@ -3875,7 +3875,7 @@ Key Requirements:
     if (data.phone) contactParts.push(`<span>${escapeHTML(data.phone)}</span>`);
 
     tailoredResumeDoc.innerHTML = `
-      <div class="paper-document-card" style="background: #ffffff; padding: 2.2rem 2.5rem; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; color: #111827;">
+      <div class="paper-document-card" style="background: #ffffff; padding: 2.2rem 2.5rem; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; color: #111827;">
         <!-- Category 1: Candidate Header -->
         <div class="paper-candidate-header" style="text-align: center; margin-bottom: 1.25rem;">
           <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.65rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: 0.04em; text-transform: uppercase;">${(escapeHTML(data.name) || 'CANDIDATE RESUME').toUpperCase()}</h2>
@@ -4476,7 +4476,7 @@ Key Requirements:
       colCardsList.innerHTML = '';
 
       if (stageJobs.length === 0) {
-        colCardsList.innerHTML = `<div class="empty-stage-placeholder" style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:1.5rem 0.5rem; border:1px dashed var(--border-color); border-radius:8px;">No ${stage} apps</div>`;
+        colCardsList.innerHTML = `<div class="empty-stage-placeholder" style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:1.5rem 0.5rem; border:1px dashed var(--border); border-radius:8px;">No ${stage} apps</div>`;
         return;
       }
 
