@@ -195,11 +195,17 @@ class AtsAnalyzer {
       }
 
       this.lastResult = data;
+      window.atsLastResult = data; // expose for script.js cross-section reads
 
       setTimeout(() => {
         if (loadingState) loadingState.style.display = 'none';
         this.renderBreakdownUi(data);
         if (atsResults) { atsResults.style.display = 'flex'; atsResults.scrollIntoView({ behavior:'smooth' }); }
+
+        // ── Sync: push ATS score into Score Analytics history ──
+        if (typeof window.recordNewScanResult === 'function') {
+          window.recordNewScanResult(data.score);
+        }
       }, 300);
 
       if (window.checklistManager) window.checklistManager.markTaskComplete('analyze_resume');
@@ -210,8 +216,14 @@ class AtsAnalyzer {
       if (loadingState) loadingState.style.display = 'none';
       const local = this.localFallback(resumeContent, jdText);
       this.lastResult = local;
+      window.atsLastResult = local;
       this.renderBreakdownUi(local);
       if (atsResults) { atsResults.style.display = 'flex'; atsResults.scrollIntoView({ behavior:'smooth' }); }
+
+      // ── Sync: push fallback score into Score Analytics ──
+      if (typeof window.recordNewScanResult === 'function') {
+        window.recordNewScanResult(local.score);
+      }
     } finally {
       if (btnScan)  { btnScan.disabled = false; btnScan.innerHTML = origBtnHTML; }
       this.isScanning = false;

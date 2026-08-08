@@ -1699,6 +1699,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateAnalyticsDashboard();
   }
+  // Expose on window so ats-analyzer.js can sync Score Analytics after every scan
+  window.recordNewScanResult = recordNewScanResult;
+  window.updateAnalyticsDashboard = updateAnalyticsDashboard;
+
 
   /**
    * Safely extracts skill tag text content without stripping 'x' characters from skill names.
