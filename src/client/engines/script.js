@@ -3182,25 +3182,79 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
 
-        if (!text || text.trim().length < 30) {
+        if (!text || text.trim().length < 10) {
           if (typeof showToast === 'function') {
             showToast('Could not extract text from file. Please ensure it is a readable PDF or TXT resume.', 'error');
           } else alert('Could not extract text from file.');
           return;
         }
 
-        // Call backend API /api/parse-resume
-        const resp = await fetch('/api/parse-resume', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resumeText: text })
-        });
-
-        if (!resp.ok) {
-          throw new Error(`Server returned HTTP ${resp.status}`);
+        let parsed = null;
+        try {
+          const resp = await fetch('/api/parse-resume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resumeText: text })
+          });
+          if (resp.ok) {
+            parsed = await resp.json();
+          }
+        } catch (err) {
+          console.warn('[Import Resume] Backend endpoint fetch error, using local parser:', err.message);
         }
 
-        const parsed = await resp.json();
+        // Fallback: local heuristic parser if API call fails
+        if (!parsed || !parsed.fullName) {
+          const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          const emailMatch = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+          const phoneMatch = text.match(/(\+?\d[\d\s\-().]{7,}\d)/);
+          const linkedinMatch = text.match(/linkedin\.com\/in\/([^\s,/<>"]+)/i);
+          const githubMatch = text.match(/github\.com\/([^\s,/<>"]+)/i);
+          const portfolioMatch = text.match(/https?:\/\/(?!linkedin|github)([^\s,<>"]+)/i);
+          const locationMatch = text.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s*(?:[A-Z]{2}|[A-Za-z]+))\b/);
+
+          let name = '';
+          for (const line of lines.slice(0, 6)) {
+            if (!line.includes('@') && !/\d{3,}/.test(line) && line.length >= 2 && line.length <= 50
+                && !/^(summary|profile|objective|resume|cv|experience|education|skills)/i.test(line)) {
+              name = line; break;
+            }
+          }
+
+          let title = '';
+          let nameFound = false;
+          for (const line of lines.slice(0, 10)) {
+            if (nameFound && line !== name) {
+              if (!line.includes('@') && !/^\+/.test(line) && line.length >= 3 && line.length <= 80) {
+                title = line; break;
+              }
+            }
+            if (line === name) nameFound = true;
+          }
+
+          const skillsMatch = text.match(/(?:skills|technologies|tech stack)[:\s]*\n*([\s\S]{10,500}?)(?:\n{2,}|\n[A-Z])/i);
+          const rawSkills = skillsMatch ? skillsMatch[1] : '';
+          const extractedSkills = rawSkills.split(/[,|•\n\/]/).map(s => s.replace(/[^\w\s.#+]/g, '').trim()).filter(s => s.length >= 2 && s.length <= 35);
+
+          parsed = {
+            fullName: parsed?.fullName || name || lines[0] || '',
+            jobTitle: parsed?.jobTitle || title || lines[1] || '',
+            email: parsed?.email || (emailMatch ? emailMatch[0] : ''),
+            phone: parsed?.phone || (phoneMatch ? phoneMatch[0] : ''),
+            location: parsed?.location || (locationMatch ? locationMatch[0] : ''),
+            linkedin: parsed?.linkedin || (linkedinMatch ? `https://linkedin.com/in/${linkedinMatch[1]}` : ''),
+            github: parsed?.github || (githubMatch ? `https://github.com/${githubMatch[1]}` : ''),
+            portfolio: parsed?.portfolio || (portfolioMatch ? portfolioMatch[0] : ''),
+            summary: parsed?.summary || '',
+            experience: parsed?.experience || text,
+            skills: (parsed?.skills && parsed.skills.length > 0) ? parsed.skills : extractedSkills,
+            education: parsed?.education || '',
+            certifications: parsed?.certifications || '',
+            projects: parsed?.projects || '',
+            achievements: parsed?.achievements || ''
+          };
+        }
+
 
         // Auto-fill legacy form fields
         if (parsed.fullName && inputFullName) inputFullName.value = parsed.fullName;
