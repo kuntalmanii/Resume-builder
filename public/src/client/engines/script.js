@@ -257,6 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
       loadUserProfileFromSupabase(user.id);
       loadJobApplicationsFromSupabase(user.id);
     }
+
+    // Restore saved active tab only after auth state is confirmed
+    restoreSavedTab();
   }
 
   /* ------ Auth state verification engine ------ */
@@ -1262,8 +1265,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Restore saved active tab on page load
-  restoreSavedTab();
+  // Navigation links ready
+
 
   /* ==========================================================================
      4. Mobile Sidebar Navigation Drawer
