@@ -1083,9 +1083,9 @@ p  { line-height: 1.65; }
 
 /* Password strength */
 .password-strength-container { margin-top: var(--sp-2); display: flex; flex-direction: column; gap: var(--sp-1); transition: all var(--t-base); }
-.strength-bar-track { height: 4px; background: rgba(216, 203, 185, 0.15); border-radius: var(--r-full); overflow: hidden; }
+.strength-bar-track { height: 6px; background: rgba(0, 0, 0, 0.08); border-radius: var(--r-full); overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.04); }
 .strength-bar-fill {
-  height: 100%; width: 0%; background: var(--border-hover);
+  height: 100%; width: 0%; min-width: 6px; background: rgba(200, 190, 175, 0.5);
   border-radius: var(--r-full); transition: width var(--t-base), background var(--t-base);
 }
 .strength-bar-fill.weak   { width: 25%; background: var(--danger); }
