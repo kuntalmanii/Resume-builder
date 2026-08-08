@@ -3777,7 +3777,8 @@ Key Requirements:
 
     // 3. Name
     let extractedName = inputFullName ? inputFullName.value.trim() : '';
-    if ((!extractedName || extractedName === 'Manish Kuntal' || extractedName === 'Alex Mercer') && text) {
+    const placeholderNames = ['YOUR NAME', 'Developer', 'Jane Doe', 'John Doe', 'Candidate'];
+    if ((!extractedName || placeholderNames.includes(extractedName)) && text) {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
       const ignoreWords = ['resume', 'curriculum', 'vitae', 'cv', 'contact', 'summary', 'profile', 'experience', 'education', 'skills', 'email', 'phone'];
       for (const line of lines.slice(0, 5)) {
