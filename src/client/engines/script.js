@@ -511,9 +511,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileStrengthFill  = document.getElementById('profileStrengthFill');
   const profileStrengthText  = document.getElementById('profileStrengthText');
   const profileStrengthScore = document.getElementById('profileStrengthScore');
-  if (profileNewPassword) {
-    profileNewPassword.addEventListener('input', () => {
-      const val = profileNewPassword.value;
+  const _profileNewPwdEl = document.getElementById('profileNewPassword');
+  if (_profileNewPwdEl) {
+    _profileNewPwdEl.addEventListener('input', () => {
+      const val = _profileNewPwdEl.value;
       if (profilePasswordStrengthWrapper) {
         profilePasswordStrengthWrapper.style.display = val ? 'flex' : 'none';
       }
