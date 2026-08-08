@@ -3064,25 +3064,34 @@ i[data-feather] svg { width: 1em; height: 1em; }
 }
 
 .doc-contact-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  position: relative !important;
+  min-width: 140px !important;
+  flex: 1 1 auto !important;
 }
 .doc-contact-icon {
-  width: 13px; height: 13px;
-  color: #94A3B8;
-  flex-shrink: 0;
+  width: 13px !important;
+  height: 13px !important;
+  color: #94A3B8 !important;
+  flex-shrink: 0 !important;
 }
 .doc-contact-field {
   font-size: 12px !important;
   color: #475569 !important;
-  outline: none;
-  border-radius: 4px;
-  padding: 3px 6px;
-  margin: -3px -6px;
-  flex: 1;
-  min-width: 0;
+  outline: none !important;
+  border-radius: 4px !important;
+  padding: 3px 6px !important;
+  margin: -3px -6px !important;
+  flex: 1 1 auto !important;
+  min-width: 100px !important;
+  width: auto !important;
+  word-break: normal !important;
+  white-space: pre-wrap !important;
+  display: inline-block !important;
+}
+
   cursor: text;
   word-break: break-all;
   transition: background 0.12s;
@@ -4768,32 +4777,43 @@ i[data-feather] svg { width: 1em; height: 1em; }
 
 .field-validation-msg {
   display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: #E53E3E;
-  margin-top: 3px;
-  line-height: 1.3;
+  position: absolute !important;
+  top: calc(100% + 2px) !important;
+  left: 0 !important;
+  z-index: 100 !important;
+  background: #FFF5F5 !important;
+  color: #C53030 !important;
+  border: 1px solid #FEB2B2 !important;
+  padding: 3px 8px !important;
+  border-radius: 5px !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+  white-space: nowrap !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
   animation: fadeIn 0.2s ease;
+  pointer-events: none !important;
 }
 
 .doc-contact-item {
-  position: relative;
+  position: relative !important;
 }
 
 .doc-contact-item .field-validation-msg {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 100;
-  background: #FFF5F5;
-  color: #C53030;
-  border: 1px solid #FEB2B2;
-  padding: 3px 8px;
-  border-radius: 5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  white-space: nowrap;
-  font-size: 10.5px;
+  position: absolute !important;
+  top: calc(100% + 2px) !important;
+  left: 20px !important;
+  z-index: 100 !important;
+  background: #FFF5F5 !important;
+  color: #C53030 !important;
+  border: 1px solid #FEB2B2 !important;
+  padding: 3px 8px !important;
+  border-radius: 5px !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+  white-space: nowrap !important;
+  font-size: 10.5px !important;
 }
+
 
 /* ─────────────────────────────────────────────────────────────
    29B. PREMIUM ATS ANALYZER UI/UX ENHANCEMENTS
