@@ -1267,6 +1267,15 @@
                 renderBullets();
                 syncBulletsToTextarea();
               };
+              window.setDocBullets = function(bulletsArray) {
+                if (Array.isArray(bulletsArray) && bulletsArray.length > 0) {
+                  docBullets = bulletsArray.map(function(b) { return (b || '').replace(/^[•\-\*]\s*/, '').trim(); }).filter(Boolean);
+                }
+                if (!docBullets.length) docBullets = ['', '', ''];
+                renderBullets();
+                syncBulletsToTextarea();
+              };
+
 
               /* ── 6. SKILLS inline system ── */
               var docSkills = [];

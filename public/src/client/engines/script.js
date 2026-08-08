@@ -3202,7 +3202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const parsed = await resp.json();
 
-        // Auto-fill form fields
+        // Auto-fill legacy form fields
         if (parsed.fullName && inputFullName) inputFullName.value = parsed.fullName;
         if (parsed.jobTitle && inputJobTitle) inputJobTitle.value = parsed.jobTitle;
         if (parsed.email && inputEmail) inputEmail.value = parsed.email;
@@ -3218,19 +3218,55 @@ document.addEventListener('DOMContentLoaded', () => {
         if (parsed.projects && inputProjects) inputProjects.value = parsed.projects;
         if (parsed.achievements && inputAchievements) inputAchievements.value = parsed.achievements;
 
+        // Auto-fill visible inline contenteditable document editor elements
+        const docName = document.getElementById('docFieldName');
+        if (docName && parsed.fullName) docName.innerText = parsed.fullName;
+
+        const docTitle = document.getElementById('docFieldTitle');
+        if (docTitle && parsed.jobTitle) docTitle.innerText = parsed.jobTitle;
+
+        const docSummary = document.getElementById('docFieldSummary');
+        if (docSummary && parsed.summary) docSummary.innerText = parsed.summary;
+
+        document.querySelectorAll('[data-syncs]').forEach(el => {
+          const syncKey = el.getAttribute('data-syncs');
+          if (syncKey === 'inputEmail' && parsed.email) el.innerText = parsed.email;
+          if (syncKey === 'inputPhone' && parsed.phone) el.innerText = parsed.phone;
+          if (syncKey === 'inputLocation' && parsed.location) el.innerText = parsed.location;
+          if (syncKey === 'inputGithub' && parsed.github) el.innerText = parsed.github;
+          if (syncKey === 'inputLinkedin' && parsed.linkedin) el.innerText = parsed.linkedin;
+          if (syncKey === 'inputPortfolio' && parsed.portfolio) el.innerText = parsed.portfolio;
+          if (syncKey === 'inputEducation' && parsed.education) el.innerText = parsed.education;
+          if (syncKey === 'inputCertifications' && parsed.certifications) el.innerText = parsed.certifications;
+          if (syncKey === 'inputProjects' && parsed.projects) el.innerText = parsed.projects;
+          if (syncKey === 'inputAchievements' && parsed.achievements) el.innerText = parsed.achievements;
+        });
+
+        // Populate inline experience bullets
+        if (parsed.experience) {
+          const lines = parsed.experience.split(/\r?\n/).map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
+          if (typeof window.setDocBullets === 'function') {
+            window.setDocBullets(lines);
+          }
+        }
+
         // Auto-fill skills tags
         if (Array.isArray(parsed.skills) && parsed.skills.length > 0) {
           const tagsContainer = document.getElementById('skillsTagsContainer');
           if (tagsContainer) {
             tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
             parsed.skills.forEach(sk => {
-              if (typeof sk === 'string' && sk.trim()) addSkillTag(sk.trim());
+              if (typeof sk === 'string' && sk.trim()) {
+                addSkillTag(sk.trim());
+                if (typeof window.addDocSkill === 'function') window.addDocSkill(sk.trim());
+              }
             });
           }
         }
 
         syncLivePreview();
         autoSaveFormFields();
+
 
         // Store extracted text globally for ATS analyzer
         window.uploadedFileText = text;
