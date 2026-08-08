@@ -565,6 +565,41 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ── Resume Parser: import existing resume PDF/TXT → populate all form fields ──
+  if (req.method === 'POST' && pathname === '/api/parse-resume') {
+    (async () => {
+      try {
+        if (isRateLimited(clientIp)) {
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded.' }));
+          return;
+        }
+        log('INFO', `Received /api/parse-resume request from IP ${clientIp}`);
+        const parseResumeHandler = require('../../api/parse-resume.js');
+        const body = await readJsonBody(req, res);
+        req.body = body;
+        const resMock = {
+          _statusCode: 200, _headers: {}, _ended: false,
+          status(code) { this._statusCode = code; return this; },
+          json(data) {
+            if (this._ended) return; this._ended = true;
+            res.writeHead(this._statusCode, { 'Content-Type': 'application/json', ...this._headers });
+            res.end(JSON.stringify(data));
+          },
+          setHeader(k, v) { this._headers[k] = v; }
+        };
+        await parseResumeHandler(req, resMock);
+      } catch (err) {
+        log('ERROR', `parse-resume error: ${err.message}`);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Internal server error' }));
+        }
+      }
+    })();
+    return;
+  }
+
   if (req.method === 'POST' && (pathname === '/api/analyze' || pathname === '/api/analyze-ats' || pathname === '/api/ats-analyze')) {
     (async () => {
       try {

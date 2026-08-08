@@ -3151,7 +3151,112 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ── Import Existing Resume (PDF / TXT) into Builder Fields ──
+  const btnImportResume = document.getElementById('btnImportResume');
+  const importResumeFileInput = document.getElementById('importResumeFileInput');
+
+  if (btnImportResume && importResumeFileInput) {
+    btnImportResume.addEventListener('click', (e) => {
+      e.preventDefault();
+      importResumeFileInput.click();
+    });
+
+    importResumeFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const origBtnHTML = btnImportResume.innerHTML;
+      btnImportResume.disabled = true;
+      btnImportResume.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;margin-right:4px;animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="10"/></svg><span>Parsing Resume...</span>`;
+
+      try {
+        let text = '';
+        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+          text = await extractPdfText(file);
+        } else {
+          text = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = ev => resolve(ev.target.result || '');
+            reader.onerror = () => resolve('');
+            reader.readAsText(file);
+          });
+        }
+
+        if (!text || text.trim().length < 30) {
+          if (typeof showToast === 'function') {
+            showToast('Could not extract text from file. Please ensure it is a readable PDF or TXT resume.', 'error');
+          } else alert('Could not extract text from file.');
+          return;
+        }
+
+        // Call backend API /api/parse-resume
+        const resp = await fetch('/api/parse-resume', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resumeText: text })
+        });
+
+        if (!resp.ok) {
+          throw new Error(`Server returned HTTP ${resp.status}`);
+        }
+
+        const parsed = await resp.json();
+
+        // Auto-fill form fields
+        if (parsed.fullName && inputFullName) inputFullName.value = parsed.fullName;
+        if (parsed.jobTitle && inputJobTitle) inputJobTitle.value = parsed.jobTitle;
+        if (parsed.email && inputEmail) inputEmail.value = parsed.email;
+        if (parsed.phone && inputPhone) inputPhone.value = parsed.phone;
+        if (parsed.location && inputLocation) inputLocation.value = parsed.location;
+        if (parsed.github && inputGithub) inputGithub.value = parsed.github;
+        if (parsed.linkedin && inputLinkedin) inputLinkedin.value = parsed.linkedin;
+        if (parsed.portfolio && inputPortfolio) inputPortfolio.value = parsed.portfolio;
+        if (parsed.summary && inputSummary) inputSummary.value = parsed.summary;
+        if (parsed.experience && bulletPoints) bulletPoints.value = parsed.experience;
+        if (parsed.education && inputEducation) inputEducation.value = parsed.education;
+        if (parsed.certifications && inputCertifications) inputCertifications.value = parsed.certifications;
+        if (parsed.projects && inputProjects) inputProjects.value = parsed.projects;
+        if (parsed.achievements && inputAchievements) inputAchievements.value = parsed.achievements;
+
+        // Auto-fill skills tags
+        if (Array.isArray(parsed.skills) && parsed.skills.length > 0) {
+          const tagsContainer = document.getElementById('skillsTagsContainer');
+          if (tagsContainer) {
+            tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
+            parsed.skills.forEach(sk => {
+              if (typeof sk === 'string' && sk.trim()) addSkillTag(sk.trim());
+            });
+          }
+        }
+
+        syncLivePreview();
+        autoSaveFormFields();
+
+        // Store extracted text globally for ATS analyzer
+        window.uploadedFileText = text;
+
+        if (typeof showToast === 'function') {
+          showToast(`Resume "${file.name}" imported successfully! Fields auto-filled.`, 'success');
+        } else {
+          alert('Resume imported successfully!');
+        }
+      } catch (err) {
+        console.error('[Import Resume] Error:', err);
+        if (typeof showToast === 'function') {
+          showToast('Failed to parse resume: ' + err.message, 'error');
+        } else {
+          alert('Failed to parse resume: ' + err.message);
+        }
+      } finally {
+        importResumeFileInput.value = '';
+        btnImportResume.disabled = false;
+        btnImportResume.innerHTML = origBtnHTML;
+      }
+    });
+  }
+
   if (btnSelectPdfFile && pdfFileInput) {
+
     btnSelectPdfFile.addEventListener('click', (e) => {
       e.preventDefault();
       pdfFileInput.click();

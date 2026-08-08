@@ -2576,12 +2576,17 @@ i[data-feather] svg { width: 1em; height: 1em; }
   border-color: transparent;
 }
 .topbar-action-btn.btn-primary:hover { background: #2a2a2a; }
-.topbar-action-btn.btn-amber {
-  background: rgba(201,139,74,0.1);
-  color: #704820;
-  border-color: rgba(201,139,74,0.25);
-}
 .topbar-action-btn.btn-amber:hover { background: rgba(201,139,74,0.18); }
+.topbar-action-btn.btn-import {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.topbar-action-btn.btn-import:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
 
 /* ── Workspace Container ── */
 .editor-workspace {
