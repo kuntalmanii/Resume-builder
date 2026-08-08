@@ -34,8 +34,19 @@ function sanitizeInputText(str) {
     .trim();
 }
 
+function setCorsHeaders(res, req) {
+  if (!res || typeof res.setHeader !== 'function') return;
+  const reqOrigin = req && req.headers ? req.headers.origin : null;
+  const allowedOrigin = process.env.ALLOWED_ORIGIN || reqOrigin || '*';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
+}
+
 module.exports = {
   GEMINI_MODELS,
   SHARED_TAXONOMY_KEYWORDS,
-  sanitizeInputText
+  sanitizeInputText,
+  setCorsHeaders
 };

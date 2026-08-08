@@ -1,5 +1,5 @@
 const https = require('https');
-const { GEMINI_MODELS, sanitizeInputText } = require('./_shared');
+const { GEMINI_MODELS, sanitizeInputText, setCorsHeaders } = require('./_shared');
 
 function runServerFallbackOptimization(jobTitle, experienceText) {
   return {
@@ -56,9 +56,7 @@ function makeGeminiRequest(model, promptText, apiKey) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(res, req);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

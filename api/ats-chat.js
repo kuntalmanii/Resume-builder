@@ -1,5 +1,5 @@
 const https = require('https');
-const { GEMINI_MODELS, sanitizeInputText } = require('./_shared');
+const { GEMINI_MODELS, sanitizeInputText, setCorsHeaders } = require('./_shared');
 
 function sendResponse(res, statusCode, data) {
   if (typeof res.status === 'function') {
@@ -95,11 +95,7 @@ function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeTe
 }
 
 module.exports = async (req, res) => {
-  if (typeof res.setHeader === 'function') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  }
+  setCorsHeaders(res, req);
 
   if (req.method === 'OPTIONS') {
     return sendResponse(res, 200, { status: 'OK' });
