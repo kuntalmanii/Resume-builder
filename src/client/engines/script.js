@@ -1013,8 +1013,29 @@ document.addEventListener('DOMContentLoaded', () => {
     trapModalFocus(userProfileModal);
   }
 
+  function closeModal(modalEl) {
+    if (!modalEl) return;
+    modalEl.style.display = 'none';
+    if (modalEl._focusTrapController) {
+      modalEl._focusTrapController.abort();
+      modalEl._focusTrapController = null;
+    }
+    if (modalEl._previouslyFocused && typeof modalEl._previouslyFocused.focus === 'function') {
+      try {
+        modalEl._previouslyFocused.focus();
+      } catch (e) {}
+    }
+    modalEl._previouslyFocused = null;
+  }
+  window.closeModal = closeModal;
+
   function trapModalFocus(modalEl) {
     if (!modalEl) return;
+
+    if (document.activeElement && document.activeElement !== document.body && !modalEl.contains(document.activeElement)) {
+      modalEl._previouslyFocused = document.activeElement;
+    }
+
     const focusables = Array.from(modalEl.querySelectorAll('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'));
     if (focusables.length === 0) return;
 
@@ -1033,8 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalEl.addEventListener('keydown', function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        modalEl.style.display = 'none';
-        controller.abort(); // clean up listener immediately on close
+        closeModal(modalEl);
         return;
       }
       if (e.key === 'Tab') {
@@ -1077,8 +1097,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (sidebarUserPill)   sidebarUserPill.addEventListener('click', openUserProfileModal);
-  if (profileModalClose) profileModalClose.addEventListener('click', () => { if (userProfileModal) userProfileModal.style.display = 'none'; });
-  if (userProfileModal)  userProfileModal.addEventListener('click', (e) => { if (e.target === userProfileModal) userProfileModal.style.display = 'none'; });
+  if (profileModalClose) profileModalClose.addEventListener('click', () => { if (userProfileModal) closeModal(userProfileModal); });
+  if (userProfileModal)  userProfileModal.addEventListener('click', (e) => { if (e.target === userProfileModal) closeModal(userProfileModal); });
 
   if (profileSaveBtn) {
     profileSaveBtn.addEventListener('click', async () => {
