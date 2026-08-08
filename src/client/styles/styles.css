@@ -2262,7 +2262,13 @@ i[data-feather] svg { width: 1em; height: 1em; }
   padding: 0 12px;
   flex-shrink: 0;
   z-index: 10;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.doc-editor-topbar::-webkit-scrollbar {
+  display: none;
 }
 .doc-resume-name-input {
   font-family: var(--font-heading);
@@ -3526,6 +3532,20 @@ i[data-feather] svg { width: 1em; height: 1em; }
   .editor-left-panel { width: 180px; }
 }
 @media (max-width: 768px) {
+  .doc-editor-topbar {
+    gap: 4px;
+    padding: 0 8px;
+  }
+  .doc-resume-name-input {
+    max-width: 110px;
+    font-size: 13px;
+  }
+  .doc-autosave-status span {
+    display: none;
+  }
+  .topbar-swatches-group span {
+    display: none;
+  }
   .editor-left-panel {
     display: none;
   }
@@ -3546,6 +3566,23 @@ i[data-feather] svg { width: 1em; height: 1em; }
   .doc-editor-body { padding: 28px 24px 40px; }
   .doc-name-field { font-size: 22px; }
   .doc-contact-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 580px) {
+  .topbar-strength-pill {
+    display: none;
+  }
+  .topbar-swatches-group {
+    margin-left: 2px !important;
+    margin-right: 2px !important;
+    padding: 3px 4px !important;
+  }
+  .topbar-action-btn span {
+    display: none;
+  }
+  .topbar-action-btn {
+    padding: 6px 8px;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
