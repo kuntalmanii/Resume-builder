@@ -4450,12 +4450,12 @@ Key Requirements:
     }
   }
 
-  function saveJobApplications() {
+  function saveJobApplications(changedJob = null) {
     try {
       localStorage.setItem(JOB_APPS_STORAGE_KEY, JSON.stringify(jobApplicationsList));
-      jobApplicationsList.forEach(job => {
-        queueOfflineTask('job', 'UPSERT', job);
-      });
+      if (changedJob) {
+        queueOfflineTask('job', 'UPSERT', changedJob);
+      }
     } catch (e) {
       console.warn('Error saving job applications:', e);
     }
@@ -4725,7 +4725,7 @@ Key Requirements:
           const job = jobApplicationsList.find(j => String(j.id) === String(jobId));
           if (job && job.stage !== targetStage) {
             job.stage = targetStage;
-            saveJobApplications();
+            saveJobApplications(job);
             renderPipelineViews();
             if (typeof showToast === 'function') {
               showToast(`Moved ${job.company} application to ${targetStage}!`, 'success');
@@ -4759,6 +4759,7 @@ Key Requirements:
           if (job && window.confirm(`Delete application for ${job.company} (${job.title})?`)) {
             jobApplicationsList = jobApplicationsList.filter(j => String(j.id) !== String(id));
             saveJobApplications();
+            queueOfflineTask('job', 'DELETE', { id: job.id });
             renderPipelineViews();
             if (typeof showToast === 'function') {
               showToast('Application deleted.', 'info');
@@ -4795,7 +4796,7 @@ Key Requirements:
           const job = jobApplicationsList.find(j => String(j.id) === String(id));
           if (job && nextStage) {
             job.stage = nextStage;
-            saveJobApplications();
+            saveJobApplications(job);
             renderPipelineViews();
             if (typeof showToast === 'function') {
               showToast(`Moved ${job.company} application to ${nextStage}!`, 'success');
@@ -4902,7 +4903,7 @@ Key Requirements:
         jobApplicationsList.unshift(jobData);
       }
 
-      saveJobApplications();
+      saveJobApplications(jobData);
       renderPipelineViews();
       closeJobModal();
 
