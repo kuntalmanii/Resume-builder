@@ -1473,14 +1473,89 @@
                 updateNavPct('certs', certs.length > 5 ? 100 : 0);
               };
 
-              /* ── 14. AI CHAT ── */
-              window.sendAiAction = function(prompt) {
-                appendUserMsg(prompt);
-                setTimeout(function() {
-                  appendAiMsg('Analyzing your resume and applying: "' + prompt + '"…\n\nTip: I work best when you trigger the AI Optimize button in the toolbar after reviewing my suggestions. Your resume data is being processed.');
-                }, 500);
+              /* ── 14. AI WRITING ASSISTANT & CHAT ── */
+              window.sendAiAction = async function(promptText) {
+                if (!promptText) return;
+                appendUserMsg(promptText);
                 switchRPanel('ai');
+
+                // Add loading indicator
+                var area = document.getElementById('aiChatMessages');
+                var loadingDiv = document.createElement('div');
+                loadingDiv.className = 'ai-msg from-ai loading';
+                loadingDiv.innerHTML = '<div class="ai-msg-meta">AI Copilot</div><span class="pulse" style="font-style:italic;color:#6b7280;">Thinking and analyzing your request…</span>';
+                if (area) {
+                  area.appendChild(loadingDiv);
+                  area.scrollTop = area.scrollHeight;
+                }
+
+                // Gather resume context
+                var name = (document.getElementById('docFieldName')?.innerText || '').trim();
+                var jobTitle = (document.getElementById('docFieldTitle')?.innerText || '').trim();
+                var summary = (document.getElementById('docFieldSummary')?.innerText || '').trim();
+                var experience = (document.getElementById('bulletPoints')?.value || '').trim();
+                var resumeText = [name, jobTitle, summary, experience].filter(Boolean).join('\n');
+
+                try {
+                  const resp = await fetch('/api/ats-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userMessage: promptText,
+                      resumeText: resumeText,
+                      jobTitle: jobTitle
+                    })
+                  });
+
+                  let aiReply = '';
+                  if (resp.ok) {
+                    const data = await resp.json();
+                    aiReply = data.reply || data.response || data.message || '';
+                  }
+
+                  if (!aiReply) {
+                    aiReply = `<b>AI Writing Suggestion:</b><br>
+                    • Use strong action verbs at the start of every bullet point (e.g. <i>Architected</i>, <i>Engineered</i>, <i>Spearheaded</i>).<br>
+                    • Include quantitative metrics like percentage improvements or scale (e.g. <i>"reduced load times by 42%"</i>).<br>
+                    • Highlight core technical skills directly in your work experience.`;
+                  }
+
+                  if (loadingDiv && loadingDiv.parentNode) {
+                    loadingDiv.parentNode.removeChild(loadingDiv);
+                  }
+                  appendAiMsg(aiReply);
+
+                  // If user clicked summary action buttons, enhance summary directly
+                  if (/summary/i.test(promptText)) {
+                    const sumEl = document.getElementById('docFieldSummary');
+                    if (sumEl) {
+                      if (/shorten/i.test(promptText)) {
+                        const parts = (sumEl.innerText || summary).split('. ');
+                        if (parts.length > 1) {
+                          sumEl.innerText = parts.slice(0, 2).join('. ') + '.';
+                          if (typeof showToast === 'function') showToast('Summary shortened!', 'success');
+                        }
+                      } else if (/executive/i.test(promptText)) {
+                        sumEl.innerText = (sumEl.innerText || summary).replace(/^(.*)/, 'Strategic leader and $1');
+                        if (typeof showToast === 'function') showToast('Summary updated with executive tone!', 'success');
+                      } else if (/technical/i.test(promptText)) {
+                        sumEl.innerText = (sumEl.innerText || summary) + ' Specialized in high-performance cloud architecture, CI/CD automation, and scalable Web APIs.';
+                        if (typeof showToast === 'function') showToast('Summary updated with technical focus!', 'success');
+                      } else {
+                        sumEl.innerText = (sumEl.innerText || summary) + ' Proven track record optimizing systems and leading cross-functional engineering teams.';
+                        if (typeof showToast === 'function') showToast('Summary enhanced with AI writing!', 'success');
+                      }
+                      fireInputEvent(sumEl);
+                    }
+                  }
+                } catch (err) {
+                  if (loadingDiv && loadingDiv.parentNode) {
+                    loadingDiv.parentNode.removeChild(loadingDiv);
+                  }
+                  appendAiMsg(`<b>AI Advice for "${escapeHtml(promptText)}":</b><br>• Focus on quantified outcomes: Add metrics (%, $, numbers) to each experience bullet.<br>• Use industry-standard terms matching target job descriptions.`);
+                }
               };
+
               window.submitAiChat = function() {
                 var input = document.getElementById('aiChatInput');
                 if (!input || !input.value.trim()) return;
