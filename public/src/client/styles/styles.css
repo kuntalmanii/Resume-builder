@@ -658,9 +658,6 @@ p  { line-height: 1.65; }
 .top-bar-right { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
 .topbar-actions { display: flex; align-items: center; gap: var(--sp-2); }
 
-/* Hide theme switcher */
-.theme-switcher-bar { display: none !important; }
-
 
 /* ─────────────────────────────────────────────────────────────
    8. MAIN CONTENT & PAGE HEADER
