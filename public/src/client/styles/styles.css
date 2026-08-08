@@ -2897,7 +2897,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
   cursor: text;
   word-break: break-all;
   transition: background 0.12s;
-  font-weight: 450;
+  font-weight: 500;
 }
 .doc-contact-field:hover { background: rgba(241, 245, 249, 0.7); }
 .doc-contact-field:focus { background: #FFFFFF; box-shadow: 0 0 0 1.5px rgba(59, 130, 246, 0.3); }
