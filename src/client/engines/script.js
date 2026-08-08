@@ -466,37 +466,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Real-time Password Security Strength Meter
+  function evaluatePasswordStrength(val, fill, text, scoreEl) {
+    if (!fill || !text || !scoreEl) return;
+    if (!val) {
+      fill.style.width  = '0%';
+      fill.className    = 'strength-bar-fill';
+      text.textContent  = 'Security Strength';
+      scoreEl.textContent = '0/4';
+      return;
+    }
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    scoreEl.textContent = `${score}/4`;
+
+    if (score <= 1) { fill.className = 'strength-bar-fill weak'; text.textContent = 'Weak Security'; }
+    else if (score <= 3) { fill.className = 'strength-bar-fill medium'; text.textContent = 'Good Security'; }
+    else { fill.className = 'strength-bar-fill strong'; text.textContent = '🔒 Excellent Strength'; }
+  }
+
+  // Real-time Password Security Strength Meter (Auth Form)
   if (authPasswordInput) {
     authPasswordInput.addEventListener('input', () => {
       const val = authPasswordInput.value;
       const fill    = document.getElementById('authStrengthFill');
       const text    = document.getElementById('authStrengthText');
       const scoreEl = document.getElementById('authStrengthScore');
-      if (!fill || !text || !scoreEl) return;
-
       if (isSignUpMode && val && passwordStrengthWrapper) {
         passwordStrengthWrapper.style.display = 'flex';
       }
+      evaluatePasswordStrength(val, fill, text, scoreEl);
+    });
+  }
 
-      if (!val) {
-        fill.style.width  = '0%';
-        fill.className    = 'strength-bar-fill';
-        text.textContent  = 'Security Strength';
-        scoreEl.textContent = '0/4';
-        return;
+  // Real-time Password Security Strength Meter (Profile Modal)
+  const profilePasswordStrengthWrapper = document.getElementById('profilePasswordStrengthWrapper');
+  const profileStrengthFill  = document.getElementById('profileStrengthFill');
+  const profileStrengthText  = document.getElementById('profileStrengthText');
+  const profileStrengthScore = document.getElementById('profileStrengthScore');
+  if (profileNewPassword) {
+    profileNewPassword.addEventListener('input', () => {
+      const val = profileNewPassword.value;
+      if (profilePasswordStrengthWrapper) {
+        profilePasswordStrengthWrapper.style.display = val ? 'flex' : 'none';
       }
-
-      let score = 0;
-      if (val.length >= 8) score++;
-      if (/[A-Z]/.test(val)) score++;
-      if (/[0-9]/.test(val)) score++;
-      if (/[^A-Za-z0-9]/.test(val)) score++;
-      scoreEl.textContent = `${score}/4`;
-
-      if (score <= 1) { fill.className = 'strength-bar-fill weak'; text.textContent = 'Weak Security'; }
-      else if (score <= 3) { fill.className = 'strength-bar-fill medium'; text.textContent = 'Good Security'; }
-      else { fill.className = 'strength-bar-fill strong'; text.textContent = '🔒 Excellent Strength'; }
+      evaluatePasswordStrength(val, profileStrengthFill, profileStrengthText, profileStrengthScore);
     });
   }
 
@@ -1007,6 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileDisplayName) profileDisplayName.value = displayName;
     if (profileCurrentPassword) profileCurrentPassword.value = '';
     if (profileNewPassword) profileNewPassword.value = '';
+    if (profilePasswordStrengthWrapper) profilePasswordStrengthWrapper.style.display = 'none';
     if (profileFeedback)    profileFeedback.textContent = '';
     userProfileModal.style.display = 'flex';
     if (window.feather) feather.replace();
