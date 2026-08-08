@@ -1441,8 +1441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAddCustomSection = document.getElementById('btnAddCustomSection');
   const customSectionsContainer = document.getElementById('customSectionsContainer');
   const previewCustomSectionsContainer = document.getElementById('previewCustomSectionsContainer');
-  const btnImportJson = document.getElementById('btnImportJson');
-  const jsonFileInput = document.getElementById('jsonFileInput');
+
 
   let customSectionsList = [];
 
@@ -3104,71 +3103,6 @@ document.addEventListener('DOMContentLoaded', () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    });
-  }
-
-  // Import JSON File Handler
-  if (btnImportJson && jsonFileInput) {
-    btnImportJson.addEventListener('click', () => jsonFileInput.click());
-
-    jsonFileInput.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-
-        const info = data.personalInfo || data;
-
-        if (info.fullName && inputFullName) inputFullName.value = info.fullName;
-        if (info.jobTitle && inputJobTitle) inputJobTitle.value = info.jobTitle;
-        if (info.email && inputEmail) inputEmail.value = info.email;
-        if (info.phone && inputPhone) inputPhone.value = info.phone;
-        if (info.location && inputLocation) inputLocation.value = info.location;
-        if (info.github && inputGithub) inputGithub.value = info.github;
-        if (info.linkedin && inputLinkedin) inputLinkedin.value = info.linkedin;
-        if (info.portfolio && inputPortfolio) inputPortfolio.value = info.portfolio;
-        if (info.summary && inputSummary) inputSummary.value = info.summary;
-        if (info.education && inputEducation) inputEducation.value = info.education;
-        if (info.certifications && inputCertifications) inputCertifications.value = info.certifications;
-        if (info.projects && inputProjects) inputProjects.value = info.projects;
-        if (info.achievements && inputAchievements) inputAchievements.value = info.achievements;
-
-        if (data.experience && bulletPoints) {
-          bulletPoints.value = typeof data.experience === 'string' ? data.experience : JSON.stringify(data.experience, null, 2);
-        }
-
-        if (Array.isArray(data.skills)) {
-          const tagsContainer = document.getElementById('skillsTagsContainer');
-          if (tagsContainer) {
-            tagsContainer.querySelectorAll('.tag').forEach(tag => tag.remove());
-            data.skills.forEach(skillName => addSkillTag(skillName));
-          }
-        }
-
-        if (Array.isArray(data.customSections)) {
-          customSectionsList = data.customSections;
-          renderCustomSectionInputs();
-        }
-
-        syncLivePreview();
-        autoSaveFormFields();
-        if (typeof showToast === 'function') {
-          showToast('Resume JSON imported successfully!', 'success');
-        } else {
-          alert('Resume JSON imported successfully!');
-        }
-      } catch (err) {
-        console.error('Failed to parse imported JSON:', err);
-        if (typeof showToast === 'function') {
-          showToast('Invalid JSON file format.', 'error');
-        } else {
-          alert('Invalid JSON file format.');
-        }
-      } finally {
-        jsonFileInput.value = '';
-      }
     });
   }
 
