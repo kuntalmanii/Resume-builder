@@ -2738,15 +2738,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmed = window.confirm('Start a new resume? This will clear all current fields.');
     if (!confirmed) return;
 
-    // Clear all text inputs and textarea
-    if (inputFullName)   inputFullName.value   = '';
-    if (inputJobTitle)   inputJobTitle.value   = '';
-    if (inputEmail)      inputEmail.value      = '';
-    if (inputPhone)      inputPhone.value      = '';
-    if (inputEducation)  inputEducation.value  = '';
-    if (bulletPoints)    bulletPoints.value    = '';
+    // Clear all text inputs and textareas
+    if (inputFullName)       inputFullName.value       = '';
+    if (inputJobTitle)       inputJobTitle.value       = '';
+    if (inputEmail)          inputEmail.value          = '';
+    if (inputPhone)          inputPhone.value          = '';
+    if (inputLocation)        inputLocation.value        = '';
+    if (inputGithub)          inputGithub.value          = '';
+    if (inputLinkedin)        inputLinkedin.value        = '';
+    if (inputPortfolio)       inputPortfolio.value       = '';
+    if (inputSummary)         inputSummary.value         = '';
+    if (inputEducation)      inputEducation.value      = '';
+    if (inputCertifications)  inputCertifications.value  = '';
+    if (inputProjects)        inputProjects.value        = '';
+    if (inputAchievements)    inputAchievements.value    = '';
+    if (bulletPoints)        bulletPoints.value        = '';
 
-    // Reset skill tags to a single default placeholder
+    customSectionsList = [];
+    renderCustomSectionInputs();
+
+    // Reset skill tags
     const tagsContainer = document.getElementById('skillsTagsContainer');
     const skillInput    = document.getElementById('skillInputField');
     if (tagsContainer) {
@@ -2757,12 +2768,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reset live preview to blank defaults
-    if (previewName)      previewName.textContent      = 'YOUR NAME';
-    if (previewRole)      previewRole.textContent      = 'TARGET JOB TITLE';
-    if (previewMeta)      previewMeta.textContent      = 'City, Country • email@domain.com • +1 000 000 0000';
-    if (previewEducation) previewEducation.textContent = 'Degree, University (Year)';
-    if (previewSkills)    previewSkills.textContent    = '';
-    if (previewBullets)   previewBullets.innerHTML     = '<li>Your experience bullet points will appear here...</li>';
+    syncLivePreview();
 
     // Clear saved draft from localStorage
     try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch(e) {}
