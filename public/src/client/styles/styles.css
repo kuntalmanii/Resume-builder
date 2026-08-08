@@ -745,11 +745,6 @@ p  { line-height: 1.65; }
   top: 40%; left: 35%; animation-delay: -9s;
 }
 
-@keyframes orbFloat {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-30px) scale(1.08); }
-}
-
 /* Top Navigation Bar */
 .auth-nav-bar {
   display: flex; align-items: center; justify-content: space-between;
