@@ -3047,64 +3047,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     9. Export JSON / PDF Actions
+     9. Export PDF Actions
      ========================================================================== */
-  const btnExportJson     = document.getElementById('btnExportJson');
-  const btnExportPdf      = document.getElementById('btnExportPdf');
-
-  // Export as JSON
-  if (btnExportJson) {
-    btnExportJson.addEventListener('click', () => {
-      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
-        .map(t => getSkillTagName(t)).filter(Boolean);
-
-      const resumeData = {
-        meta: { exportedAt: new Date().toISOString(), version: '2.5', tool: 'ResuAI' },
-        personalInfo: {
-          fullName:       inputFullName       ? inputFullName.value.trim()       : '',
-          jobTitle:       inputJobTitle       ? inputJobTitle.value.trim()       : '',
-          email:          inputEmail          ? inputEmail.value.trim()          : '',
-          phone:          inputPhone          ? inputPhone.value.trim()          : '',
-          location:       inputLocation       ? inputLocation.value.trim()       : '',
-          github:         inputGithub         ? inputGithub.value.trim()         : '',
-          linkedin:       inputLinkedin       ? inputLinkedin.value.trim()       : '',
-          portfolio:      inputPortfolio      ? inputPortfolio.value.trim()      : '',
-          summary:        inputSummary        ? inputSummary.value.trim()        : '',
-          education:      inputEducation      ? inputEducation.value.trim()      : '',
-          certifications: inputCertifications ? inputCertifications.value.trim() : '',
-          projects:       inputProjects       ? inputProjects.value.trim()       : '',
-          achievements:   inputAchievements   ? inputAchievements.value.trim()   : '',
-        },
-        skills,
-        customSections: customSectionsList,
-        experience: bulletPoints ? bulletPoints.value.trim() : '',
-        preview: {
-          name:           previewName           ? previewName.textContent           : '',
-          role:           previewRole           ? previewRole.textContent           : '',
-          meta:           previewMeta           ? previewMeta.innerHTML             : '',
-          summary:        previewSummary        ? previewSummary.textContent        : '',
-          education:      previewEducation      ? previewEducation.textContent      : '',
-          skills:         previewSkills         ? previewSkills.textContent         : '',
-          certifications: previewCertifications ? previewCertifications.textContent : '',
-          projects:       previewProjects       ? previewProjects.textContent       : '',
-          achievements:   previewAchievements   ? previewAchievements.textContent   : '',
-        }
-      };
-
-      const blob = new Blob([JSON.stringify(resumeData, null, 2)], { type: 'application/json' });
-      const url  = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const safeName = (inputFullName && inputFullName.value.trim()
-        ? inputFullName.value.trim().replace(/\s+/g, '_').toLowerCase()
-        : 'resume');
-      link.href     = url;
-      link.download = `${safeName}_resuai.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
-  }
+  const btnExportPdf = document.getElementById('btnExportPdf');
 
 
 
