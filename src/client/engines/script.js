@@ -3302,15 +3302,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show extraction status in the badge for PDF/TXT
     if (!file.name.endsWith('.docx')) {
-      if (selectedFileName && uploadedFileText) {
-        const charCount = uploadedFileText.trim().length;
+      if (selectedFileName && window.uploadedFileText) {
+        const charCount = window.uploadedFileText.trim().length;
         selectedFileName.textContent = `${file.name} (${charCount} chars extracted)`;
-      } else if (selectedFileName && !uploadedFileText) {
+      } else if (selectedFileName && !window.uploadedFileText) {
         selectedFileName.textContent = `${file.name} — could not extract text. Try PDF or TXT.`;
       }
     }
 
-    console.log(`[ResuAI] Extracted ${uploadedFileText.length} characters from ${file.name}`);
+    console.log(`[ResuAI] Extracted ${window.uploadedFileText.length} characters from ${file.name}`);
   }
 
   if (pdfFileInput) {
@@ -3718,7 +3718,7 @@ Key Requirements:
    * Local Client-Side Fallback Evaluator (used when no API key is set or if offline)
    */
   function runClientAtsDiagnostic() {
-    const jdRawText = (atsJdInput ? atsJdInput.value : "") + " " + uploadedFileText;
+    const jdRawText = (atsJdInput ? atsJdInput.value : "") + " " + window.uploadedFileText;
     const jdLower = jdRawText.toLowerCase();
 
     let candidateSkillsText = "";
@@ -3730,7 +3730,7 @@ Key Requirements:
       candidateSkillsText += " " + tag.textContent;
     });
 
-    const candidateLower = (candidateSkillsText + " " + uploadedFileText).toLowerCase();
+    const candidateLower = (candidateSkillsText + " " + window.uploadedFileText).toLowerCase();
     const jdKeywordsPresent = KNOWN_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
     const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
       ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
@@ -3966,7 +3966,7 @@ Key Requirements:
     if (!tailoredResumeDoc) return;
 
     // Post-process data to ensure contact info and name are never empty
-    data = fillMissingCandidateDetails(data, uploadedFileText);
+    data = fillMissingCandidateDetails(data, window.uploadedFileText);
 
     const skills = Array.isArray(data.skills) ? data.skills.join(' · ') : (data.skills || '');
 
@@ -4051,7 +4051,7 @@ Key Requirements:
 
       // Use uploaded resume PDF text or fallback to live editor canvas text
       const canvasText = document.querySelector('.doc-editor-body')?.innerText || '';
-      const resumeText = (uploadedFileText && uploadedFileText.trim().length > 30) ? uploadedFileText.trim() : canvasText.trim();
+      const resumeText = (window.uploadedFileText && window.uploadedFileText.trim().length > 30) ? window.uploadedFileText.trim() : canvasText.trim();
 
       if (!resumeText) {
         const cta = document.getElementById('tailoredResumeCta');
