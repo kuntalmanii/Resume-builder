@@ -4,42 +4,55 @@ const { GEMINI_MODELS, sanitizeInputText, setCorsHeaders } = require('./_shared'
 function runServerFallbackOptimization(jobTitle, text, section, action) {
   let cleanText = (text || '').trim();
 
-  if (!cleanText || cleanText.length < 5) {
-    cleanText = 'Results-driven software engineer with 3+ years of experience architecting high-performance web applications and scalable cloud systems.';
-  }
+  // Extract companies mentioned in input
+  const companies = [];
+  if (/google/i.test(cleanText)) companies.push('Google');
+  if (/amazon/i.test(cleanText)) companies.push('Amazon');
+  if (/microsoft/i.test(cleanText)) companies.push('Microsoft');
+  if (/apple/i.test(cleanText)) companies.push('Apple');
+  if (/meta|facebook/i.test(cleanText)) companies.push('Meta');
+  if (/netflix/i.test(cleanText)) companies.push('Netflix');
+  if (/stripe/i.test(cleanText)) companies.push('Stripe');
 
-  // Heuristic cleanup for summary
+  let companyContext = companies.length > 0
+    ? `at leading technology companies including ${companies.join(' and ')}`
+    : 'in high-growth technology environments';
+
+  let shortCompanyContext = companies.length > 0
+    ? `at ${companies.join(' and ')}`
+    : 'at top technology firms';
+
+  const roleTitle = jobTitle || 'Software Engineer';
+
   if (!section || section === 'summary') {
-    let rewritten = cleanText;
-    // Fix common typos
-    rewritten = rewritten.replace(/\bwored\b/gi, 'worked')
-                         .replace(/\bamaoxx\b/gi, 'Amazon')
-                         .replace(/\bgogole\b/gi, 'Google')
-                         .replace(/\bmicrosof\b/gi, 'Microsoft');
-
-    if (/google|amazon|worked/i.test(rewritten)) {
-      rewritten = 'Results-driven Software Engineer with 3+ years of experience at leading technology firms including Google and Amazon. Proven track record architecting high-availability web applications, optimizing performance metrics, and collaborating across cross-functional engineering teams to ship scalable products.';
-    }
+    let summaryParagraph = `Results-driven ${roleTitle} with proven experience ${companyContext}. Demonstrated track record architecting high-availability systems, optimizing performance, and collaborating across engineering teams to ship scalable products.`;
 
     if (/shorten/i.test(action)) {
-      rewritten = 'Results-driven Software Engineer with 3+ years of experience at Google and Amazon building scalable web systems.';
+      summaryParagraph = `${roleTitle} ${shortCompanyContext} with expertise in building high-performance web applications and scalable cloud services.`;
     } else if (/executive/i.test(action)) {
-      rewritten = 'Strategic Engineering Leader with 3+ years of experience at Google and Amazon. Demonstrated expertise driving architecture decisions, scaling cloud infrastructure, and mentoring cross-functional engineering teams.';
+      summaryParagraph = `Strategic ${roleTitle} ${companyContext}. Demonstrated expertise driving technical architecture decisions, scaling cloud infrastructure, and leading high-performing engineering teams.`;
     } else if (/technical/i.test(action)) {
-      rewritten = 'Senior Software Engineer with 3+ years of experience at Google and Amazon. Specialized in high-throughput cloud architecture, microservices, TypeScript/React frontend systems, and CI/CD pipelines.';
+      summaryParagraph = `Senior ${roleTitle} ${companyContext}. Specialized in distributed cloud architecture, high-throughput microservices, TypeScript/React systems, and CI/CD pipelines.`;
+    } else if (/ats/i.test(action)) {
+      summaryParagraph = `Results-oriented ${roleTitle} ${shortCompanyContext}. Skilled in full-stack web development, system architecture, database optimization, and agile software delivery.`;
     }
 
     return {
-      optimizedText: rewritten,
-      optimizedBulletPoints: rewritten,
-      suggestedSkills: ['TypeScript', 'React', 'Node.js', 'Amazon Web Services', 'System Design']
+      section: 'summary',
+      optimizedText: summaryParagraph,
+      optimizedBulletPoints: summaryParagraph,
+      suggestedSkills: ['TypeScript', 'React', 'Node.js', 'System Design', 'Cloud Architecture']
     };
   }
 
+  // Work Experience fallback
+  let bullets = `• Architected scalable web services ${shortCompanyContext}, maintaining 99.99% uptime for high-volume user traffic.\n• Optimized application performance and database queries, cutting average p99 response latency significantly.\n• Spearheaded technical initiatives across cross-functional engineering teams, boosting deployment velocity.`;
+
   return {
-    optimizedText: cleanText,
-    optimizedBulletPoints: `• Architected high-performance UI component library serving 2M+ active monthly users.\n• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.\n• Spearheaded frontend migration to TypeScript and Next.js, boosting team release velocity by 35%.\n• Implemented client-side GraphQL caching layer, decreasing server payload size by 60%.`,
-    suggestedSkills: ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL"]
+    section: 'experience',
+    optimizedText: bullets,
+    optimizedBulletPoints: bullets,
+    suggestedSkills: ["TypeScript", "React", "Next.js", "System Design", "Cloud Architecture", "GraphQL"]
   };
 }
 
@@ -117,22 +130,23 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(fallback);
     }
 
-    const prompt = `You are an expert Senior Technical Resume Writer and Google Hiring Manager.
-Rewrite and optimize the candidate's ${section.toUpperCase()} section for maximum ATS parser score and executive impact.
+    const prompt = `You are an expert Senior Technical Resume Writer and Hiring Manager.
+Rewrite and optimize the candidate's ${section.toUpperCase()} section based STRICTLY on their input background.
 
 TARGET JOB TITLE: ${jobTitle || 'Software Engineer'}
 SKILLS: ${Array.isArray(skills) ? skills.join(', ') : (skills || 'TypeScript, React')}
 ACTION REQUEST: ${action}
-RAW INPUT TEXT:
-"${text || 'i worked for google for 3 years and then wored at amaoxx'}"
+RAW CANDIDATE INPUT:
+"${text || 'worked at Google and Amazon'}"
 
-Instructions:
-1. Fix all spelling errors, grammatical mistakes, and casual phrasing (e.g. "wored at amaoxx" -> "worked at Amazon").
-2. Produce a professional, high-impact, ATS-optimized paragraph for the ${section} section.
-3. If section is "summary", respond with a cohesive 2-3 sentence professional summary paragraph.
+CRITICAL INSTRUCTIONS:
+1. Preserve the candidate's actual work experience and company names (e.g. Google, Amazon, Microsoft). Do NOT invent unrelated skills or companies.
+2. If section is "summary", generate a cohesive 2-3 sentence professional summary paragraph. Do NOT use bullet points for summary.
+3. If section is "experience", generate 3-4 high-impact experience bullet points with action verbs and metrics.
 4. Respond STRICTLY in JSON format with schema:
 {
-  "optimizedText": "<rewritten high-impact text>",
+  "section": "${section}",
+  "optimizedText": "<rewritten high-impact text or summary paragraph>",
   "optimizedBulletPoints": "<rewritten text or bullets>",
   "suggestedSkills": ["<skill1>", "<skill2>", "<skill3>"]
 }`;

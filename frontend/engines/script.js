@@ -1963,25 +1963,80 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Saves all current form fields and skill tags to localStorage automatically.
    */
+  function syncFormInputsToCenterCanvas() {
+    const docName = document.getElementById('docFieldName');
+    if (docName && inputFullName) docName.innerText = inputFullName.value || '';
+
+    const docTitle = document.getElementById('docFieldTitle');
+    if (docTitle && inputJobTitle) docTitle.innerText = inputJobTitle.value || '';
+
+    const docEmail = document.querySelector('[data-syncs="inputEmail"]');
+    if (docEmail && inputEmail) docEmail.innerText = inputEmail.value || '';
+
+    const docPhone = document.querySelector('[data-syncs="inputPhone"]');
+    if (docPhone && inputPhone) docPhone.innerText = inputPhone.value || '';
+
+    const docLoc = document.querySelector('[data-syncs="inputLocation"]');
+    if (docLoc && inputLocation) docLoc.innerText = inputLocation.value || '';
+
+    const docGh = document.querySelector('[data-syncs="inputGithub"]');
+    if (docGh && inputGithub) docGh.innerText = inputGithub.value || '';
+
+    const docLi = document.querySelector('[data-syncs="inputLinkedin"]');
+    if (docLi && inputLinkedin) docLi.innerText = inputLinkedin.value || '';
+
+    const docPort = document.querySelector('[data-syncs="inputPortfolio"]');
+    if (docPort && inputPortfolio) docPort.innerText = inputPortfolio.value || '';
+
+    const docSum = document.getElementById('docFieldSummary');
+    if (docSum && inputSummary) docSum.innerText = inputSummary.value || '';
+
+    const docEdu = document.getElementById('docFieldEducation');
+    if (docEdu && inputEducation) docEdu.innerText = inputEducation.value || '';
+
+    const docCerts = document.getElementById('docFieldCerts');
+    if (docCerts && inputCertifications) docCerts.innerText = inputCertifications.value || '';
+
+    const docProj = document.getElementById('docFieldProjects');
+    if (docProj && inputProjects) docProj.innerText = inputProjects.value || '';
+
+    const docAch = document.getElementById('docFieldAchievements');
+    if (docAch && inputAchievements) docAch.innerText = inputAchievements.value || '';
+
+    if (bulletPoints && typeof window.setDocBullets === 'function') {
+      window.setDocBullets(bulletPoints.value || '');
+    }
+  }
+
+  window.syncFormInputsToCenterCanvas = syncFormInputsToCenterCanvas;
+
+  /**
+   * Saves all current form fields and skill tags to localStorage automatically.
+   */
   function autoSaveFormFields() {
+    const getVal = (inputEl, docId) => {
+      const docVal = (document.getElementById(docId)?.innerText || '').trim();
+      return docVal || (inputEl ? inputEl.value : '');
+    };
+
     const draftData = {
-      fullName: inputFullName ? inputFullName.value : '',
-      jobTitle: inputJobTitle ? inputJobTitle.value : '',
+      fullName: getVal(inputFullName, 'docFieldName'),
+      jobTitle: getVal(inputJobTitle, 'docFieldTitle'),
       email: inputEmail ? inputEmail.value : '',
       phone: inputPhone ? inputPhone.value : '',
       location: inputLocation ? inputLocation.value : '',
       github: inputGithub ? inputGithub.value : '',
       linkedin: inputLinkedin ? inputLinkedin.value : '',
       portfolio: inputPortfolio ? inputPortfolio.value : '',
-      summary: inputSummary ? inputSummary.value : '',
-      education: inputEducation ? inputEducation.value : '',
-      certifications: inputCertifications ? inputCertifications.value : '',
+      summary: getVal(inputSummary, 'docFieldSummary'),
+      education: getVal(inputEducation, 'docFieldEducation'),
+      certifications: getVal(inputCertifications, 'docFieldCerts'),
       projects: inputProjects ? inputProjects.value : '',
       achievements: inputAchievements ? inputAchievements.value : '',
       customSections: customSectionsList,
       bulletPoints: bulletPoints ? bulletPoints.value : '',
       atsJdText: atsJdInput ? atsJdInput.value : '',
-      skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean)
+      skills: Array.from(document.querySelectorAll('#skillsTagsContainer .tag, #docSkillsWrapper .tag')).map(t => getSkillTagName(t)).filter(Boolean)
     };
 
     try {
@@ -1993,48 +2048,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Restores form fields from localStorage on startup (ignoring legacy sample defaults).
+   * Restores form fields from localStorage on startup.
    */
   function loadSavedFormFields() {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (saved) {
         const draft = JSON.parse(saved);
-        const LEGACY_DEFAULTS = [
-          'Manish Kuntal',
-          'github.com/kuntalmanii',
-          'linkedin.com/in/manishkuntal',
-          'manishkuntal.dev',
-          'manish@resuai.dev',
-          '+1 (415) 890-2341',
-          'San Francisco, CA (US Citizen · Open to Remote)',
-          'Senior UI/UX Engineer & Systems Architect'
-        ];
-
-        const isClean = (val) => val && !LEGACY_DEFAULTS.includes(val.trim());
-
-        if (isClean(draft.fullName) && inputFullName) inputFullName.value = draft.fullName;
-        if (isClean(draft.jobTitle) && inputJobTitle) inputJobTitle.value = draft.jobTitle;
-        if (isClean(draft.email) && inputEmail) inputEmail.value = draft.email;
-        if (isClean(draft.phone) && inputPhone) inputPhone.value = draft.phone;
-        if (isClean(draft.location) && inputLocation) inputLocation.value = draft.location;
-        if (isClean(draft.github) && inputGithub) inputGithub.value = draft.github;
-        if (isClean(draft.linkedin) && inputLinkedin) inputLinkedin.value = draft.linkedin;
-        if (isClean(draft.portfolio) && inputPortfolio) inputPortfolio.value = draft.portfolio;
-        if (isClean(draft.summary) && inputSummary) inputSummary.value = draft.summary;
-        if (isClean(draft.education) && inputEducation) inputEducation.value = draft.education;
-        if (isClean(draft.certifications) && inputCertifications) inputCertifications.value = draft.certifications;
-        if (isClean(draft.projects) && inputProjects) inputProjects.value = draft.projects;
-        if (isClean(draft.achievements) && inputAchievements) inputAchievements.value = draft.achievements;
+        if (draft.fullName && inputFullName) inputFullName.value = draft.fullName;
+        if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
+        if (draft.email && inputEmail) inputEmail.value = draft.email;
+        if (draft.phone && inputPhone) inputPhone.value = draft.phone;
+        if (draft.location && inputLocation) inputLocation.value = draft.location;
+        if (draft.github && inputGithub) inputGithub.value = draft.github;
+        if (draft.linkedin && inputLinkedin) inputLinkedin.value = draft.linkedin;
+        if (draft.portfolio && inputPortfolio) inputPortfolio.value = draft.portfolio;
+        if (draft.summary && inputSummary) inputSummary.value = draft.summary;
+        if (draft.education && inputEducation) inputEducation.value = draft.education;
+        if (draft.certifications && inputCertifications) inputCertifications.value = draft.certifications;
+        if (draft.projects && inputProjects) inputProjects.value = draft.projects;
+        if (draft.achievements && inputAchievements) inputAchievements.value = draft.achievements;
         if (Array.isArray(draft.customSections)) {
           customSectionsList = draft.customSections;
           renderCustomSectionInputs();
         }
-        if (isClean(draft.bulletPoints) && bulletPoints) bulletPoints.value = draft.bulletPoints;
+        if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
         if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
 
+        syncFormInputsToCenterCanvas();
         syncLivePreview();
         syncLiveSkills();
+      } else {
+        syncFormInputsToCenterCanvas();
+        syncLivePreview();
       }
     } catch (e) {
       console.warn('Could not restore form fields from LocalStorage:', e);
@@ -2224,13 +2270,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function syncLivePreview() {
-    if (inputFullName && previewName) {
-      updateTextNode(previewName, inputFullName.value.trim().toUpperCase() || 'YOUR NAME');
+    const docName = document.getElementById('docFieldName')?.innerText?.trim();
+    const nameVal = docName || (inputFullName ? inputFullName.value.trim() : '');
+    if (previewName) {
+      updateTextNode(previewName, nameVal.toUpperCase() || 'YOUR NAME');
     }
-    if (inputJobTitle && previewRole) {
-      const titleVal = inputJobTitle.value.trim();
-      const locVal = inputLocation ? inputLocation.value.trim() : '';
-      if (titleVal && titleVal.toLowerCase() !== locVal.toLowerCase() && !/^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(titleVal)) {
+
+    const docRole = document.getElementById('docFieldTitle')?.innerText?.trim();
+    const titleVal = docRole || (inputJobTitle ? inputJobTitle.value.trim() : '');
+    if (previewRole) {
+      if (titleVal) {
         updateTextNode(previewRole, titleVal.toUpperCase());
         previewRole.style.display = 'block';
       } else {
@@ -2241,12 +2290,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (previewMeta) {
       const chips = [];
-      const loc  = inputLocation ? inputLocation.value.trim() : '';
-      const em   = inputEmail ? inputEmail.value.trim() : '';
-      const ph   = inputPhone ? inputPhone.value.trim() : '';
-      const gh   = inputGithub ? inputGithub.value.trim() : '';
-      const li   = inputLinkedin ? inputLinkedin.value.trim() : '';
-      const port = inputPortfolio ? inputPortfolio.value.trim() : '';
+      const getFieldVal = (selector, inputEl) => {
+        const docVal = document.querySelector(selector)?.innerText?.trim();
+        return docVal || (inputEl ? inputEl.value.trim() : '');
+      };
+
+      const loc  = getFieldVal('[data-syncs="inputLocation"]', inputLocation);
+      const em   = getFieldVal('[data-syncs="inputEmail"]', inputEmail);
+      const ph   = getFieldVal('[data-syncs="inputPhone"]', inputPhone);
+      const gh   = getFieldVal('[data-syncs="inputGithub"]', inputGithub);
+      const li   = getFieldVal('[data-syncs="inputLinkedin"]', inputLinkedin);
+      const port = getFieldVal('[data-syncs="inputPortfolio"]', inputPortfolio);
 
       if (loc)  chips.push(`<span class="contact-chip"><i data-feather="map-pin"></i>${loc}</span>`);
       if (em)   chips.push(`<span class="contact-chip"><i data-feather="mail"></i>${em}</span>`);
@@ -2262,64 +2316,91 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (inputSummary && previewSummary && previewSummarySection) {
-      const val = inputSummary.value.trim();
-      if (val) {
-        updateTextNode(previewSummary, val);
-        if (previewSummarySection.style.display !== 'block') previewSummarySection.style.display = 'block';
+    const docSum = document.getElementById('docFieldSummary')?.innerText?.trim();
+    const summaryVal = docSum || (inputSummary ? inputSummary.value.trim() : '');
+    if (previewSummary && previewSummarySection) {
+      if (summaryVal) {
+        updateTextNode(previewSummary, summaryVal);
+        previewSummarySection.style.display = 'block';
       } else {
-        if (previewSummarySection.style.display !== 'none') previewSummarySection.style.display = 'none';
+        updateTextNode(previewSummary, '');
+        previewSummarySection.style.display = 'none';
       }
     }
 
-    if (inputEducation && previewEducation) {
-      const val = inputEducation.value.trim();
-      const newHtml = val ? formatEducationHTML(val) : '';
+    const docEdu = document.getElementById('docFieldEducation')?.innerText?.trim();
+    const eduVal = docEdu || (inputEducation ? inputEducation.value.trim() : '');
+    if (previewEducation) {
+      const newHtml = eduVal ? formatEducationHTML(eduVal) : '';
       if (previewEducation.innerHTML !== newHtml) previewEducation.innerHTML = newHtml;
     }
 
-    if (inputCertifications && previewCertifications && previewCertificationsSection) {
-      const val = inputCertifications.value.trim();
-      if (val) {
-        updateTextNode(previewCertifications, val);
-        if (previewCertificationsSection.style.display !== 'block') previewCertificationsSection.style.display = 'block';
+    const docCerts = document.getElementById('docFieldCerts')?.innerText?.trim();
+    const certsVal = docCerts || (inputCertifications ? inputCertifications.value.trim() : '');
+    if (previewCertifications && previewCertificationsSection) {
+      if (certsVal) {
+        updateTextNode(previewCertifications, certsVal);
+        previewCertificationsSection.style.display = 'block';
       } else {
-        if (previewCertificationsSection.style.display !== 'none') previewCertificationsSection.style.display = 'none';
+        updateTextNode(previewCertifications, '');
+        previewCertificationsSection.style.display = 'none';
       }
     }
 
     if (inputProjects && previewProjects && previewProjectsSection) {
-      const val = inputProjects.value.trim();
+      const docProj = document.getElementById('docFieldProjects')?.innerText?.trim();
+      const val = docProj || (inputProjects ? inputProjects.value.trim() : '');
       if (val) {
         updateTextNode(previewProjects, val);
-        if (previewProjectsSection.style.display !== 'block') previewProjectsSection.style.display = 'block';
+        previewProjectsSection.style.display = 'block';
       } else {
-        if (previewProjectsSection.style.display !== 'none') previewProjectsSection.style.display = 'none';
+        updateTextNode(previewProjects, '');
+        previewProjectsSection.style.display = 'none';
       }
     }
 
     if (inputAchievements && previewAchievements && previewAchievementsSection) {
-      const val = inputAchievements.value.trim();
+      const docAch = document.getElementById('docFieldAchievements')?.innerText?.trim();
+      const val = docAch || (inputAchievements ? inputAchievements.value.trim() : '');
       if (val) {
         updateTextNode(previewAchievements, val);
-        if (previewAchievementsSection.style.display !== 'block') previewAchievementsSection.style.display = 'block';
+        previewAchievementsSection.style.display = 'block';
       } else {
-        if (previewAchievementsSection.style.display !== 'none') previewAchievementsSection.style.display = 'none';
+        updateTextNode(previewAchievements, '');
+        previewAchievementsSection.style.display = 'none';
       }
     }
 
     renderCustomSectionsPreview();
 
-    if (bulletPoints && previewBullets) {
-      const lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
+    if (previewBullets) {
+      let lines = [];
+      const bulletTexts = document.querySelectorAll('#docBulletsList .doc-bullet-text');
+      if (bulletTexts.length > 0) {
+        lines = Array.from(bulletTexts).map(b => (b.innerText || '').trim()).filter(Boolean);
+      } else if (bulletPoints && bulletPoints.value.trim()) {
+        lines = bulletPoints.value.split('\n').filter(line => line.trim() !== '');
+      }
       const newHtml = lines.length > 0 ? lines.map(line => `<li>${escapeHTML(line.trim().replace(/^[-•*]\s*/, ''))}</li>`).join('') : '';
       if (previewBullets.innerHTML !== newHtml) previewBullets.innerHTML = newHtml;
     }
+
+    if (previewSkills) {
+      const tagEls = document.querySelectorAll('#docSkillsWrapper .tag, #skillsTagsContainer .tag');
+      const skillList = Array.from(tagEls).map(tag => getSkillTagName(tag)).filter(Boolean);
+      if (skillList.length > 0) {
+        previewSkills.textContent = skillList.join(', ');
+      } else {
+        previewSkills.textContent = '';
+      }
+    }
+
     updateCharCounter();
     calculateProfileStrength();
     updateTopUserProfile();
-    if (typeof debouncedAutoSave === 'function') debouncedAutoSave();
   }
+
+  window.syncLivePreview = syncLivePreview;
 
   const debouncedSyncLivePreview = debounce(syncLivePreview, 150);
   const debouncedAutoSave = debounce(autoSaveFormFields, 500);

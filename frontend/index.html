@@ -560,11 +560,6 @@
                     <span class="section-nav-name">Personal Info</span>
                     <span class="section-nav-pct" id="navPct-personal">—</span>
                   </div>
-                  <div class="section-nav-item" data-target="docSection-summary" onclick="editorNavTo('docSection-summary', this)">
-                    <span class="section-nav-dot"></span>
-                    <span class="section-nav-name">Summary</span>
-                    <span class="section-nav-pct" id="navPct-summary">—</span>
-                  </div>
                   <div class="section-nav-item" data-target="docSection-experience" onclick="editorNavTo('docSection-experience', this)">
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Experience</span>
@@ -584,6 +579,11 @@
                     <span class="section-nav-dot"></span>
                     <span class="section-nav-name">Certifications</span>
                     <span class="section-nav-pct" id="navPct-certs">—</span>
+                  </div>
+                  <div class="section-nav-item" data-target="docSection-summary" onclick="editorNavTo('docSection-summary', this)">
+                    <span class="section-nav-dot"></span>
+                    <span class="section-nav-name">Summary</span>
+                    <span class="section-nav-pct" id="navPct-summary">—</span>
                   </div>
                 </nav>
 
@@ -686,39 +686,7 @@
                       </div>
                     </div>
 
-                    <!-- §2 PROFESSIONAL SUMMARY -->
-                    <div class="doc-section-block" id="docSection-summary" data-section="summary">
-                      <div class="doc-section-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        <span>Professional Summary</span>
-                      </div>
-                      <div class="doc-field"
-                           contenteditable="true"
-                           spellcheck="true"
-                           data-placeholder="Write a compelling 2–3 sentence executive summary. E.g. Staff Engineer with 8+ years architecting distributed systems at scale, delivering 40% latency improvements at Google..."
-                           data-syncs="inputSummary"
-                           id="docFieldSummary"
-                           aria-label="Professional Summary"
-                           style="min-height:80px;"></div>
-                      <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Improve Writing" onclick="sendAiAction('Improve the writing of my professional summary')">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                          <span>✦ Improve Writing</span>
-                        </button>
-                        <button class="doc-sha-btn" title="AI: Shorten" onclick="sendAiAction('Shorten my summary to be concise and punchy')">
-                          <span>✦ Shorten</span>
-                        </button>
-                        <button class="doc-sha-btn" title="AI: Executive" onclick="sendAiAction('Rewrite my summary with an executive leadership tone')">
-                          <span>✦ Executive</span>
-                        </button>
-                        <button class="doc-sha-btn" title="AI: Technical" onclick="sendAiAction('Rewrite my summary with a strong technical focus')">
-                          <span>✦ Technical</span>
-                        </button>
-                        <button class="doc-sha-btn" title="AI: ATS Friendly" onclick="sendAiAction('Optimize my summary for ATS keyword matching')">
-                          <span>✦ ATS Friendly</span>
-                        </button>
-                      </div>
-                    </div>
+
 
                     <!-- §3 WORK EXPERIENCE -->
                     <div class="doc-section-block" id="docSection-experience" data-section="experience">
@@ -848,6 +816,8 @@
                       </div>
                     </div>
 
+
+
                     <!-- §7 PROJECTS -->
                     <div class="doc-section-block" id="docSection-projects" data-section="projects">
                       <div class="doc-section-label">
@@ -890,6 +860,40 @@
                         </button>
                         <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format achievements for optimal ATS scanning')">
                           <span>✦ ATS Format</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- §8b PROFESSIONAL SUMMARY (Placed at the very last position) -->
+                    <div class="doc-section-block" id="docSection-summary" data-section="summary">
+                      <div class="doc-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Professional Summary</span>
+                      </div>
+                      <div class="doc-field"
+                           contenteditable="true"
+                           spellcheck="true"
+                           data-placeholder="Write a compelling 2–3 sentence executive summary. E.g. Staff Engineer with 8+ years architecting distributed systems at scale, delivering 40% latency improvements at Google..."
+                           data-syncs="inputSummary"
+                           id="docFieldSummary"
+                           aria-label="Professional Summary"
+                           style="min-height:80px;"></div>
+                      <div class="doc-section-hover-actions">
+                        <button class="doc-sha-btn" title="AI: Improve Writing" onclick="sendAiAction('Improve the writing of my professional summary')">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                          <span>✦ Improve Writing</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Shorten" onclick="sendAiAction('Shorten my summary to be concise and punchy')">
+                          <span>✦ Shorten</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Executive" onclick="sendAiAction('Rewrite my summary with an executive leadership tone')">
+                          <span>✦ Executive</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: Technical" onclick="sendAiAction('Rewrite my summary with a strong technical focus')">
+                          <span>✦ Technical</span>
+                        </button>
+                        <button class="doc-sha-btn" title="AI: ATS Friendly" onclick="sendAiAction('Optimize my summary for ATS keyword matching')">
+                          <span>✦ ATS Friendly</span>
                         </button>
                       </div>
                     </div>
@@ -1014,14 +1018,14 @@
                     <!-- Zoom controls -->
                     <div class="preview-rpanel-controls">
                       <button class="preview-zoom-btn" id="previewZoomOut" onclick="adjustPreviewZoom(-10)">−</button>
-                      <span class="preview-scale-label" id="previewScaleLabel">75%</span>
+                      <span class="preview-scale-label" id="previewScaleLabel">95%</span>
                       <button class="preview-zoom-btn" id="previewZoomIn" onclick="adjustPreviewZoom(10)">+</button>
                       <div class="preview-rpanel-spacer"></div>
 
                     </div>
                     <!-- A4 Preview Paper -->
                     <div class="preview-rpanel-scroll">
-                      <div class="preview-rpanel-paper" id="previewRpanelPaper" style="transform:scale(0.75);">
+                      <div class="preview-rpanel-paper" id="previewRpanelPaper" style="transform:scale(0.95);">
                         <!-- Live preview sheet -->
                         <div class="preview-paper-workspace" id="previewCardSection">
                           <div class="preview-paper-sheet" id="printableResumeDoc">
@@ -1031,17 +1035,13 @@
                               <div class="paper-contact-row" id="previewMeta"></div>
                               <div class="paper-header-rule"></div>
                             </div>
-                            <div class="paper-section" id="previewSummarySection">
-                              <div class="paper-section-title"><span class="section-accent-bar"></span>EXECUTIVE SUMMARY</div>
-                              <p class="section-content" id="previewSummary"></p>
+                            <div class="paper-section">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>WORK EXPERIENCE &amp; KEY IMPACT PROJECTS</div>
+                              <div class="experience-block"><ul class="exp-list" id="previewBullets"></ul></div>
                             </div>
                             <div class="paper-section">
                               <div class="paper-section-title"><span class="section-accent-bar"></span>TECHNICAL EXPERTISE</div>
                               <p class="section-content" id="previewSkills"></p>
-                            </div>
-                            <div class="paper-section">
-                              <div class="paper-section-title"><span class="section-accent-bar"></span>WORK EXPERIENCE &amp; KEY IMPACT PROJECTS</div>
-                              <div class="experience-block"><ul class="exp-list" id="previewBullets"></ul></div>
                             </div>
                             <div class="paper-section">
                               <div class="paper-section-title"><span class="section-accent-bar"></span>EDUCATION &amp; CREDENTIALS</div>
@@ -1058,6 +1058,10 @@
                             <div class="paper-section" id="previewAchievementsSection" style="display:none;">
                               <div class="paper-section-title"><span class="section-accent-bar"></span>KEY ACHIEVEMENTS &amp; HONORS</div>
                               <p class="section-content" id="previewAchievements"></p>
+                            </div>
+                            <div class="paper-section" id="previewSummarySection">
+                              <div class="paper-section-title"><span class="section-accent-bar"></span>EXECUTIVE SUMMARY</div>
+                              <p class="section-content" id="previewSummary"></p>
                             </div>
                             <div id="previewCustomSectionsContainer"></div>
                           </div>
@@ -1112,6 +1116,9 @@
                 fireInputEvent(target);
                 updateSectionPct();
                 updateAutosave();
+                if (typeof window.syncLivePreview === 'function') {
+                  window.syncLivePreview();
+                }
               }
 
               /* ── 3. WIRE all contenteditable fields ── */
@@ -1335,7 +1342,7 @@
               if (docScrollArea) {
                 docScrollArea.addEventListener('scroll', function() {
                   var scrollTop = docScrollArea.scrollTop;
-                  var sections = ['docSection-personal','docSection-summary','docSection-experience','docSection-skills','docSection-education','docSection-certs'];
+                  var sections = ['docSection-personal','docSection-experience','docSection-skills','docSection-education','docSection-certs','docSection-projects','docSection-achievements','docSection-summary'];
                   var activeId = sections[0];
                   sections.forEach(function(id) {
                     var el = document.getElementById(id);
@@ -1360,7 +1367,7 @@
               };
 
               /* ── 9. PREVIEW ZOOM ── */
-              var previewScale = 75;
+              var previewScale = 95;
               window.adjustPreviewZoom = function(delta) {
                 previewScale = Math.max(30, Math.min(120, previewScale + delta));
                 var paper = document.getElementById('previewRpanelPaper');
@@ -1453,13 +1460,16 @@
 
                 // Gather current document state
                 var name = (document.getElementById('docFieldName')?.innerText || '').trim();
-                var jobTitle = (document.getElementById('docFieldTitle')?.innerText || '').trim();
-                var summary = (document.getElementById('docFieldSummary')?.innerText || '').trim();
+                var jobTitle = (document.getElementById('inputJobTitle')?.value || document.getElementById('docFieldTitle')?.innerText || '').trim();
+                var summary = (document.getElementById('inputSummary')?.value || document.getElementById('docFieldSummary')?.innerText || '').trim();
                 var experience = (document.getElementById('bulletPoints')?.value || '').trim();
 
                 var targetSection = 'summary';
                 var targetText = summary;
-                if (/bullet|experience|work|quantify|rewrite/i.test(promptText)) {
+                if (/summary/i.test(promptText)) {
+                  targetSection = 'summary';
+                  targetText = summary;
+                } else if (/bullet|experience|work|quantify/i.test(promptText)) {
                   targetSection = 'experience';
                   targetText = experience;
                 } else if (/skill/i.test(promptText)) {
@@ -1483,7 +1493,13 @@
                   let rewrittenText = '';
                   if (optResp.ok) {
                     const optData = await optResp.json();
-                    rewrittenText = optData.optimizedText || optData.optimizedBulletPoints || '';
+                    if (targetSection === 'summary') {
+                      rewrittenText = optData.optimizedText || optData.optimizedBulletPoints || '';
+                      // Clean up summary paragraph (strip bullet points if any)
+                      rewrittenText = rewrittenText.replace(/^[\s•\-\*]+/gm, '').replace(/\s+/g, ' ').trim();
+                    } else {
+                      rewrittenText = optData.optimizedBulletPoints || optData.optimizedText || '';
+                    }
                   }
 
                   if (loadingDiv && loadingDiv.parentNode) {
@@ -1494,14 +1510,12 @@
                     // Update document section directly
                     if (targetSection === 'summary') {
                       const sumEl = document.getElementById('docFieldSummary');
-                      if (sumEl) {
-                        sumEl.innerText = rewrittenText;
-                        if (typeof fireInputEvent === 'function') fireInputEvent(sumEl);
-                        else {
-                          sumEl.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                        if (typeof showToast === 'function') showToast('Professional Summary rewritten & optimized with AI!', 'success');
-                      }
+                      const inputSum = document.getElementById('inputSummary');
+                      if (sumEl) sumEl.innerText = rewrittenText;
+                      if (inputSum) inputSum.value = rewrittenText;
+                      if (typeof syncLivePreview === 'function') syncLivePreview();
+                      if (typeof autoSaveFormFields === 'function') autoSaveFormFields();
+                      if (typeof showToast === 'function') showToast('Professional Summary rewritten & optimized with AI!', 'success');
                     } else if (targetSection === 'experience') {
                       const expEl = document.getElementById('bulletPoints');
                       if (expEl) {
@@ -1512,7 +1526,7 @@
                       }
                     }
 
-                    appendAiMsg(`<b>AI Rewritten Content:</b><br>${escapeHtml(rewrittenText).replace(/\n/g, '<br>')}<br><br><i>✓ Applied directly to your resume.</i>`);
+                    appendAiMsg('<b>AI Rewritten Content:</b><br>' + escapeHtml(rewrittenText).replace(/\n/g, '<br>') + '<br><br><i>✓ Applied directly to your resume.</i>', true);
                   } else {
                     // Fallback to chat advice if endpoint returned no text
                     const chatResp = await fetch('/api/ats-chat', {
@@ -1533,7 +1547,7 @@
                   if (loadingDiv && loadingDiv.parentNode) {
                     loadingDiv.parentNode.removeChild(loadingDiv);
                   }
-                  appendAiMsg(`<b>AI Advice for "${escapeHtml(promptText)}":</b><br>• Focus on quantified outcomes: Add metrics (%, $, numbers) to each experience bullet.<br>• Use industry-standard terms matching target job descriptions.`);
+                  appendAiMsg('<b>AI Advice for "' + escapeHtml(promptText) + '":</b><br>• Focus on quantified outcomes: Add metrics (%, $, numbers) to each experience bullet.<br>• Use industry-standard terms matching target job descriptions.', true);
                 }
               };
 
@@ -1554,12 +1568,13 @@
                 area.appendChild(div);
                 area.scrollTop = area.scrollHeight;
               }
-              function appendAiMsg(text) {
+              function appendAiMsg(text, isHtml) {
                 var area = document.getElementById('aiChatMessages');
                 if (!area) return;
                 var div = document.createElement('div');
                 div.className = 'ai-msg from-ai';
-                div.innerHTML = '<div class="ai-msg-meta">AI Copilot</div>' + escapeHtml(text).replace(/\n/g,'<br>');
+                var contentHtml = isHtml ? text : escapeHtml(text).replace(/\n/g, '<br>');
+                div.innerHTML = '<div class="ai-msg-meta">AI Copilot</div>' + contentHtml;
                 area.appendChild(div);
                 area.scrollTop = area.scrollHeight;
               }
