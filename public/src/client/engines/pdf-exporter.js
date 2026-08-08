@@ -146,11 +146,82 @@ class PdfExporter {
       background: #ffffff !important;
       font-family: ${styles.bodyFont};
     }
+    .paper-candidate-header {
+      margin-bottom: 10px !important;
+    }
+    .paper-candidate-name {
+      font-size: 18pt !important;
+      font-weight: 700 !important;
+      line-height: 1.2 !important;
+      color: #111827 !important;
+    }
+    .paper-candidate-role {
+      font-size: 11pt !important;
+      font-weight: 600 !important;
+      color: #4f46e5 !important;
+      margin-top: 2px !important;
+    }
+    .paper-contact-row {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      gap: 3px 8px !important;
+      margin-top: 6px !important;
+    }
+    .contact-chip {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 3px !important;
+      font-size: 8.5pt !important;
+      color: #374151 !important;
+      white-space: nowrap !important;
+    }
+    .contact-chip svg,
+    .contact-chip svg.feather,
+    .contact-chip i {
+      width: 10px !important;
+      height: 10px !important;
+      max-width: 10px !important;
+      max-height: 10px !important;
+      stroke-width: 2.2 !important;
+      stroke: #4b5563 !important;
+      fill: none !important;
+      display: inline-block !important;
+      vertical-align: middle !important;
+      flex-shrink: 0 !important;
+    }
+    .contact-divider {
+      color: #9ca3af !important;
+      font-size: 8.5pt !important;
+      margin: 0 1px !important;
+    }
     @media print {
+
       html, body {
         padding: 0 !important;
         margin: 0 !important;
         background: #ffffff !important;
+        /* Offline fallback: if Google Fonts (${styles.fontLink}) fails to
+           load, the browser will cascade to these system fonts instead of
+           falling back all the way to Times New Roman (browser default).
+           The font stacks below mirror the web font choices:
+             - inter-jakarta  → Arial, Helvetica, sans-serif
+             - roboto-sans    → Arial, Helvetica, sans-serif
+             - georgia-serif  → Georgia, 'Times New Roman', serif        */
+        font-family: ${styles.bodyFont}, Arial, Helvetica, sans-serif !important;
+        font-size: 9.5pt !important;
+        line-height: 1.55 !important;
+        color: #1a1a2e !important;
+      }
+      .preview-paper-sheet {
+        font-family: ${styles.bodyFont}, Arial, Helvetica, sans-serif !important;
+      }
+      .doc-name,
+      .section-title,
+      .resume-name,
+      .tailored-name {
+        /* Heading font with same offline-safe fallback chain */
+        font-family: ${styles.headingFont}, Arial, Helvetica, sans-serif !important;
       }
     }
   </style>
