@@ -13,8 +13,17 @@
       "dest": "/api/$1"
     },
     {
-      "src": "/((?!api/).*)",
+      "src": "/frontend/(.*)",
+      "dest": "/frontend/$1"
+    },
+    {
+      "src": "/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|webp|avif|map))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
 }
+
