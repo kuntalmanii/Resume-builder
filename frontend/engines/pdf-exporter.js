@@ -117,8 +117,6 @@ class PdfExporter {
     ${styles.pageSizeCss}
     *, *::before, *::after {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
@@ -126,96 +124,153 @@ class PdfExporter {
       background: #ffffff !important;
       color: #1a1a2e !important;
       font-family: ${styles.bodyFont};
-      font-size: 9.5pt;
+      font-size: 10pt;
       line-height: 1.55;
       padding: 0 !important;
       margin: 0 !important;
     }
+
+    /* ── Paper shell: match on-screen preview exactly ── */
     .preview-paper-sheet {
       box-shadow: none !important;
       border: none !important;
+      border-radius: 0 !important;
       width: 100% !important;
       max-width: 100% !important;
-      padding: 0 !important;
+      min-height: unset !important;
+      padding: 8mm 10mm !important;   /* preserve internal whitespace */
       margin: 0 !important;
       background: #ffffff !important;
       font-family: ${styles.bodyFont};
+      display: block !important;
+      transition: none !important;
+      transform: none !important;
     }
+    .preview-paper-sheet:hover {
+      transform: none !important;
+    }
+
+    /* ── Candidate header ── */
     .paper-candidate-header {
-      margin-bottom: 10px !important;
+      margin-bottom: 12px !important;
+      padding-bottom: 10px !important;
+      border-bottom: 2px solid #111 !important;
+      text-align: left !important;
     }
-    .paper-candidate-name {
-      font-size: 18pt !important;
+    .paper-candidate-name,
+    .doc-name-field {
+      font-family: ${styles.headingFont}, Arial, sans-serif !important;
+      font-size: 22px !important;       /* matches .paper-candidate-name base rule */
       font-weight: 700 !important;
-      line-height: 1.2 !important;
-      color: #111827 !important;
+      color: #111 !important;
+      letter-spacing: -0.03em !important;
+      line-height: 1.15 !important;
+      text-transform: uppercase !important;
     }
-    .paper-candidate-role {
-      font-size: 11pt !important;
-      font-weight: 600 !important;
-      color: #4f46e5 !important;
-      margin-top: 2px !important;
+    .paper-candidate-role,
+    .doc-title-field {
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      color: #5E5E5E !important;
+      margin-top: 3px !important;
+      letter-spacing: normal !important;
     }
+
+    /* ── Contact row ── */
     .paper-contact-row {
       display: flex !important;
       flex-wrap: wrap !important;
       align-items: center !important;
-      gap: 3px 8px !important;
+      gap: 3px 10px !important;
       margin-top: 6px !important;
+      font-size: 9px !important;
+      color: #5E5E5E !important;
     }
+    .paper-contact-row a { color: inherit !important; text-decoration: none !important; }
     .contact-chip {
       display: inline-flex !important;
       align-items: center !important;
       gap: 3px !important;
-      font-size: 8.5pt !important;
+      font-size: 9px !important;
       color: #374151 !important;
       white-space: nowrap !important;
     }
-    .contact-chip svg,
-    .contact-chip svg.feather,
-    .contact-chip i {
-      width: 10px !important;
-      height: 10px !important;
-      max-width: 10px !important;
-      max-height: 10px !important;
-      stroke-width: 2.2 !important;
-      stroke: #4b5563 !important;
-      fill: none !important;
-      display: inline-block !important;
-      vertical-align: middle !important;
-      flex-shrink: 0 !important;
+    .contact-chip svg, .contact-chip svg.feather, .contact-chip i {
+      width: 9px !important; height: 9px !important;
+      stroke-width: 2 !important; stroke: #4b5563 !important;
+      fill: none !important; display: inline-block !important;
+      vertical-align: middle !important; flex-shrink: 0 !important;
     }
-    .contact-divider {
-      color: #9ca3af !important;
-      font-size: 8.5pt !important;
-      margin: 0 1px !important;
-    }
-    @media print {
+    .contact-divider { color: #9ca3af !important; margin: 0 1px !important; }
 
+    /* ── Sections: compact padding matching on-screen preview ── */
+    .paper-section,
+    .doc-section-block {
+      padding: 10px 0 !important;      /* was 32px — the main gap culprit */
+      margin-bottom: 0 !important;
+      border-bottom: 1px solid rgba(0,0,0,0.06) !important;
+      break-inside: avoid !important;
+      transition: none !important;
+      opacity: 1 !important;
+      filter: none !important;
+    }
+    .paper-section:first-child,
+    .doc-section-block:first-child { padding-top: 0 !important; }
+    .paper-section:last-child,
+    .doc-section-block:last-child { border-bottom: none !important; padding-bottom: 0 !important; }
+
+    /* ── Section titles ── */
+    .paper-section-title,
+    .doc-section-label {
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      font-size: 8.5px !important;
+      font-weight: 700 !important;
+      color: #111 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.1em !important;
+      margin-bottom: 6px !important;
+      padding-bottom: 3px !important;
+      border-bottom: 1px solid #ECE8E1 !important;
+      user-select: none !important;
+    }
+    .doc-section-label::after { display: none !important; }
+    .section-accent-bar {
+      width: 12px !important; height: 2px !important;
+      background: var(--accent, #C98B4A) !important;
+      border-radius: 1px !important; flex-shrink: 0 !important;
+    }
+
+    /* ── Body text ── */
+    .section-content, .exp-list, .exp-list li, .doc-field,
+    .doc-bullet-text, .paper-section p {
+      font-size: 9.5px !important;
+      color: #333 !important;
+      line-height: 1.55 !important;
+      font-family: ${styles.bodyFont}, Arial, sans-serif !important;
+    }
+    .exp-list { list-style: disc !important; padding-left: 14px !important; }
+    .exp-list li { margin-bottom: 2px !important; }
+
+    /* ── Hide all editor-only chrome ── */
+    .doc-section-hover-actions, .doc-sha-btn,
+    .doc-skill-suggestion-chip, [contenteditable]:empty::before { display: none !important; }
+
+    /* ── Print media block ── */
+    @media print {
       html, body {
-        padding: 0 !important;
-        margin: 0 !important;
-        background: #ffffff !important;
-        /* Offline fallback: if Google Fonts (${styles.fontLink}) fails to
-           load, the browser will cascade to these system fonts instead of
-           falling back all the way to Times New Roman (browser default).
-           The font stacks below mirror the web font choices:
-             - inter-jakarta  → Arial, Helvetica, sans-serif
-             - roboto-sans    → Arial, Helvetica, sans-serif
-             - georgia-serif  → Georgia, 'Times New Roman', serif        */
         font-family: ${styles.bodyFont}, Arial, Helvetica, sans-serif !important;
-        font-size: 9.5pt !important;
+        font-size: 10pt !important;
         line-height: 1.55 !important;
         color: #1a1a2e !important;
+        padding: 0 !important; margin: 0 !important;
+        background: #ffffff !important;
       }
       .preview-paper-sheet {
         font-family: ${styles.bodyFont}, Arial, Helvetica, sans-serif !important;
       }
-      .doc-name,
-      .section-title,
-      .resume-name,
-      .tailored-name {
-        /* Heading font with same offline-safe fallback chain */
+      .paper-candidate-name, .doc-name-field {
         font-family: ${styles.headingFont}, Arial, Helvetica, sans-serif !important;
       }
     }
