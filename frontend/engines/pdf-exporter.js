@@ -155,7 +155,7 @@ class PdfExporter {
       margin-bottom: 12px !important;
       padding-bottom: 10px !important;
       border-bottom: 2px solid #111 !important;
-      text-align: left !important;
+      text-align: center !important;
     }
     .paper-candidate-name,
     .doc-name-field {
@@ -166,6 +166,7 @@ class PdfExporter {
       letter-spacing: -0.03em !important;
       line-height: 1.15 !important;
       text-transform: uppercase !important;
+      text-align: center !important;
     }
     .paper-candidate-role,
     .doc-title-field {
@@ -174,6 +175,7 @@ class PdfExporter {
       color: #5E5E5E !important;
       margin-top: 3px !important;
       letter-spacing: normal !important;
+      text-align: center !important;
     }
 
     /* ── Contact row ── */
@@ -181,6 +183,7 @@ class PdfExporter {
       display: flex !important;
       flex-wrap: wrap !important;
       align-items: center !important;
+      justify-content: center !important;
       gap: 3px 10px !important;
       margin-top: 6px !important;
       font-size: 9px !important;
