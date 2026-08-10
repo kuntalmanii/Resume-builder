@@ -449,6 +449,31 @@ const server = http.createServer((req, res) => {
   const pathname = parsedUrl.pathname;
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
+  // ── API Router ──
+  const API_ROUTES = new Set([
+    '/api/optimize-resume',
+    '/api/parse-resume',
+    '/api/ats-analyze',
+    '/api/analyze',
+    '/api/analyze-ats',
+    '/api/ats-chat',
+    '/api/generate-tailored-resume',
+    '/api/login'
+  ]);
+
+  if (pathname.startsWith('/api/')) {
+    if (!API_ROUTES.has(pathname)) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: `API route '${pathname}' not found` }));
+      return;
+    }
+    if (req.method !== 'POST') {
+      res.writeHead(405, { 'Content-Type': 'application/json', 'Allow': 'POST, OPTIONS' });
+      res.end(JSON.stringify({ error: `Method ${req.method} Not Allowed on ${pathname}` }));
+      return;
+    }
+  }
+
   if (req.method === 'POST' && pathname === '/api/optimize-resume') {
     (async () => {
       try {
