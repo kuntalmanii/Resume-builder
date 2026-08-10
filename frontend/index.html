@@ -1293,10 +1293,14 @@
                 syncSkillsToTagSystem();
               };
               function syncSkillsToTagSystem() {
-                // Sync to existing skill tags container text so JS live-sync picks it up
+                // Directly update the preview so Technical Expertise always reflects docSkills
+                var previewSkillsEl = document.getElementById('previewSkills');
+                if (previewSkillsEl) {
+                  previewSkillsEl.textContent = docSkills.join(', ');
+                }
+                // Also attempt to trigger the legacy skill system (for ATS analyzer etc.)
                 var skillInput = document.getElementById('skillInputField');
                 if (skillInput) {
-                  // Trigger the existing skill system to update previewSkills
                   skillInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 updateAutosave();
@@ -1318,10 +1322,12 @@
                   var pills = originalPillsContainer.querySelectorAll('.skill-tag');
                   docSkills = Array.from(pills).map(function(p){ return p.dataset.skill || p.textContent.trim().replace('×','').trim(); });
                   renderDocSkills();
+                  syncSkillsToTagSystem();
                 });
                 pillObserver.observe(originalPillsContainer, { childList: true, subtree: true });
               }
               renderDocSkills();
+              syncSkillsToTagSystem();
 
               /* ── 7. SECTION NAV ── */
               window.editorNavTo = function(sectionId, navItem) {
