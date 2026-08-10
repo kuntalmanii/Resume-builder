@@ -252,7 +252,8 @@ class JobTracker {
         app.title.toLowerCase().includes(this.searchQuery)   ||
         (app.location || '').toLowerCase().includes(this.searchQuery);
       const matchStage = this.stageFilter === 'all' || app.stage === this.stageFilter ||
-        (this.stageFilter === 'interview' && app.stage === 'interviewing');
+        (this.stageFilter === 'interview' && app.stage === 'interviewing') ||
+        (this.stageFilter === 'interviewing' && app.stage === 'interview');
       return matchSearch && matchStage;
     });
   }
@@ -261,7 +262,7 @@ class JobTracker {
 
   _updateKPIs() {
     const apps       = this.applications;
-    const interviews = apps.filter(a => a.stage === 'interviewing').length;
+    const interviews = apps.filter(a => a.stage === 'interviewing' || a.stage === 'interview').length;
     const offers     = apps.filter(a => a.stage === 'offer').length;
     const avgAts     = apps.length
       ? Math.round(apps.reduce((s, a) => s + (a.atsScore || 0), 0) / apps.length)
@@ -370,7 +371,7 @@ class JobTracker {
     const apps = this._filteredApps();
 
     container.innerHTML = COLUMNS.map(col => {
-      const colApps = apps.filter(a => a.stage === col.id);
+      const colApps = apps.filter(a => a.stage === col.id || (col.id === 'interviewing' && a.stage === 'interview') || (col.id === 'interview' && a.stage === 'interviewing'));
       return `
         <div class="kanban-column" data-stage="${col.id}"
           style="background:var(--bg-card,#1e1e2e);border:1px solid var(--border,#2d2d44);

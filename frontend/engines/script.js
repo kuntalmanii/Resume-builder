@@ -4262,7 +4262,7 @@ Key Requirements:
       company: 'Microsoft',
       title: 'Senior Frontend Engineer',
       stage: 'interview',
-      salary: '₹35,00,000 - ₹45,00,000',
+      salary: '$180k - $220k',
       date: '2026-07-20',
       location: 'Redmond, WA (Hybrid)',
       atsScore: 94,
@@ -4276,21 +4276,21 @@ Key Requirements:
       company: 'Stripe',
       title: 'Staff Systems Architect',
       stage: 'offer',
-      salary: '₹45,00,000 - ₹60,00,000',
+      salary: '$220k - $270k',
       date: '2026-07-15',
       location: 'Remote',
       atsScore: 91,
       tags: ['Go', 'Microservices', 'Distributed Systems', 'API'],
       url: 'https://stripe.com/jobs/staff-architect',
       jdText: 'Architect resilient payment APIs, microservices, distribution protocols, latency reduction, and high availability systems.',
-      notes: 'Written offer received! Base: ₹50 LPA + Equity. Reviewing offer letter details before deadline.'
+      notes: 'Written offer received! Base: $240k + Equity. Reviewing offer letter details before deadline.'
     },
     {
       id: 'job-103',
       company: 'OpenAI',
       title: 'Full Stack AI Platform Lead',
       stage: 'applied',
-      salary: '₹40,00,000 - ₹55,00,000',
+      salary: '$200k - $250k',
       date: '2026-07-22',
       location: 'San Francisco, CA',
       atsScore: 88,
@@ -4304,7 +4304,7 @@ Key Requirements:
       company: 'Google',
       title: 'Senior Software Engineer (Cloud)',
       stage: 'interview',
-      salary: '₹38,00,000 - ₹50,00,000',
+      salary: '$190k - $240k',
       date: '2026-07-18',
       location: 'Sunnyvale, CA',
       atsScore: 95,
@@ -4318,7 +4318,7 @@ Key Requirements:
       company: 'Meta',
       title: 'UI Infrastructure Engineer',
       stage: 'wishlist',
-      salary: '₹36,00,000 - ₹48,00,000',
+      salary: '$175k - $215k',
       date: '2026-07-24',
       location: 'Menlo Park, CA',
       atsScore: 85,
@@ -4466,7 +4466,7 @@ Key Requirements:
 
       if (!colCardsList) return;
 
-      const stageJobs = filteredList.filter(j => j.stage === stage);
+      const stageJobs = filteredList.filter(j => j.stage === stage || (stage === 'interview' && j.stage === 'interviewing') || (stage === 'interviewing' && j.stage === 'interview'));
       if (countEl) countEl.textContent = stageJobs.length;
 
       colCardsList.innerHTML = '';
