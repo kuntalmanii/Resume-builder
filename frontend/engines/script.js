@@ -444,6 +444,12 @@ document.addEventListener('DOMContentLoaded', () => {
         authToggleQuestion.textContent = 'Already have an account?';
         authToggleBtn.textContent      = 'Sign In';
         if (passwordStrengthWrapper) passwordStrengthWrapper.style.display = 'flex';
+
+        // Clear all form fields when toggling to Sign Up mode for a fresh new account creation
+        if (authEmailInput) authEmailInput.value = '';
+        if (authPasswordInput) authPasswordInput.value = '';
+        const authNameInput = document.getElementById('authName');
+        if (authNameInput) authNameInput.value = '';
       } else {
         authTitle.textContent     = 'Welcome back';
         authSubtitle.textContent  = 'Sign in to your ResuAI workspace to access your resumes & ATS metrics.';
@@ -452,6 +458,14 @@ document.addEventListener('DOMContentLoaded', () => {
         authToggleQuestion.textContent = "Don't have an account?";
         authToggleBtn.textContent      = 'Sign Up';
         if (passwordStrengthWrapper) passwordStrengthWrapper.style.display = 'none';
+
+        // Restore remembered email if returning to Sign In mode
+        try {
+          const rememberedEmail = localStorage.getItem('resuai_remember_email');
+          if (rememberedEmail && authEmailInput) {
+            authEmailInput.value = rememberedEmail;
+          }
+        } catch(e) {}
       }
       if (window.feather) feather.replace();
     });
