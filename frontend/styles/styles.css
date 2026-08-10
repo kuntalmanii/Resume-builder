@@ -4725,6 +4725,8 @@ i[data-feather] svg { width: 1em; height: 1em; }
   margin: 0;
   border-radius: 6px;
   transition: all 0.2s;
+}
+
 /* ── Real-Time Resume Builder Field Validation Styles (Senior Web Developer UI/UX) ── */
 .field-invalid {
   border-color: #EF4444 !important;
