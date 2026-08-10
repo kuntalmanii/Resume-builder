@@ -488,29 +488,37 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const { jobTitle, experienceText, skills, geminiModel, sensitivity } = await readJsonBody(req, res);
         log('INFO', `Received /api/optimize-resume request from IP ${clientIp}`);
 
-        if (GEMINI_API_KEY) {
-          try {
-            const result = await callGeminiOptimize(jobTitle, experienceText, skills, geminiModel, sensitivity);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(result));
-            return;
-          } catch (err) {
-            log('WARN', `Gemini Optimize error on server, using fallback: ${err.message}`);
-          }
+        // Delegate to the standalone handler (supports both old 'experienceText' and new 'text'/'section'/'action' schema)
+        const optimizeResumeHandler = require('./api/optimize-resume.js');
+        const body = await readJsonBody(req, res);
+
+        // Bridge: if frontend sends 'experienceText' (old field), map to 'text' for the handler
+        if (body.experienceText && !body.text) {
+          body.text = body.experienceText;
         }
 
-        const fallback = runServerFallbackOptimization(jobTitle, experienceText);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(fallback));
+        req.body = body;
+
+        const resMock = {
+          _statusCode: 200, _headers: {}, _ended: false,
+          status(code) { this._statusCode = code; return this; },
+          json(data) {
+            if (this._ended) return; this._ended = true;
+            res.writeHead(this._statusCode, { 'Content-Type': 'application/json', ...this._headers });
+            res.end(JSON.stringify(data));
+          },
+          setHeader(k, v) { this._headers[k] = v; },
+          end() { if (!this._ended) { this._ended = true; res.writeHead(this._statusCode); res.end(); } }
+        };
+
+        await optimizeResumeHandler(req, resMock);
       } catch (err) {
         log('ERROR', `Optimize resume handler catch error: ${err.message}`);
         if (!res.headersSent) {
-          const fallback = runServerFallbackOptimization('', '');
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(fallback));
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Internal server error during resume optimization.' }));
         }
       }
     })();
@@ -609,6 +617,11 @@ const server = http.createServer((req, res) => {
         }
 
         const atsChatHandler = require('./api/ats-chat.js');
+
+        // Pre-parse body so req.body is populated before the handler runs
+        const body = await readJsonBody(req, res);
+        req.body = body;
+
         await atsChatHandler(req, res);
       } catch (err) {
         log('ERROR', `ATS Chat route error: ${err.message}`);
