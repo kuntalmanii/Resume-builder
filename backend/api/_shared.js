@@ -32,7 +32,7 @@ function sanitizeInputText(str) {
     .trim();
 }
 
-function setCorsHeaders(res, req) {
+function setCorsHeaders(req, res) {
   if (!res || typeof res.setHeader !== 'function') return;
   const reqOrigin = req && req.headers ? req.headers.origin : null;
   const allowedOrigin = process.env.ALLOWED_ORIGIN || reqOrigin || '*';

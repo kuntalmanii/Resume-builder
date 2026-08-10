@@ -95,7 +95,7 @@ function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeTe
 }
 
 module.exports = async (req, res) => {
-  setCorsHeaders(res, req);
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return sendResponse(res, 200, { status: 'OK' });

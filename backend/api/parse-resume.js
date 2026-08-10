@@ -7,13 +7,8 @@
 'use strict';
 
 const https = require('https');
-const { GEMINI_MODELS } = require('./_shared');
+const { GEMINI_MODELS, setCorsHeaders } = require('./_shared');
 
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
 
 function makeGeminiRequest(model, prompt, apiKey) {
   return new Promise((resolve, reject) => {
@@ -166,7 +161,7 @@ function heuristicParse(text) {
 }
 
 module.exports = async function parseResumeHandler(req, res) {
-  setCorsHeaders(res);
+  setCorsHeaders(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
