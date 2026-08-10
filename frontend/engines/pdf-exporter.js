@@ -79,7 +79,7 @@ class PdfExporter {
   }
 
   generatePrintPdf(targetEl = null) {
-    const resumeDoc = targetEl || document.getElementById('printableResumeDoc') || document.getElementById('tailoredResumeDoc');
+    const resumeDoc = targetEl || document.getElementById('printableResumeDoc');
     if (!resumeDoc) {
       window.print();
       return;

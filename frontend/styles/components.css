@@ -677,21 +677,6 @@ select.form-input {
 }
 .recommendation-card strong { color: var(--text-primary); }
 
-/* Tailored resume CTA */
-.tailored-resume-cta {
-  background: var(--bg-white); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: var(--sp-6);
-}
-.cta-inner { display: flex; align-items: center; gap: var(--sp-5); }
-.cta-icon {
-  width: 48px; height: 48px; background: var(--accent-light);
-  border-radius: var(--r-md); display: flex; align-items: center;
-  justify-content: center; flex-shrink: 0;
-}
-.cta-icon svg { width: 22px; height: 22px; color: var(--accent); }
-.cta-text { flex: 1; }
-.cta-text h4 { font-size: var(--text-md); font-weight: var(--fw-semibold); color: var(--text-primary); margin-bottom: var(--sp-1); }
-.cta-text p { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.5; }
 
 
 /* ─────────────────────────────────────────────────────────────
