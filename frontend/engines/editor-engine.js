@@ -87,7 +87,7 @@ class EditorEngine {
 
   /* ------ Real-Time Input Field Validation ------ */
   validateField(el) {
-    if (!el) return true;
+    if (!el || el.closest('#authForm')) return true;
 
     const val = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
       ? el.value.trim()
