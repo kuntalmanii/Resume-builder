@@ -546,7 +546,8 @@ const server = http.createServer((req, res) => {
             res.writeHead(this._statusCode, { 'Content-Type': 'application/json', ...this._headers });
             res.end(JSON.stringify(data));
           },
-          setHeader(k, v) { this._headers[k] = v; }
+          setHeader(k, v) { this._headers[k] = v; },
+          end() { if (!this._ended) { this._ended = true; res.writeHead(this._statusCode); res.end(); } }
         };
         await parseResumeHandler(req, resMock);
       } catch (err) {
@@ -590,13 +591,13 @@ const server = http.createServer((req, res) => {
             res.writeHead(this._statusCode, { 'Content-Type': 'application/json', ...this._headers });
             res.end(JSON.stringify(data));
           },
-          setHeader(k, v) { this._headers[k] = v; }
+          setHeader(k, v) { this._headers[k] = v; },
+          end() { if (!this._ended) { this._ended = true; res.writeHead(this._statusCode); res.end(); } }
         };
 
         await atsAnalyzeHandler(req, resMock);
       } catch (err) {
         log('ERROR', `ATS Analyze handler catch error: ${err.message}`);
-        const atsAnalyzeHandler = require('./api/ats-analyze.js');
         if (!res.headersSent) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Internal server error' }));
@@ -644,7 +645,9 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const { jdText = '', resumeText = '', geminiModel = '' } = await readJsonBody(req, res);
+        const { jdText: rawJd = '', resumeText: rawResume = '', geminiModel = '' } = await readJsonBody(req, res);
+        const jdText     = sanitizeInputText(rawJd);
+        const resumeText = sanitizeInputText(rawResume);
         log('INFO', `Received /api/generate-tailored-resume request from IP ${clientIp}`);
 
         if (GEMINI_API_KEY) {
@@ -676,6 +679,12 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && pathname === '/api/login') {
     (async () => {
       try {
+        if (isRateLimited(clientIp)) {
+          log('WARN', `Rate limit exceeded for IP: ${clientIp} on /api/login`);
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
+          return;
+        }
         const { email } = await readJsonBody(req, res);
         const emailToUse = (email && email.trim()) ? email.trim() : 'developer@resuai.dev';
         const token = 'token_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);

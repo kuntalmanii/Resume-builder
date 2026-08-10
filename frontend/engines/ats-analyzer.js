@@ -137,13 +137,13 @@ class AtsAnalyzer {
     }
 
     if (!jdText) {
-      if (typeof showToast === 'function') showToast('Please paste a Job Description or select a preset role above before scanning.', 'warn');
+    if (typeof showToast === 'function') showToast('Please paste a Job Description or select a preset role above before scanning.', 'warning');
       this.isScanning = false;
       return;
     }
 
-    if (!resumeContent) {
-      if (typeof showToast === 'function') showToast('No resume content found. Please build your resume or upload a file first.', 'warn');
+  if (!resumeContent) {
+      if (typeof showToast === 'function') showToast('No resume content found. Please build your resume or upload a file first.', 'warning');
       this.isScanning = false;
       return;
     }

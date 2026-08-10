@@ -80,7 +80,9 @@ function heuristicParse(text) {
   const locMatch = text.match(/\b([A-Z][a-zA-Z\s]{2,20},\s*(?:[A-Z]{2}|[A-Za-z]{2,20}))\b/);
   let location = locMatch ? locMatch[1].trim() : '';
   if (location) {
-    location = location.replace(/^[A-Z][a-z]+\s+(?=[A-Z][a-z]+,\s*)/, '').trim();
+    // Only strip a leading word if it looks like a noise word (e.g. "Located in San Francisco")
+    // Do NOT strip the first word of legitimate two-word city names like "San Francisco" or "New York"
+    location = location.replace(/^(?:located\s+in|city\s*[:=]|location\s*[:=])\s*/i, '').trim();
   }
 
   // Name: first non-empty line that isn't contact/location/section heading

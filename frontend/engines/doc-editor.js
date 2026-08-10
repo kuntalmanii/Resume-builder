@@ -498,7 +498,7 @@
           if (expEl) {
             expEl.value = rewrittenText;
             expEl.dispatchEvent(new Event('input', { bubbles: true }));
-            if (typeof window.setDocBullets === 'function') window.setDocBullets(rewrittenText);
+      if (typeof window.setDocBullets === 'function') window.setDocBullets(rewrittenText.split('\n'));
             if (typeof showToast === 'function') showToast('Experience bullets rewritten with AI!', 'success');
           }
         } else if (targetSection === 'skills') {
