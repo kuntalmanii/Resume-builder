@@ -701,6 +701,10 @@
       ? document.getElementById('scoreNumber').textContent.replace('%', '')
       : '';
 
+    var lastResult      = window.atsLastResult || {};
+    var missingKeywords = Array.isArray(lastResult.missingKeywords) ? lastResult.missingKeywords : [];
+    var matchedKeywords = Array.isArray(lastResult.matchedKeywords) ? lastResult.matchedKeywords : [];
+
     var FALLBACK_MSG =
       '<b>ATS Career Coach Advice:</b><br>' +
       'To maximize your match rate, ensure your Work Experience includes quantified metrics ' +
@@ -710,7 +714,15 @@
       var response = await fetch('/api/ats-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: text, jobTitle, jobDescription: jdText, resumeText, currentScore })
+        body: JSON.stringify({
+          userMessage: text,
+          jobTitle: jobTitle,
+          jobDescription: jdText,
+          resumeText: resumeText,
+          currentScore: currentScore,
+          missingKeywords: missingKeywords,
+          matchedKeywords: matchedKeywords
+        })
       });
       loadingMsg.innerHTML = response.ok
         ? ((await response.json()).reply || 'Here is how you can improve your resume...')

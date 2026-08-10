@@ -66,15 +66,21 @@ function callGeminiChat(apiKey, prompt, modelIndex = 0) {
   });
 }
 
-function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeText) {
+function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeText, missingKeywords = [], matchedKeywords = [], currentScore = '') {
   const query = userMessage.toLowerCase();
 
-  if (query.includes('lose points') || query.includes('why') || query.includes('gap') || query.includes('score')) {
-    return `<b>ATS Score Analysis Breakdown:</b><br>
-    Points are typically deducted due to:
-    <br>1. <b>Missing Core Skills</b>: Key terms present in the target job description that are absent from your resume.
-    <br>2. <b>Lack of Quantified Impact</b>: Bullet points without metrics (e.g. %, $, numbers, or scale).
-    <br>3. <b>Un-anchored Keywords</b>: Listing technical skills in a skills block without demonstrating their application in your work experience.`;
+  if (query.includes('lose points') || query.includes('why') || query.includes('gap') || query.includes('score') || query.includes('missing')) {
+    const missingStr = (Array.isArray(missingKeywords) && missingKeywords.length > 0)
+      ? missingKeywords.join(', ')
+      : 'Key technical skills from job description';
+
+    return `<b>ATS Diagnostic Score Analysis:</b><br>
+    Your current ATS match score is <b>${currentScore ? currentScore + '%' : 'Pending'}</b>.<br><br>
+    <b>Primary Keyword Gaps Identified:</b><br>
+    The scanner found that your resume is missing these target keywords: <b>${missingStr}</b>.<br><br>
+    <b>How to fix this:</b><br>
+    1. Integrate 1-2 instances of <b>${missingKeywords.slice(0, 3).join(', ') || 'missing skills'}</b> directly into your Work Experience bullet points.<br>
+    2. Quantify achievements with metrics (e.g. <i>"Reduced API latency by 45% using ${missingKeywords[0] || 'target tech'}"</i>).`;
   }
 
   if (query.includes('workday') || query.includes('greenhouse') || query.includes('lever') || query.includes('taleo')) {
@@ -85,13 +91,18 @@ function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeTe
   }
 
   if (query.includes('add') || query.includes('how to') || query.includes('bullet')) {
-    const topic = userMessage.replace(/how to add|how do i add|add|to my resume/gi, '').trim() || 'Required Skill';
-    return `<b>Recommended Bullet Point for "${topic}":</b><br>
+    const targetSkill = (Array.isArray(missingKeywords) && missingKeywords.length > 0) ? missingKeywords[0] : 'Required Skill';
+    const topic = userMessage.replace(/how to add|how do i add|add|to my resume/gi, '').trim() || targetSkill;
+    return `<b>Recommended Impact Bullet Point for "${topic}":</b><br>
     <i>"Spearheaded enterprise implementation of <b>${topic}</b> across core application modules, optimizing workflow performance and achieving 99.9% system reliability."</i>`;
   }
 
+  const missingInfo = (Array.isArray(missingKeywords) && missingKeywords.length > 0)
+    ? `<br><br><b>Key Missing Keywords to Focus On:</b> <i>${missingKeywords.join(', ')}</i>`
+    : '';
+
   return `<b>ATS Career Coach Advice:</b><br>
-  For the target role <b>${jobTitle || 'Target Position'}</b>, focus on incorporating exact skill keywords from the job description into high-impact bullet points: <b>[Strong Action Verb] + [Context & Tech Stack] + [Quantified Metric]</b>.`;
+  For the target role <b>${jobTitle || 'Target Position'}</b> (Current Match: <b>${currentScore ? currentScore + '%' : 'Pending'}</b>), focus on incorporating exact skill keywords into high-impact bullet points: <b>[Strong Action Verb] + [Context & Tech Stack] + [Quantified Metric]</b>.${missingInfo}`;
 }
 
 module.exports = async (req, res) => {
@@ -119,7 +130,7 @@ module.exports = async (req, res) => {
       } catch (e) { body = {}; }
     }
 
-    const { userMessage, jobTitle, jobDescription, resumeText, currentScore } = body || {};
+    const { userMessage, jobTitle, jobDescription, resumeText, currentScore, missingKeywords, matchedKeywords } = body || {};
     const cleanMsg = sanitizeInputText(userMessage);
 
     if (!cleanMsg) {
@@ -129,24 +140,30 @@ module.exports = async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText);
+      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText, missingKeywords, matchedKeywords, currentScore);
       return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
     }
 
+    const missingStr = Array.isArray(missingKeywords) && missingKeywords.length ? missingKeywords.join(', ') : 'None detected';
+    const matchedStr = Array.isArray(matchedKeywords) && matchedKeywords.length ? matchedKeywords.join(', ') : 'None detected';
+
     const prompt = `You are an expert ATS (Applicant Tracking System) Career Coach and Executive Resume Auditor.
-Analyze the user's career question in the context of their target role and resume:
+Analyze the user's career question based on their exact ATS Diagnostic Analysis results:
 
 Target Job Title: "${jobTitle || 'Not specified'}"
 Current ATS Score: "${currentScore ? currentScore + '%' : 'Pending'}"
+Matched Keywords: "${matchedStr}"
+Missing Keywords: "${missingStr}"
 Job Description context: "${(jobDescription || '').slice(0, 1000)}"
 Candidate Resume context: "${(resumeText || '').slice(0, 1000)}"
 
 User Question: "${cleanMsg}"
 
 Instructions:
-- Provide a direct, highly practical, and actionable answer (2-4 concise paragraphs max).
-- Format your response using clean HTML tags (e.g. <b>, <i>, <br>, <ul>, <li>) so it renders beautifully in a chat box.
-- Give concrete bullet point examples or keyword positioning tips where relevant.`;
+- Provide a direct, highly practical answer grounded in their exact ATS scan analysis results above.
+- Specifically mention their missing keywords (${missingStr}) when answering questions about score improvements, point deductions, or bullet point enhancements.
+- Give concrete bullet point examples demonstrating how to weave missing keywords into high-impact accomplishments.
+- Format your response using clean HTML tags (<b>, <i>, <br>, <ul>, <li>).`;
 
     try {
       const geminiReply = await callGeminiChat(apiKey, prompt);
@@ -154,7 +171,7 @@ Instructions:
       return sendResponse(res, 200, { reply: cleanReply, source: 'gemini' });
     } catch (aiErr) {
       console.warn('Gemini chat API call failed, using fallback:', aiErr.message);
-      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText);
+      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText, missingKeywords, matchedKeywords, currentScore);
       return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
     }
 
