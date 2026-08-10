@@ -22,7 +22,7 @@ class CommandPalette {
       { id: 'nav-ats', group: 'Navigation', icon: '📊', title: 'ATS Analyzer Engine', desc: 'Real-time ATS score & keyword match diagnostic', action: () => CommandPalette.navigateToTab('ats-analyzer'), shortcut: '↵' },
       { id: 'nav-analytics', group: 'Navigation', icon: '📈', title: 'Score Analytics', desc: 'FAANG benchmark scores & keyword density', action: () => CommandPalette.navigateToTab('analytics'), shortcut: '↵' },
       { id: 'nav-tracker', group: 'Navigation', icon: '💼', title: 'Job Applications Tracker', desc: 'Kanban application pipeline manager', action: () => CommandPalette.navigateToTab('job-tracker'), shortcut: '↵' },
-      { id: 'nav-settings', group: 'Navigation', icon: '⚙️', title: 'System & Account Settings', desc: 'Platform configurations & candidate profile', action: () => CommandPalette.navigateToTab('settings'), shortcut: '↵' },
+
 
       // Quick Actions
       { id: 'act-pdf', group: 'Quick Actions', icon: '📥', title: 'Export ATS PDF', desc: 'Download high-resolution ATS resume PDF', action: () => CommandPalette.triggerExportPdf(), shortcut: '⌘P' },

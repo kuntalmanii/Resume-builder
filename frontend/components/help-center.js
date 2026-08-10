@@ -51,7 +51,7 @@ class HelpCenter {
         title: '🎨 Templates',
         articles: [
           { q: 'Which resume templates pass ATS parsers?', a: 'All ResuAI templates (FAANG Executive, Modern Minimalist, and Engineering Classic) follow strict 1-column single-flow typography rules guaranteed to parse perfectly in Taleo, Workday, and Greenhouse.' },
-          { q: 'Can I switch templates dynamically?', a: 'Yes! Select any template design token from the top bar or settings panel to reformat your document instantaneously.' }
+          { q: 'Can I switch templates dynamically?', a: 'Yes! Select any template design token from the top bar to reformat your document instantaneously.' }
         ]
       },
       {
@@ -79,14 +79,6 @@ class HelpCenter {
         ]
       },
       {
-        id: 'settings',
-        title: '⚙️ Settings',
-        articles: [
-          { q: 'Where are my AI API keys stored?', a: 'All API keys are encrypted locally inside your browser storage (localStorage). Keys are never transmitted to unverified servers.' },
-          { q: 'How do I toggle color themes?', a: 'Open Command Palette (⌘K) and select "Cycle Studio Color Theme" or toggle themes in System Settings.' }
-        ]
-      },
-      {
         id: 'faq',
         title: '❓ Frequently Asked Questions',
         articles: [
@@ -107,7 +99,7 @@ class HelpCenter {
         title: '💬 Contact & Support',
         articles: [
           { q: 'How do I get human developer support?', a: 'Email support@resuai.dev or launch the AI Copilot for live assistance with resume structuring.' },
-          { q: 'How do I report a bug?', a: 'Open System Settings $\\rightarrow$ Platform Diagnostics to submit logs directly to our core engineering team.' }
+          { q: 'How do I report a bug?', a: 'Email support@resuai.dev to submit logs directly to our core engineering team.' }
         ]
       }
     ];
