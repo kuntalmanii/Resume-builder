@@ -9,7 +9,7 @@
     "dev:watch": "node --watch backend/server.js"
   },
   "engines": {
-    "node": ">=18.x"
+    "node": "18.x"
   },
   "keywords": [
     "resume-builder",
