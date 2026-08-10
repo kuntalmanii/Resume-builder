@@ -94,7 +94,7 @@
   /* ── 4. BULLETS system ── */
   var docBullets = [];
 
-  function escapeHtml(str) {
+  function escapeHTML(str) {
     return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
@@ -137,7 +137,7 @@
       li.innerHTML =
         '<span class="doc-bullet-dot"></span>' +
         '<div class="doc-bullet-text" contenteditable="true" spellcheck="true" data-idx="' + idx + '" data-placeholder="Bullet point — use XYZ format: Achieved X by doing Y, resulting in Z metric">' +
-          escapeHtml(text) +
+          escapeHTML(text) +
         '</div>' +
         '<button class="doc-bullet-remove" data-idx="' + idx + '" title="Remove bullet">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
@@ -238,7 +238,7 @@
     docSkills.forEach(function (skill, idx) {
       var tag = document.createElement('span');
       tag.className = 'doc-skill-tag';
-      tag.innerHTML = escapeHtml(skill) + '<span class="doc-skill-tag-x" data-idx="' + idx + '">&times;</span>';
+      tag.innerHTML = escapeHTML(skill) + '<span class="doc-skill-tag-x" data-idx="' + idx + '">&times;</span>';
       wrapper.appendChild(tag);
     });
     wrapper.appendChild(addInput);
@@ -503,7 +503,7 @@
         }
         appendAiMsg(
           '<b>AI Rewritten Content:</b><br>' +
-          escapeHtml(rewrittenText).replace(/\n/g, '<br>') +
+          escapeHTML(rewrittenText).replace(/\n/g, '<br>') +
           '<br><br><i>✓ Applied directly to your resume.</i>',
           true
         );
@@ -526,7 +526,7 @@
     } catch (err) {
       if (loadingDiv && loadingDiv.parentNode) loadingDiv.parentNode.removeChild(loadingDiv);
       appendAiMsg(
-        '<b>AI Advice for "' + escapeHtml(promptText) + '":</b><br>' +
+        '<b>AI Advice for "' + escapeHTML(promptText) + '":</b><br>' +
         '• Focus on quantified outcomes: Add metrics (%, $, numbers) to each experience bullet.<br>' +
         '• Use industry-standard terms matching target job descriptions.',
         true
@@ -547,7 +547,7 @@
     if (!area) return;
     var div = document.createElement('div');
     div.className = 'ai-msg from-user';
-    div.innerHTML = '<div class="ai-msg-meta">YOU</div>' + escapeHtml(text);
+    div.innerHTML = '<div class="ai-msg-meta">YOU</div>' + escapeHTML(text);
     area.appendChild(div);
     area.scrollTop = area.scrollHeight;
   }
@@ -557,7 +557,7 @@
     if (!area) return;
     var div = document.createElement('div');
     div.className = 'ai-msg from-ai';
-    var contentHtml = isHtml ? text : escapeHtml(text).replace(/\n/g, '<br>');
+    var contentHtml = isHtml ? text : escapeHTML(text).replace(/\n/g, '<br>');
     div.innerHTML = '<div class="ai-msg-meta">AI Copilot</div>' + contentHtml;
     area.appendChild(div);
     area.scrollTop = area.scrollHeight;
