@@ -119,7 +119,14 @@ ResuAI/
 │   │   ├── help-center.js      # In-app help & documentation panel
 │   │   └── help-center.css
 │   └── styles/
-│       ├── styles.css          # Main stylesheet
+│       ├── styles.css          # Master bundle & @import manifest
+│       ├── variables.css       # Core variables & design tokens
+│       ├── layout.css          # App shell, navigation & layout
+│       ├── auth.css            # Authentication screens & components
+│       ├── components.css      # Shared UI controls, buttons & modals
+│       ├── job-tracker.css     # Job application pipeline styles
+│       ├── resume-editor.css   # Resume builder & live paper preview
+│       ├── ats-analyzer.css    # ATS diagnostic engine & audit workspace
 │       └── empty-states.css    # Empty state illustrations
 │
 ├── api/                        # Vercel serverless entry points (proxy → backend/api/)
