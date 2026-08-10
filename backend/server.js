@@ -690,7 +690,7 @@ const server = http.createServer((req, res) => {
   const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
   
   // Resolve target file path against root project directory
-  let filePath = safePath === '/'
+  let filePath = (safePath === '/' || safePath === '/index.html')
     ? path.join(rootDir, 'frontend', 'index.html')
     : path.join(rootDir, safePath);
 
