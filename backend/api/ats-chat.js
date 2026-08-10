@@ -72,37 +72,37 @@ function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeTe
   if (query.includes('lose points') || query.includes('why') || query.includes('gap') || query.includes('score') || query.includes('missing')) {
     const missingStr = (Array.isArray(missingKeywords) && missingKeywords.length > 0)
       ? missingKeywords.join(', ')
-      : 'Key technical skills from job description';
+      : 'Key skills mentioned in the job description';
 
-    return `<b>ATS Diagnostic Score Analysis:</b><br>
-    Your current ATS match score is <b>${currentScore ? currentScore + '%' : 'Pending'}</b>.<br><br>
-    <b>Primary Keyword Gaps Identified:</b><br>
-    The scanner found that your resume is missing these target keywords: <b>${missingStr}</b>.<br><br>
-    <b>How to fix this:</b><br>
-    1. Integrate 1-2 instances of <b>${missingKeywords.slice(0, 3).join(', ') || 'missing skills'}</b> directly into your Work Experience bullet points.<br>
-    2. Quantify achievements with metrics (e.g. <i>"Reduced API latency by 45% using ${missingKeywords[0] || 'target tech'}"</i>).`;
+    return `<b>Simple Resume Score Breakdown:</b><br>
+    Your current match score is <b>${currentScore ? currentScore + '%' : 'Pending'}</b>.<br><br>
+    <b>Main Missing Keywords:</b><br>
+    Your resume currently does not mention these key terms from the job posting: <b>${missingStr}</b>.<br><br>
+    <b>How to Improve:</b><br>
+    1. Add 1 or 2 of these skills (such as <b>${missingKeywords.slice(0, 3).join(', ') || 'the missing skills'}</b>) directly into your past job descriptions.<br>
+    2. Add clear results or numbers (for example: <i>"Improved project speed by 30% using ${missingKeywords[0] || 'the target skill'}"</i>).`;
   }
 
   if (query.includes('workday') || query.includes('greenhouse') || query.includes('lever') || query.includes('taleo')) {
-    return `<b>ATS Parser Optimization Tips:</b><br>
-    • <b>Workday & Taleo</b>: Rely on exact literal text matching. Ensure skill keywords match the target Job Description word-for-word.
-    • <b>Greenhouse & Lever</b>: Parse structured experience sections. Use standard headings (e.g. <i>Work Experience</i>, <i>Technical Skills</i>, <i>Education</i>).
-    • Avoid complex multi-column tables, text boxes, or embedded images that confuse parser trees.`;
+    return `<b>Easy Tips to Pass Resume Scanners:</b><br>
+    • <b>Use Exact Words</b>: Match the exact job titles and skills listed in the job description.<br>
+    • <b>Clear Headings</b>: Use simple, standard headings like <i>Work Experience</i>, <i>Skills</i>, and <i>Education</i>.<br>
+    • <b>Keep Format Simple</b>: Avoid tables, columns, text boxes, or graphics so automated scanners can read your text easily.`;
   }
 
   if (query.includes('add') || query.includes('how to') || query.includes('bullet')) {
     const targetSkill = (Array.isArray(missingKeywords) && missingKeywords.length > 0) ? missingKeywords[0] : 'Required Skill';
     const topic = userMessage.replace(/how to add|how do i add|add|to my resume/gi, '').trim() || targetSkill;
-    return `<b>Recommended Impact Bullet Point for "${topic}":</b><br>
-    <i>"Spearheaded enterprise implementation of <b>${topic}</b> across core application modules, optimizing workflow performance and achieving 99.9% system reliability."</i>`;
+    return `<b>Simple Example Bullet Point for "${topic}":</b><br>
+    <i>"Used <b>${topic}</b> to design and deliver core projects, improving team productivity and product quality."</i>`;
   }
 
   const missingInfo = (Array.isArray(missingKeywords) && missingKeywords.length > 0)
-    ? `<br><br><b>Key Missing Keywords to Focus On:</b> <i>${missingKeywords.join(', ')}</i>`
+    ? `<br><br><b>Key Skills to Add:</b> <i>${missingKeywords.join(', ')}</i>`
     : '';
 
-  return `<b>ATS Career Coach Advice:</b><br>
-  For the target role <b>${jobTitle || 'Target Position'}</b> (Current Match: <b>${currentScore ? currentScore + '%' : 'Pending'}</b>), focus on incorporating exact skill keywords into high-impact bullet points: <b>[Strong Action Verb] + [Context & Tech Stack] + [Quantified Metric]</b>.${missingInfo}`;
+  return `<b>Easy Career Coach Tip:</b><br>
+  For the <b>${jobTitle || 'Target Position'}</b> role (Current Match: <b>${currentScore ? currentScore + '%' : 'Pending'}</b>), write your experience bullets using this simple structure: <b>Action Word + What You Built/Did + Measurable Result</b>.${missingInfo}`;
 }
 
 module.exports = async (req, res) => {
@@ -147,11 +147,16 @@ module.exports = async (req, res) => {
     const missingStr = Array.isArray(missingKeywords) && missingKeywords.length ? missingKeywords.join(', ') : 'None detected';
     const matchedStr = Array.isArray(matchedKeywords) && matchedKeywords.length ? matchedKeywords.join(', ') : 'None detected';
 
-    const prompt = `You are an expert ATS (Applicant Tracking System) Career Coach and Executive Resume Auditor.
-Analyze the user's career question based on their exact ATS Diagnostic Analysis results:
+    const prompt = `You are a supportive, friendly ATS Career Coach helping job applicants improve their resumes.
 
+CRITICAL TONE REQUIREMENT:
+- Write in simple, clear, everyday PLAIN ENGLISH that anyone can easily understand.
+- DO NOT use complex technical jargon, overly dense engineering terms, or complicated corporate buzzwords.
+- Explain all advice plainly, like a supportive and clear mentor.
+
+Context from the candidate's ATS scan:
 Target Job Title: "${jobTitle || 'Not specified'}"
-Current ATS Score: "${currentScore ? currentScore + '%' : 'Pending'}"
+Current Match Score: "${currentScore ? currentScore + '%' : 'Pending'}"
 Matched Keywords: "${matchedStr}"
 Missing Keywords: "${missingStr}"
 Job Description context: "${(jobDescription || '').slice(0, 1000)}"
@@ -160,10 +165,10 @@ Candidate Resume context: "${(resumeText || '').slice(0, 1000)}"
 User Question: "${cleanMsg}"
 
 Instructions:
-- Provide a direct, highly practical answer grounded in their exact ATS scan analysis results above.
-- Specifically mention their missing keywords (${missingStr}) when answering questions about score improvements, point deductions, or bullet point enhancements.
-- Give concrete bullet point examples demonstrating how to weave missing keywords into high-impact accomplishments.
-- Format your response using clean HTML tags (<b>, <i>, <br>, <ul>, <li>).`;
+- Answer directly in simple, clear language based on the scan results above.
+- Specifically list their missing keywords (${missingStr}) in plain terms when discussing improvements.
+- Provide simple, easy-to-understand bullet point examples showing how to include missing skills.
+- Use clean HTML formatting (<b>, <i>, <br>, <ul>, <li>).`;
 
     try {
       const geminiReply = await callGeminiChat(apiKey, prompt);
