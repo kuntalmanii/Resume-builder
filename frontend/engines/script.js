@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const { data } = await sb.from('job_applications').select('*').eq('user_id', userId);
       if (data && Array.isArray(data) && data.length > 0) {
-        console.log('ResuAI: Loaded job applications from Supabase:', data.length);
+
       }
     } catch (e) {
       console.warn('ResuAI: Job applications load notice:', e.message);
@@ -1895,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Conflict Resolution: Never overwrite newer server data
             if (remoteTime > localTime) {
-              console.log('SyncEngine: Server has newer resume data. Fetching remote resume...');
+
               await loadUserProfileFromSupabase(user.id);
               continue;
             }
@@ -1940,7 +1940,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSyncStatusUI('error', `Sync Error (${remainingQueue.length} pending)`);
       // Exponential Backoff Retry Strategy: min(30s, 1000 * 2^attempt)
       const delayMs = Math.min(30000, 1000 * Math.pow(2, maxAttemptCount));
-      console.log(`SyncEngine: Retrying in ${delayMs}ms (attempt ${maxAttemptCount})...`);
+
       if (syncRetryTimeout) clearTimeout(syncRetryTimeout);
       syncRetryTimeout = setTimeout(processOfflineSyncQueue, delayMs);
     } else {
@@ -3461,7 +3461,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    console.log(`[ResuAI] Extracted ${window.uploadedFileText.length} characters from ${file.name}`);
+
   }
 
   if (pdfFileInput) {
@@ -3856,85 +3856,6 @@ Key Requirements:
       chip.classList.add('active');
     });
   }
-
-  // Common technical and professional keywords list for local fallback matching
-  const KNOWN_KEYWORDS = [
-    'TypeScript', 'React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Vanilla CSS',
-    'Design Systems', 'GraphQL', 'REST APIs', 'Web Vitals', 'Performance',
-    'Node', 'Kubernetes', 'Docker', 'Redis', 'CI/CD', 'Communication',
-    'Project Management', 'System Architecture', 'Python', 'Git', 'Agile'
-  ];
-
-  /**
-   * Local Client-Side Fallback Evaluator (used when no API key is set or if offline)
-   */
-  function runClientAtsDiagnostic() {
-    const jdRawText = (atsJdInput ? atsJdInput.value : "") + " " + window.uploadedFileText;
-    const jdLower = jdRawText.toLowerCase();
-
-    let candidateSkillsText = "";
-    if (inputJobTitle) candidateSkillsText += " " + inputJobTitle.value;
-    if (bulletPoints) candidateSkillsText += " " + bulletPoints.value;
-
-    const skillTags = document.querySelectorAll('#skillsTagsContainer .tag');
-    skillTags.forEach(tag => {
-      candidateSkillsText += " " + tag.textContent;
-    });
-
-    const candidateLower = (candidateSkillsText + " " + window.uploadedFileText).toLowerCase();
-    const jdKeywordsPresent = KNOWN_KEYWORDS.filter(kw => jdLower.includes(kw.toLowerCase()));
-    const activeJdKeywords = jdKeywordsPresent.length >= 3 ? jdKeywordsPresent : 
-      ['TypeScript', 'React', 'Design Systems', 'Vanilla CSS', 'Web Vitals', 'GraphQL', 'Kubernetes', 'Redis', 'CI/CD'];
-
-    const matched = [];
-    const missing = [];
-
-    activeJdKeywords.forEach(kw => {
-      if (candidateLower.includes(kw.toLowerCase())) {
-        matched.push(kw);
-      } else {
-        missing.push(kw);
-      }
-    });
-
-    const total = activeJdKeywords.length || 1;
-    const matchRatio = matched.length / total;
-    const dynamicScore = Math.min(94, Math.max(70, Math.round(70 + (matchRatio * 24))));
-
-    const topMissing = missing.slice(0, 2).join(', ') || 'Kubernetes / Redis';
-
-    renderAtsReportUI({
-      score: dynamicScore,
-      matchedKeywords: matched,
-      missingKeywords: missing,
-      recommendations: [
-        `Add 1-2 instances of missing keywords (${topMissing}) under your technical project bullet points.`,
-        `Quantify Web Vitals or performance metrics with explicit percentage improvements (e.g. Reduced LCP by 42%).`,
-        `Maintain standard section headings like TECHNICAL EXPERTISE for 100% parsing accuracy in Lever & Greenhouse.`
-      ]
-    });
-  }
-
-  /**
-   * Calls secure Node.js backend endpoint /api/ats-analyze (which communicates with Gemini API server-side).
-   * @param {string} jdText 
-   * @param {string} resumeText 
-   */
-  async function fetchBackendAtsAnalysis(jdText, resumeText) {
-    const activeSettings = getActiveSettings();
-    const response = await fetch('/api/ats-analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jdText, resumeText, geminiModel: activeSettings.geminiModel, atsEngine: activeSettings.atsEngine })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return await response.json();
-  }
-
 
 
   // Restore form persistence & initial live preview sync

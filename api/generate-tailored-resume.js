@@ -1,1 +1,2 @@
-module.exports = require('../backend/api/optimize-resume.js');
+module.exports = require('../backend/api/generate-tailored-resume.js');
+

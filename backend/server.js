@@ -92,6 +92,9 @@ function setSecurityHeaders(req, res) {
   res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com; font-src 'self' https://fonts.gstatic.com https://api.fontshare.com; img-src 'self' data: https:; connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co;");
 }
 
+// NOTE: Not imported from _shared.js — this variant adds a maxLength cap used
+// by readJsonBody to truncate over-sized text fields before Gemini API calls.
+// _shared.js exports a simpler version without the length guard.
 function sanitizeInputText(str, maxLength = 50000) {
   if (!str || typeof str !== 'string') return '';
   let clean = str.trim();
@@ -102,6 +105,7 @@ function sanitizeInputText(str, maxLength = 50000) {
   }
   return clean;
 }
+
 
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;

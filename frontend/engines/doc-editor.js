@@ -94,9 +94,6 @@
   /* ── 4. BULLETS system ── */
   var docBullets = [];
 
-  function escapeHTML(str) {
-    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   function placeCaretAtEnd(el) {
     el.focus();
