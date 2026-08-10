@@ -100,18 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * updates active states on theme switcher buttons, and saves to localStorage.
    * @param {string} themeId - e.g. 'sunset-amber', 'twilight-haze', 'eucalyptus-glow'
    */
-  function syncSettingsThemeSwatches() {
-    const activeTheme = body.getAttribute('data-theme') || 'sunset-amber';
-    const swatches = document.querySelectorAll('.settings-theme-swatch');
-    swatches.forEach(swatch => {
-      const themeId = swatch.getAttribute('data-theme-swatch');
-      if (themeId === activeTheme) {
-        swatch.classList.add('active');
-      } else {
-        swatch.classList.remove('active');
-      }
-    });
-  }
+
 
   function setTheme(themeId) {
     if (!themeId) return;
@@ -136,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('LocalStorage not accessible for theme persistence:', e);
     }
 
-    syncSettingsThemeSwatches();
+
   }
 
   // Attach click listeners to all theme switcher buttons
@@ -147,18 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Attach click listeners to settings theme swatches
-  const settingsThemeSwatches = document.querySelectorAll('.settings-theme-swatch');
-  settingsThemeSwatches.forEach(swatch => {
-    swatch.addEventListener('click', (e) => {
-      e.preventDefault();
-      const themeId = swatch.getAttribute('data-theme-swatch');
-      setTheme(themeId);
-      if (typeof showToast === 'function') {
-        showToast(`Workspace theme updated to ${swatch.title}!`, 'success');
-      }
-    });
-  });
+
 
   // Restore saved theme on initial page load (default: 'sunset-amber')
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'sunset-amber';
@@ -4235,224 +4213,9 @@ Key Requirements:
 
   /* ==========================================================================
      12. Platform Settings & Preferences Manager Engine
+     — Settings UI removed. localStorage key preserved for PDF paper-size/
+       typography defaults consumed by pdf-exporter.js (getPdfExportStyles).
      ========================================================================== */
-  const SETTINGS_STORAGE_KEY = 'resuai-platform-settings';
-
-  const settingGeminiModel              = document.getElementById('settingGeminiModel');
-  const settingOptimizationSensitivity  = document.getElementById('settingOptimizationSensitivity');
-  const sensitivityVal                  = document.getElementById('sensitivityVal');
-  const btnSaveAiSettings               = document.getElementById('btnSaveAiSettings');
-
-  const settingAtsEngine                = document.getElementById('settingAtsEngine');
-  const settingSeniority                = document.getElementById('settingSeniority');
-  const settingKeywordMatchStrategy     = document.getElementById('settingKeywordMatchStrategy');
-  const btnSaveAtsSettings              = document.getElementById('btnSaveAtsSettings');
-
-  const settingPaperSize                = document.getElementById('settingPaperSize');
-  const settingTypography               = document.getElementById('settingTypography');
-  const btnSavePdfSettings              = document.getElementById('btnSavePdfSettings');
-
-  const settingAutoSaveToggle           = document.getElementById('settingAutoSaveToggle');
-  const btnExportAllData                = document.getElementById('btnExportAllData');
-  const btnResetAllData                 = document.getElementById('btnResetAllData');
-
-  // Sensitivity range slider value text update
-  if (settingOptimizationSensitivity && sensitivityVal) {
-    settingOptimizationSensitivity.addEventListener('input', () => {
-      const val = parseFloat(settingOptimizationSensitivity.value);
-      let label = 'Balanced';
-      if (val <= 0.3) label = 'Strict ATS Keywords';
-      else if (val >= 0.8) label = 'Creative Impact';
-      sensitivityVal.textContent = `${label} (${val})`;
-    });
-  }
-
-  // Save Settings state to LocalStorage
-  function savePlatformSettings() {
-    const settings = {
-      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.0-flash',
-      sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
-      atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever',
-      seniority: settingSeniority ? settingSeniority.value : 'senior',
-      matchStrategy: settingKeywordMatchStrategy ? settingKeywordMatchStrategy.value : 'semantic',
-      paperSize: settingPaperSize ? settingPaperSize.value : 'letter',
-      typography: settingTypography ? settingTypography.value : 'inter-jakarta',
-      autoSave: settingAutoSaveToggle ? settingAutoSaveToggle.checked : true,
-      savedAt: new Date().toISOString()
-    };
-
-    try {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-    } catch (e) {
-      console.warn('Could not save settings to LocalStorage:', e);
-    }
-  }
-
-  // Restore Settings state from LocalStorage on load
-  function loadPlatformSettings() {
-    try {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (!saved) {
-        syncSettingsThemeSwatches();
-        updateLocalStorageDiagnostics();
-        return;
-      }
-      const s = JSON.parse(saved);
-
-      if (s.geminiModel && settingGeminiModel) settingGeminiModel.value = s.geminiModel;
-      if (s.sensitivity && settingOptimizationSensitivity) {
-        settingOptimizationSensitivity.value = s.sensitivity;
-        if (sensitivityVal) {
-          const val = parseFloat(s.sensitivity);
-          let label = 'Balanced';
-          if (val <= 0.3) label = 'Strict ATS Keywords';
-          else if (val >= 0.8) label = 'Creative Impact';
-          sensitivityVal.textContent = `${label} (${val})`;
-        }
-      }
-      if (s.atsEngine && settingAtsEngine) settingAtsEngine.value = s.atsEngine;
-      if (s.seniority && settingSeniority) settingSeniority.value = s.seniority;
-      if (s.matchStrategy && settingKeywordMatchStrategy) settingKeywordMatchStrategy.value = s.matchStrategy;
-      if (s.paperSize && settingPaperSize) settingPaperSize.value = s.paperSize;
-      if (s.typography && settingTypography) settingTypography.value = s.typography;
-      if (typeof s.autoSave === 'boolean' && settingAutoSaveToggle) settingAutoSaveToggle.checked = s.autoSave;
-      
-      applyTypographyToLivePreview();
-      syncSettingsThemeSwatches();
-      updateLocalStorageDiagnostics();
-    } catch (e) {
-      console.warn('Could not restore settings from LocalStorage:', e);
-    }
-  }
-
-  // --- Platform LocalStorage Diagnostics Size Calculator ---
-  function updateLocalStorageDiagnostics() {
-    let sizeInBytes = 0;
-    try {
-      const keys = ['resuai-draft-resume', 'resuai-platform-settings', 'resuai-dashboard-theme', 'resuai-analytics-history', 'resuai-logged-in'];
-      let totalStr = '';
-      keys.forEach(k => {
-        totalStr += (localStorage.getItem(k) || '');
-      });
-      sizeInBytes = totalStr.length * 2;
-    } catch(e) {}
-
-    const sizeInKB = (sizeInBytes / 1024).toFixed(2);
-    const diagPayloadSize = document.getElementById('diagPayloadSize');
-    if (diagPayloadSize) diagPayloadSize.textContent = `${sizeInKB} KB`;
-
-    const percentUsed = Math.min(100, Math.max(0.01, (parseFloat(sizeInKB) / 5120) * 100));
-    
-    const storagePercentText = document.getElementById('storagePercentText');
-    const storageProgressFill = document.getElementById('storageProgressFill');
-    
-    if (storagePercentText) storagePercentText.textContent = `${percentUsed.toFixed(3)}% of 5MB limit`;
-    if (storageProgressFill) storageProgressFill.style.width = `${percentUsed}%`;
-  }
-
-  // Visual feedback for save buttons
-  function handleSettingsSaveFeedback(buttonEl, label) {
-    savePlatformSettings();
-    applyTypographyToLivePreview();
-    updateLocalStorageDiagnostics();
-    if (typeof showToast === 'function') {
-      showToast(label || 'Saved Successfully!', 'success');
-    }
-    if (buttonEl) {
-      const orig = buttonEl.innerHTML;
-      buttonEl.innerHTML = `<i data-feather="check"></i> <span>Saved!</span>`;
-      if (window.feather) feather.replace();
-      setTimeout(() => {
-        buttonEl.innerHTML = orig;
-        if (window.feather) feather.replace();
-      }, 2000);
-    }
-  }
-
-  const aiEngineSettingsForm = document.getElementById('aiEngineSettingsForm');
-  const pdfExportSettingsForm = document.getElementById('pdfExportSettingsForm');
-
-  if (aiEngineSettingsForm) {
-    aiEngineSettingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      handleSettingsSaveFeedback(btnSaveAiSettings, 'AI Engine & Target Profile Saved!');
-    });
-  }
-
-  if (pdfExportSettingsForm) {
-    pdfExportSettingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      handleSettingsSaveFeedback(btnSavePdfSettings, 'Typography & Export Formats Saved!');
-    });
-  }
-
-  if (settingAutoSaveToggle) {
-    settingAutoSaveToggle.addEventListener('change', () => {
-      savePlatformSettings();
-      updateLocalStorageDiagnostics();
-      showToast('Auto-save preference updated.', 'info');
-    });
-  }
-
-  // Backup All Workspace Data & Settings as JSON
-  if (btnExportAllData) {
-    btnExportAllData.addEventListener('click', () => {
-      let settingsObj = {};
-      let draftObj = {};
-
-      try {
-        const settingsRaw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-        if (settingsRaw) settingsObj = JSON.parse(settingsRaw);
-      } catch (e) {}
-
-      try {
-        const draftRaw = localStorage.getItem('resuai-draft-resume');
-        if (draftRaw) draftObj = JSON.parse(draftRaw);
-      } catch (e) {}
-
-      const themeRaw = localStorage.getItem('resuai-dashboard-theme');
-
-      const backupPackage = {
-        exportedAt: new Date().toISOString(),
-        version: '2.5',
-        theme: themeRaw || 'sunset-amber',
-        settings: settingsObj,
-        draftResume: draftObj
-      };
-
-      const blob = new Blob([JSON.stringify(backupPackage, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `resuai_workspace_backup_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      if (typeof showToast === 'function') {
-        showToast('Workspace backup JSON exported successfully!', 'success');
-      }
-    });
-  }
-
-  // Danger Zone: Reset All Local Workspace Data
-  if (btnResetAllData) {
-    btnResetAllData.addEventListener('click', () => {
-      const confirm1 = window.confirm('DANGER: This will delete all saved resume drafts, ATS history, job applications, custom API keys, and workspace settings. Continue?');
-      if (!confirm1) return;
-
-      try {
-        localStorage.removeItem('resuai-draft-resume');
-        localStorage.removeItem(SETTINGS_STORAGE_KEY);
-        localStorage.removeItem('resuai-dashboard-theme');
-        localStorage.removeItem(ANALYTICS_HISTORY_KEY);
-        localStorage.removeItem(JOB_APPS_STORAGE_KEY);
-      } catch (e) {}
-
-      alert('Workspace reset complete. Reloading application...');
-      window.location.reload();
-    });
-  }
 
   // --- Interactive Score Analytics Hover Tooltips ---
   const chartDots = document.querySelectorAll('.chart-dot');
@@ -5264,9 +5027,7 @@ Key Requirements:
     });
   }
 
-  // Load saved settings on startup
-  loadPlatformSettings();
-
+  // Platform initialization complete
 });
 
 
