@@ -458,7 +458,7 @@
       targetText    = experience;
     } else if (/skill/i.test(promptText)) {
       targetSection = 'skills';
-      targetText    = (document.getElementById('docFieldSkills')?.innerText || '').trim();
+      targetText    = (document.getElementById('previewSkills')?.textContent || docSkills.join(', ') || '').trim();
     }
 
     try {
@@ -500,6 +500,13 @@
             if (typeof window.setDocBullets === 'function') window.setDocBullets(rewrittenText);
             if (typeof showToast === 'function') showToast('Experience bullets rewritten with AI!', 'success');
           }
+        } else if (targetSection === 'skills') {
+          const newSkills = rewrittenText
+            .split(/[,•\n]+/)
+            .map(s => s.trim().replace(/^[\s•\-\*]+/, ''))
+            .filter(Boolean);
+          newSkills.forEach(s => window.addDocSkill?.(s));
+          if (typeof showToast === 'function') showToast('Technical Skills updated & optimized with AI!', 'success');
         }
         appendAiMsg(
           '<b>AI Rewritten Content:</b><br>' +
