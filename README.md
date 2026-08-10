@@ -2,7 +2,7 @@
 
 > An AI-powered resume builder, ATS keyword scorer, and job application tracker built for software engineers.
 
-![License](https://img.shields.io/badge/license-MIT-blue) ![Node](https://img.shields.io/badge/node-%3E%3D18.x-brightgreen) ![Gemini](https://img.shields.io/badge/AI-Gemini%202.0%20Flash-orange) ![Supabase](https://img.shields.io/badge/auth-Supabase-3ECF8E) ![Deploy](https://img.shields.io/badge/deploy-Vercel-black)
+![License](https://img.shields.io/badge/license-MIT-blue) ![Node](https://img.shields.io/badge/node-%3E%3D24.x-brightgreen) ![Gemini](https://img.shields.io/badge/AI-Gemini%202.0%20Flash-orange) ![Supabase](https://img.shields.io/badge/auth-Supabase-3ECF8E) ![Deploy](https://img.shields.io/badge/deploy-Vercel-black)
 
 ---
 
@@ -143,7 +143,7 @@ ResuAI/
 ## Local Development Setup
 
 ### Prerequisites
-- **Node.js** v18 or higher
+- **Node.js** v24 or higher
 - A **Google Gemini API key** — get one free at [aistudio.google.com](https://aistudio.google.com/)
 
 ### 1. Clone the repository
