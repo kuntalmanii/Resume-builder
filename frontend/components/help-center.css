@@ -7,7 +7,7 @@
 .help-center-fab {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: 80px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -42,7 +42,7 @@
 .help-center-drawer {
   position: fixed;
   bottom: 84px;
-  right: 24px;
+  right: 80px;
   width: 380px;
   max-height: 580px;
   background: rgba(255, 255, 255, 0.96);
