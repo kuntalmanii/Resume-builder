@@ -421,20 +421,20 @@
                  All IDs preserved for script.js compatibility
                  ══════════════════════════════════════════════ -->
             <div id="legacyResumeInputs" style="display:none;position:absolute;pointer-events:none;opacity:0;z-index:-1;" aria-hidden="true">
-              <input type="text"  id="inputFullName"       class="form-input live-sync" value="" />
-              <input type="text"  id="inputJobTitle"       class="form-input live-sync" value="" />
-              <input type="email" id="inputEmail"          class="form-input live-sync" value="" />
-              <input type="text"  id="inputPhone"          class="form-input live-sync" value="" />
-              <input type="text"  id="inputLocation"       class="form-input live-sync" value="" />
-              <input type="text"  id="inputGithub"         class="form-input live-sync" value="" />
-              <input type="text"  id="inputLinkedin"       class="form-input live-sync" value="" />
-              <input type="text"  id="inputPortfolio"      class="form-input live-sync" value="" />
-              <textarea id="inputSummary"    class="form-textarea live-sync" rows="4"></textarea>
-              <textarea id="bulletPoints"    class="form-textarea live-sync" rows="6"></textarea>
-              <input type="text"  id="inputEducation"      class="form-input live-sync" value="" />
-              <input type="text"  id="inputCertifications" class="form-input live-sync" value="" />
-              <textarea id="inputProjects"      class="form-textarea live-sync" rows="4"></textarea>
-              <textarea id="inputAchievements"  class="form-textarea live-sync" rows="4"></textarea>
+              <input type="text"  id="inputFullName"       class="form-input live-sync" value="" aria-label="Full Name" />
+              <input type="text"  id="inputJobTitle"       class="form-input live-sync" value="" aria-label="Job Title" />
+              <input type="email" id="inputEmail"          class="form-input live-sync" value="" aria-label="Email" />
+              <input type="text"  id="inputPhone"          class="form-input live-sync" value="" aria-label="Phone" />
+              <input type="text"  id="inputLocation"       class="form-input live-sync" value="" aria-label="Location" />
+              <input type="text"  id="inputGithub"         class="form-input live-sync" value="" aria-label="Github Profile" />
+              <input type="text"  id="inputLinkedin"       class="form-input live-sync" value="" aria-label="LinkedIn Profile" />
+              <input type="text"  id="inputPortfolio"      class="form-input live-sync" value="" aria-label="Portfolio URL" />
+              <textarea id="inputSummary"    class="form-textarea live-sync" rows="4" aria-label="Summary"></textarea>
+              <textarea id="bulletPoints"    class="form-textarea live-sync" rows="6" aria-label="Bullet Points"></textarea>
+              <input type="text"  id="inputEducation"      class="form-input live-sync" value="" aria-label="Education" />
+              <input type="text"  id="inputCertifications" class="form-input live-sync" value="" aria-label="Certifications" />
+              <textarea id="inputProjects"      class="form-textarea live-sync" rows="4" aria-label="Projects"></textarea>
+              <textarea id="inputAchievements"  class="form-textarea live-sync" rows="4" aria-label="Achievements"></textarea>
               <!-- Skills system (must remain intact for JS) -->
               <div class="tags-input-container" id="skillsTagsContainer" style="position:relative;">
                 <input type="text" class="tag-input-field" id="skillInputField" placeholder="+ Add skill" autocomplete="off" />
@@ -1743,6 +1743,7 @@
 
     </div>
   </div>
+</div>
 
   <!-- Modal: Add / Edit Job Application -->
   <div class="modal-overlay" id="jobModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
