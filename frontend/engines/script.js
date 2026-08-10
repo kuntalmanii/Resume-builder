@@ -4563,7 +4563,7 @@ Key Requirements:
               <h3 class="empty-state-headline">No job applications tracked yet</h3>
               <p class="empty-state-desc">Organize your job search across Wishlist, Applied, Interviewing, and Offer stages with real-time application pipelines.</p>
               <div class="empty-state-actions">
-                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddAppModal')?.click()">
+                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddNewJob')?.click()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Add First Application</span>
                 </button>

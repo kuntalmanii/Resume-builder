@@ -339,10 +339,14 @@
 
   /* ── 8. RIGHT PANEL TOGGLE ── */
   window.switchRPanel = function (panel) {
-    document.getElementById('rpanelAI').style.display      = (panel === 'ai')      ? 'flex' : 'none';
-    document.getElementById('rpanelPreview').style.display = (panel === 'preview') ? 'flex' : 'none';
-    document.getElementById('rpTabAI').classList.toggle('active', panel === 'ai');
-    document.getElementById('rpTabPreview').classList.toggle('active', panel === 'preview');
+    var ai = document.getElementById('rpanelAI');
+    var prev = document.getElementById('rpanelPreview');
+    var tabAi = document.getElementById('rpTabAI');
+    var tabPrev = document.getElementById('rpTabPreview');
+    if (ai) ai.style.display = (panel === 'ai') ? 'flex' : 'none';
+    if (prev) prev.style.display = (panel === 'preview') ? 'flex' : 'none';
+    if (tabAi) tabAi.classList.toggle('active', panel === 'ai');
+    if (tabPrev) tabPrev.classList.toggle('active', panel === 'preview');
   };
 
   /* ── 9. PREVIEW ZOOM ── */
