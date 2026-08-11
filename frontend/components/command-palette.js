@@ -152,9 +152,10 @@ class CommandPalette {
     if (!this.resultsEl) return;
 
     if (this.filteredCommands.length === 0) {
+      const queryText = (this.inputEl.value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       this.resultsEl.innerHTML = `
         <div class="command-empty-state">
-          No matching commands found for "${this.inputEl.value}".
+          No matching commands found for "${queryText}".
         </div>
       `;
       return;
