@@ -16,6 +16,8 @@
     "ats-analyzer",
     "ai-resume"
   ],
+  "dependencies": {},
+  "devDependencies": {},
   "author": "ResuAI Team",
   "license": "MIT"
 }

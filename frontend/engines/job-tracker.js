@@ -251,9 +251,9 @@ class JobTracker {
         app.company.toLowerCase().includes(this.searchQuery) ||
         app.title.toLowerCase().includes(this.searchQuery)   ||
         (app.location || '').toLowerCase().includes(this.searchQuery);
-      const matchStage = this.stageFilter === 'all' || app.stage === this.stageFilter ||
-        (this.stageFilter === 'interview' && app.stage === 'interviewing') ||
-        (this.stageFilter === 'interviewing' && app.stage === 'interview');
+      const appStage = app.stage === 'interview' ? 'interviewing' : app.stage;
+      const targetStage = this.stageFilter === 'interview' ? 'interviewing' : this.stageFilter;
+      const matchStage = this.stageFilter === 'all' || appStage === targetStage;
       return matchSearch && matchStage;
     });
   }
@@ -371,7 +371,7 @@ class JobTracker {
     const apps = this._filteredApps();
 
     container.innerHTML = COLUMNS.map(col => {
-      const colApps = apps.filter(a => a.stage === col.id || (col.id === 'interviewing' && a.stage === 'interview') || (col.id === 'interview' && a.stage === 'interviewing'));
+      const colApps = apps.filter(a => (a.stage === 'interview' ? 'interviewing' : a.stage) === col.id);
       return `
         <div class="kanban-column" data-stage="${col.id}"
           style="background:var(--bg-card,#1e1e2e);border:1px solid var(--border,#2d2d44);

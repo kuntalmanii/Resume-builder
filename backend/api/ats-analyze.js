@@ -209,9 +209,12 @@ Respond STRICTLY with a single valid JSON object — no markdown fences, no pros
     let result = null;
     for (const model of models) {
       try { result = await makeGeminiRequest(model, prompt, key); if (result) break; }
-      catch(e) { console.warn(`[ATS] ${model} failed:`,e.message); }
+      catch(e) { console.warn(`[ATS] ${model} failed:`, e.message); }
     }
-    if (!result) result = runServerFallbackAnalysis(cR,cJD);
+    if (!result) {
+      console.warn(`[ATS] All attempted Gemini models (${models.join(', ')}) failed. Executing server heuristic fallback analysis.`);
+      result = runServerFallbackAnalysis(cR,cJD);
+    }
     return res.status(200).json(result);
   } catch(err) {
     console.error('[ATS] Error:',err);
