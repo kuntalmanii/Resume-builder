@@ -723,30 +723,34 @@ class AtsAnalyzer {
 </body>
 </html>`;
 
-    // Reuse or create hidden print iframe
-    let iframe = document.getElementById('resuaiAtsReportIframe');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = 'resuaiAtsReportIframe';
-      Object.assign(iframe.style, { position:'fixed', right:'0', bottom:'0', width:'0', height:'0', border:'0', visibility:'hidden' });
-      document.body.appendChild(iframe);
+    // Open report in a dedicated popup window so the browser prints ONLY the report
+    const popup = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
+    if (!popup) {
+      if (typeof showToast === 'function') showToast('Popup blocked — please allow popups for this site and try again.', 'warning');
+      return;
     }
 
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(reportHTML);
-    doc.close();
+    popup.document.open();
+    popup.document.write(reportHTML);
+    popup.document.close();
 
+    // Wait for fonts/assets to load then trigger print dialog
+    popup.onload = () => {
+      setTimeout(() => {
+        popup.focus();
+        popup.print();
+        if (typeof showToast === 'function') showToast('ATS Report opened — choose "Save as PDF" in the print dialog.', 'success');
+      }, 600);
+    };
+
+    // Fallback if onload doesn't fire (e.g. same-origin doc.write)
     setTimeout(() => {
-      try {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        if (typeof showToast === 'function') showToast('ATS Report ready — use your browser\'s Save as PDF option.', 'success');
-      } catch (err) {
-        console.error('[ATS Export] Print error:', err);
-        window.print();
+      if (!popup.closed) {
+        popup.focus();
+        popup.print();
+        if (typeof showToast === 'function') showToast('ATS Report opened — choose "Save as PDF" in the print dialog.', 'success');
       }
-    }, 400);
+    }, 1200);
   }
 
   /* ─── DOM helpers ─── */
