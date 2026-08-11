@@ -499,7 +499,7 @@ class AtsAnalyzer {
       </div>`;
   }
 
-  /* ─── ATS Analysis PDF Report Exporter ─── */
+  /* ─── ATS Analysis PDF Report Exporter (pure jsPDF vector) ─── */
   exportAnalysisPdf() {
     const data = this.lastResult;
     if (!data) {
@@ -507,9 +507,15 @@ class AtsAnalyzer {
       return;
     }
 
+    // Access jsPDF from the html2pdf bundle or global
+    const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!JsPDF) {
+      if (typeof showToast === 'function') showToast('PDF library not ready — please refresh and try again.', 'warning');
+      return;
+    }
+
     const {
       score: rawScore = 0,
-      verdict = '',
       matchedKeywords: matched = [],
       missingKeywords: missing = [],
       recommendations = [],
@@ -520,279 +526,327 @@ class AtsAnalyzer {
     } = data;
 
     const score = Math.min(100, Math.max(0, parseInt(rawScore, 10) || 0));
-    const scoreColor = score >= 80 ? '#16a34a' : score >= 60 ? '#d97706' : '#dc2626';
-    const verdictLabel = score >= 85 ? 'SHORTLIST ✓' : score >= 70 ? 'HOLD — Review' : 'REJECT — Gaps Detected';
-    const verdictBg    = score >= 85 ? '#dcfce7' : score >= 70 ? '#fef9c3' : '#fee2e2';
-    const verdictFg    = score >= 85 ? '#166534' : score >= 70 ? '#854d0e' : '#991b1b';
-    const candidateName = document.getElementById('previewName')?.textContent ||
-                          document.getElementById('fullName')?.value || 'Candidate';
-    const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
-    const intProb  = hp.interview   || (score >= 85 ? '91%' : score >= 70 ? '74%' : '48%');
-    const offProb  = hp.offer       || (score >= 85 ? '82%' : score >= 70 ? '61%' : '33%');
-    const atsGate  = hp.atsGatePass || (score >= 85 ? '97%' : score >= 70 ? '81%' : '52%');
+    // Read candidate name from resume preview OR form field — strip placeholder text
+    let candidateName = '';
+    const previewNameEl = document.getElementById('previewName');
+    if (previewNameEl) {
+      const t = (previewNameEl.textContent || '').trim();
+      if (t && t !== 'YOUR NAME' && t.length > 1) candidateName = t;
+    }
+    if (!candidateName) {
+      const fnEl = document.getElementById('fullName');
+      if (fnEl) candidateName = (fnEl.value || '').trim();
+    }
+    if (!candidateName) candidateName = 'Candidate';
+
+    const timestamp  = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+    const scoreRgb   = score >= 80 ? [22, 163, 74] : score >= 60 ? [217, 119, 6] : [220, 38, 38];
+    const verdictLabel = score >= 85 ? 'SHORTLIST ✓' : score >= 70 ? 'HOLD — Review' : 'REJECT — Gaps Detected';
+    const verdictBg    = score >= 85 ? [220, 252, 231] : score >= 70 ? [254, 249, 195] : [254, 226, 226];
+    const verdictFg    = score >= 85 ? [22, 101, 52]   : score >= 70 ? [133, 77, 14]  : [153, 27, 27];
+    const intProb      = hp.interview   || (score >= 85 ? '91%' : score >= 70 ? '74%' : '48%');
+    const offProb      = hp.offer       || (score >= 85 ? '82%' : score >= 70 ? '61%' : '33%');
+    const atsGate      = hp.atsGatePass || (score >= 85 ? '97%' : score >= 70 ? '81%' : '52%');
 
     const sectionMetrics = [
-      { label: 'Keyword Match',      value: ss.keywordMatch     ?? score },
-      { label: 'Skills Alignment',   value: ss.skillsAlignment  ?? Math.min(95, score + 3) },
-      { label: 'Experience Impact',  value: ss.experienceImpact ?? Math.min(98, score + 5) },
-      { label: 'Metric Density',     value: ss.metricDensity    ?? Math.max(40, score - 8) },
-      { label: 'Formatting / ATS',   value: ss.formattingATS    ?? 95 },
-      { label: 'Readability',        value: ss.readabilityScore ?? 88 },
-      { label: 'Action Verbs',       value: ss.actionVerbs      ?? Math.min(96, score + 5) },
-      { label: 'Education & Certs',  value: ss.educationCerts   ?? 100 },
+      { label: 'Keyword Match',     value: ss.keywordMatch     ?? score },
+      { label: 'Skills Alignment',  value: ss.skillsAlignment  ?? Math.min(95, score + 3) },
+      { label: 'Experience Impact', value: ss.experienceImpact ?? Math.min(98, score + 5) },
+      { label: 'Metric Density',    value: ss.metricDensity    ?? Math.max(40, score - 8) },
+      { label: 'Formatting / ATS',  value: ss.formattingATS    ?? 95 },
+      { label: 'Readability',       value: ss.readabilityScore ?? 88 },
+      { label: 'Action Verbs',      value: ss.actionVerbs      ?? Math.min(96, score + 5) },
+      { label: 'Education & Certs', value: ss.educationCerts   ?? 100 },
     ];
 
-    const barColor = v => v >= 75 ? '#16a34a' : v >= 55 ? '#d97706' : '#dc2626';
+    const barRgb = v => v >= 75 ? [22, 163, 74] : v >= 55 ? [217, 119, 6] : [220, 38, 38];
 
-    const metricsHTML = sectionMetrics.map(m => `
-      <div style="margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
-          <span style="color:#374151;font-weight:500;">${this.escapeHTML(m.label)}</span>
-          <span style="color:${barColor(m.value)};font-weight:700;">${m.value}%</span>
-        </div>
-        <div style="height:7px;background:#f3f4f6;border-radius:9999px;overflow:hidden;">
-          <div style="height:100%;width:${m.value}%;background:${barColor(m.value)};border-radius:9999px;"></div>
-        </div>
-      </div>`).join('');
+    // ── Initialise document ──────────────────────────────────────
+    const doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const PW = 210, PH = 297, M = 14, CW = PW - M * 2;
+    let y = M;
 
-    const matchedHTML = matched.length > 0
-      ? matched.map(kw => `<span style="display:inline-block;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;margin:2px;">${this.escapeHTML(kw)}</span>`).join('')
-      : `<span style="color:#6b7280;font-style:italic;font-size:11px;">No keywords matched.</span>`;
-
-    const missingHTML = missing.length > 0
-      ? missing.map(kw => `<span style="display:inline-block;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;margin:2px;">${this.escapeHTML(kw)}</span>`).join('')
-      : `<span style="color:#16a34a;font-weight:600;font-size:11px;">✓ All required keywords matched!</span>`;
-
-    const recsHTML = recommendations.length > 0
-      ? recommendations.map((rec, i) => `
-        <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f3f4f6;">
-          <span style="flex-shrink:0;width:22px;height:22px;background:#1e3a5f;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${i + 1}</span>
-          <p style="margin:0;font-size:11px;color:#374151;line-height:1.6;">${this.escapeHTML(typeof rec === 'string' ? rec : JSON.stringify(rec))}</p>
-        </div>`).join('')
-      : `<p style="color:#6b7280;font-style:italic;font-size:11px;">No recommendations generated.</p>`;
-
-    const rewritesHTML = smartRewrites.length > 0
-      ? smartRewrites.map(r => `
-        <div style="margin-bottom:14px;padding:12px;background:#fafafa;border:1px solid #e5e7eb;border-radius:6px;">
-          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Before:</div>
-          <p style="font-size:11px;color:#374151;margin:0 0 8px;line-height:1.6;">${this.escapeHTML(r.before || '')}</p>
-          <div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">AI-Optimized:</div>
-          <p style="font-size:11px;color:#166534;margin:0;line-height:1.6;font-weight:500;">${this.escapeHTML(r.after || '')}</p>
-        </div>`).join('')
-      : `<p style="color:#6b7280;font-style:italic;font-size:11px;">No AI rewrites available (run a full Gemini scan to generate optimized bullets).</p>`;
-
-    // ── Build Executive Summary narrative ──
-    const topMatched    = matched.slice(0, 5).join(', ') || 'none';
-    const topMissing    = missing.slice(0, 5).join(', ') || 'none';
-    const sectionScoreAvg = Math.round(sectionMetrics.reduce((s, m) => s + m.value, 0) / sectionMetrics.length);
-    const weakSections  = sectionMetrics.filter(m => m.value < 60).map(m => m.label);
-    const strongSections= sectionMetrics.filter(m => m.value >= 80).map(m => m.label);
-
-    const overallStatus = score >= 85
-      ? `<strong>${this.escapeHTML(candidateName)}'s</strong> resume demonstrates <strong>excellent ATS compatibility</strong> with a score of <strong>${score}%</strong>. This resume is highly competitive and is likely to clear automated screening filters and reach a human recruiter.`
-      : score >= 70
-      ? `<strong>${this.escapeHTML(candidateName)}'s</strong> resume shows <strong>moderate ATS alignment</strong> with a score of <strong>${score}%</strong>. The resume meets baseline requirements but needs targeted keyword improvements to consistently pass ATS gatekeepers.`
-      : `<strong>${this.escapeHTML(candidateName)}'s</strong> resume shows <strong>significant keyword gaps</strong> with a score of <strong>${score}%</strong>. Immediate improvements are required to make this resume competitive for ATS-filtered job applications.`;
-
-    const keywordSummary = matched.length > 0
-      ? `The resume successfully matched <strong>${matched.length} of ${matched.length + missing.length} required keywords</strong>. Key matched terms include: <em>${this.escapeHTML(topMatched)}</em>.`
-      : `The resume did not match any of the required job description keywords. A full rewrite targeting the specific role requirements is strongly recommended.`;
-
-    const gapSummary = missing.length > 0
-      ? `<strong>${missing.length} critical keywords</strong> are missing from the resume. The most important gaps are: <em>${this.escapeHTML(topMissing)}</em>. These should be incorporated naturally into the work experience and skills sections.`
-      : `<strong>No keyword gaps were detected.</strong> All required terms from the job description were found in the resume.`;
-
-    const strengthSummary = strongSections.length > 0
-      ? `The resume performs strongly in: <strong>${strongSections.map(s => this.escapeHTML(s)).join(', ')}</strong>.`
-      : `No sections scored above 80%. A comprehensive resume revision is recommended.`;
-
-    const weakSummary = weakSections.length > 0
-      ? `Areas requiring improvement: <strong>${weakSections.map(s => this.escapeHTML(s)).join(', ')}</strong>. Focus on these sections first for maximum ATS impact.`
-      : `All sections are performing adequately. Focus on keyword density and metric-driven bullet points to push the score higher.`;
-
-    const nextStepText = score >= 85
-      ? 'Submit your application with confidence. Consider preparing tailored cover letter content that mirrors the matched keywords. Review AI-optimized rewrites for any remaining bullet point improvements.'
-      : score >= 70
-      ? `Incorporate the ${missing.length} missing keywords into your experience bullets before applying. Use the AI-optimized rewrites section below as a guide. Aim for a score above 85% before submitting.`
-      : `Do not submit this resume without significant revision. Add all ${missing.length} missing keywords in context within your work experience. Consider using the AI Copilot feature for a full resume rewrite targeting this specific role.`;
-
-    const executiveSummaryHTML = `
-    <div style="background:#f8faff;border:1.5px solid #dbeafe;border-radius:8px;padding:18px 20px;margin-bottom:20px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#1e40af;margin-bottom:12px;">📋 Executive Summary</div>
-      <p style="font-size:11.5px;color:#1e293b;line-height:1.75;margin:0 0 10px;">${overallStatus}</p>
-      <p style="font-size:11px;color:#374151;line-height:1.75;margin:0 0 10px;">${keywordSummary} ${gapSummary}</p>
-      <p style="font-size:11px;color:#374151;line-height:1.75;margin:0 0 10px;">${strengthSummary} ${weakSummary}</p>
-      <div style="background:#eff6ff;border-left:3px solid #3b82f6;border-radius:0 4px 4px 0;padding:10px 14px;margin-top:12px;">
-        <div style="font-size:10px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Recommended Next Steps</div>
-        <p style="font-size:11px;color:#1e3a8a;line-height:1.65;margin:0;">${nextStepText}</p>
-      </div>
-    </div>`;
-
-    const reportInnerBody = `
-<div id="atsReportContainer" style="font-family:'Inter', Arial, sans-serif; font-size:11px; color:#111827; background:#ffffff; padding:24px; width:750px; margin:0 auto; line-height:1.6; box-sizing:border-box;">
-  <!-- HEADER -->
-  <div style="background:#1e3a5f; color:#ffffff; padding:20px 24px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-    <div>
-      <div style="font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; opacity:0.75; margin-bottom:4px;">ResuAI Studio — ATS Diagnostic Report</div>
-      <div style="font-size:20px; font-weight:800; letter-spacing:-0.02em;">${this.escapeHTML(candidateName)}</div>
-      <div style="font-size:10px; opacity:0.65; margin-top:4px;">Generated: ${timestamp}</div>
-    </div>
-    <div style="text-align:center;">
-      <div style="font-size:38px; font-weight:800; color:${scoreColor}; line-height:1;">${score}%</div>
-      <div style="font-size:10px; opacity:0.8; margin-top:2px;">ATS Match Score</div>
-    </div>
-  </div>
-
-  <!-- VERDICT BANNER -->
-  <div style="background:${verdictBg}; color:${verdictFg}; border:1.5px solid ${scoreColor}40; border-radius:6px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:center; gap:12px;">
-    <div style="font-size:15px; font-weight:800; white-space:nowrap;">${verdictLabel}</div>
-    <div style="font-size:11px; opacity:0.9; line-height:1.4;">${this.escapeHTML(recruiterVerdict || (score >= 75 ? 'This candidate demonstrates strong alignment with the role requirements.' : 'Moderate gaps detected. Incorporate missing keywords to boost ATS ranking.'))}</div>
-  </div>
-
-  <!-- EXECUTIVE SUMMARY -->
-  ${executiveSummaryHTML}
-
-  <!-- HIRING PROBABILITY -->
-  <div style="margin-bottom:22px; page-break-inside:avoid;">
-    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">Hiring Probability Estimates</h2>
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
-      <div style="text-align:center; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
-        <div style="font-size:22px; font-weight:800; color:${barColor(parseInt(intProb))};">${intProb}</div>
-        <div style="font-size:10px; color:#64748b; font-weight:500; margin-top:3px;">Interview Probability</div>
-      </div>
-      <div style="text-align:center; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
-        <div style="font-size:22px; font-weight:800; color:${barColor(parseInt(offProb))};">${offProb}</div>
-        <div style="font-size:10px; color:#64748b; font-weight:500; margin-top:3px;">Offer Probability</div>
-      </div>
-      <div style="text-align:center; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
-        <div style="font-size:22px; font-weight:800; color:${barColor(parseInt(atsGate))};">${atsGate}</div>
-        <div style="font-size:10px; color:#64748b; font-weight:500; margin-top:3px;">ATS Gatekeeper Pass</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCORE MATRIX -->
-  <div style="margin-bottom:22px; page-break-inside:avoid;">
-    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">Section Score Breakdown</h2>
-    ${metricsHTML}
-  </div>
-
-  <!-- MATCHED KEYWORDS -->
-  <div style="margin-bottom:22px; page-break-inside:avoid;">
-    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">✓ Matched Keywords (${matched.length})</h2>
-    <div style="line-height:2;">${matchedHTML}</div>
-  </div>
-
-  <!-- MISSING KEYWORDS -->
-  <div style="margin-bottom:22px; page-break-inside:avoid;">
-    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">⚠ Missing / Gap Keywords (${missing.length})</h2>
-    <div style="line-height:2;">${missingHTML}</div>
-  </div>
-
-  <!-- RECOMMENDATIONS -->
-  <div style="margin-bottom:22px; page-break-inside:avoid;">
-    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">Action Recommendations</h2>
-    ${recsHTML}
-  </div>
-
-  <!-- SMART REWRITES -->
-  <div style="margin-bottom:22px; page-break-inside:avoid;">
-    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">AI-Optimized Bullet Rewrites</h2>
-    ${rewritesHTML}
-  </div>
-
-  <!-- FOOTER -->
-  <div style="margin-top:24px; padding-top:12px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-    <span style="font-size:9px; color:#9ca3af;">Generated by ResuAI Studio · ATS Diagnostic Engine</span>
-    <span style="font-size:9px; color:#9ca3af;">${timestamp}</span>
-  </div>
-</div>`;
-
-    const reportHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>ATS Analysis Report — ${this.escapeHTML(candidateName)}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    @page { size: A4 portrait; margin: 12mm; }
-    html, body { font-family: 'Inter', Arial, sans-serif; font-size: 11px; color: #111827; background: #ffffff !important; margin: 0; padding: 0; line-height: 1.6; }
-    @media print { body { background: #ffffff !important; } }
-  </style>
-</head>
-<body style="background:#ffffff;">
-  ${reportInnerBody}
-</body>
-</html>`;
-
-    const pdfFileName = `ATS_Diagnostic_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-
-    // Strategy 1: Direct html2pdf PDF File Download
-    if (typeof window.html2pdf === 'function') {
-      const tempDiv = document.createElement('div');
-      tempDiv.id = 'atsPdfTempRenderContainer';
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '0';
-      tempDiv.style.top = '0';
-      tempDiv.style.zIndex = '999999';
-      tempDiv.style.width = '790px';
-      tempDiv.style.background = '#ffffff';
-      tempDiv.style.color = '#111827';
-      tempDiv.innerHTML = reportInnerBody;
-      document.body.appendChild(tempDiv);
-
-      const opt = {
-        margin:       [8, 8, 8, 8],
-        filename:     pdfFileName,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      if (typeof showToast === 'function') showToast('Generating ATS Diagnostic PDF Report...', 'info');
-
-      window.html2pdf().set(opt).from(tempDiv).save().then(() => {
-        if (tempDiv.parentNode) tempDiv.parentNode.removeChild(tempDiv);
-        if (typeof showToast === 'function') showToast('ATS Report PDF downloaded successfully!', 'success');
-      }).catch(err => {
-        console.warn('[ATS Export] html2pdf fallback to popup print:', err);
-        if (tempDiv.parentNode) tempDiv.parentNode.removeChild(tempDiv);
-        this._fallbackPopupPrint(reportHTML);
-      });
-      return;
-    }
-
-    // Strategy 2: Popup Window Document Print
-    this._fallbackPopupPrint(reportHTML);
-  }
-
-  _fallbackPopupPrint(reportHTML) {
-    const popup = window.open('', '_blank', 'width=900,height=750,scrollbars=yes,resizable=yes');
-    if (!popup) {
-      if (typeof showToast === 'function') showToast('Popup blocked — please allow popups for this site.', 'warning');
-      return;
-    }
-    popup.document.open();
-    popup.document.write(reportHTML);
-    popup.document.close();
-
-    popup.onload = () => {
-      setTimeout(() => {
-        popup.focus();
-        popup.print();
-        if (typeof showToast === 'function') showToast('ATS Report opened — choose "Save as PDF" in the print dialog.', 'success');
-      }, 500);
+    const checkPage = (needed = 10) => {
+      if (y + needed > PH - 14) { doc.addPage(); y = M; }
     };
 
-    setTimeout(() => {
-      if (!popup.closed) {
-        popup.focus();
-        popup.print();
-      }
-    }, 1000);
+    const sectionHead = (title) => {
+      checkPage(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(30, 58, 95);
+      doc.text(title.toUpperCase(), M, y);
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.3);
+      doc.line(M, y + 1.8, M + CW, y + 1.8);
+      y += 7;
+    };
+
+    // ── HEADER BAR ──────────────────────────────────────────────
+    doc.setFillColor(30, 58, 95);
+    doc.rect(0, 0, PW, 40, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(148, 182, 215);
+    doc.text('RESUAI STUDIO — ATS DIAGNOSTIC REPORT', M, 12);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.setTextColor(255, 255, 255);
+    doc.text(candidateName.substring(0, 42), M, 23);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(148, 182, 215);
+    doc.text(`Generated: ${timestamp}`, M, 31);
+
+    // Score badge (right side)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(scoreRgb[0], scoreRgb[1], scoreRgb[2]);
+    doc.text(`${score}%`, PW - M, 20, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(148, 182, 215);
+    doc.text('ATS MATCH SCORE', PW - M, 27, { align: 'right' });
+
+    y = 46;
+
+    // ── VERDICT BANNER ──────────────────────────────────────────
+    checkPage(18);
+    doc.setFillColor(verdictBg[0], verdictBg[1], verdictBg[2]);
+    doc.setDrawColor(verdictFg[0], verdictFg[1], verdictFg[2]);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(M, y, CW, 14, 2, 2, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(verdictFg[0], verdictFg[1], verdictFg[2]);
+    doc.text(verdictLabel, M + 4, y + 7);
+
+    const vText = recruiterVerdict || (score >= 75
+      ? 'Strong alignment detected. Resume is competitive for ATS filters.'
+      : 'Moderate gaps detected. Incorporate missing keywords to boost ATS ranking.');
+    const vLines = doc.splitTextToSize(vText, CW - 60);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(vLines[0] || '', M + 58, y + 7);
+    y += 18;
+
+    // ── EXECUTIVE SUMMARY ────────────────────────────────────────
+    sectionHead('Executive Summary');
+
+    const topMatchedStr = matched.slice(0, 5).join(', ') || 'none';
+    const topMissingStr  = missing.slice(0, 5).join(', ') || 'none';
+    const strong = sectionMetrics.filter(m => m.value >= 80).map(m => m.label);
+    const weak   = sectionMetrics.filter(m => m.value < 60).map(m => m.label);
+
+    const p1 = score >= 85
+      ? `${candidateName}'s resume demonstrates excellent ATS compatibility with a score of ${score}%. This resume is highly competitive and will likely clear automated screening to reach a human recruiter.`
+      : score >= 70
+      ? `${candidateName}'s resume shows moderate ATS alignment (${score}%). It meets baseline requirements but needs targeted keyword improvements to consistently pass ATS gatekeepers.`
+      : `${candidateName}'s resume shows significant keyword gaps with a score of ${score}%. Immediate revisions are required to make this resume competitive for ATS-filtered applications.`;
+
+    const p2 = matched.length > 0
+      ? `The resume matched ${matched.length} of ${matched.length + missing.length} required keywords. Key matched terms: ${topMatchedStr}. `
+        + (missing.length > 0 ? `${missing.length} critical keywords are missing, including: ${topMissingStr}.` : 'No keyword gaps detected.')
+      : 'No required keywords were matched. A complete rewrite targeting role-specific terms is strongly recommended.';
+
+    const p3 = strong.length > 0
+      ? `Resume performs strongly in: ${strong.join(', ')}.${weak.length > 0 ? ` Areas needing improvement: ${weak.join(', ')}.` : ''}`
+      : 'All sections need improvement to compete for this role.';
+
+    const nextStep = score >= 85
+      ? 'Submit with confidence. Consider tailoring your cover letter with matched keywords. Review AI rewrites for any final bullet improvements.'
+      : score >= 70
+      ? `Incorporate the ${missing.length} missing keywords into your experience section before applying. Target a score above 85%.`
+      : `Do not submit without significant revision. Add all ${missing.length} missing keywords in context within your work experience and skills section.`;
+
+    // Summary box
+    const allParaLines = [
+      ...doc.setFont('helvetica','normal').setFontSize(8.5) && doc.splitTextToSize(p1, CW - 6),
+      '',
+      ...doc.splitTextToSize(p2, CW - 6),
+      '',
+      ...doc.splitTextToSize(p3, CW - 6),
+    ];
+    const boxH = allParaLines.length * 4.8 + 8;
+    checkPage(boxH + 22);
+    doc.setFillColor(248, 250, 255);
+    doc.setDrawColor(219, 234, 254);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(M, y, CW, boxH, 2, 2, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(30, 41, 59);
+    let ty = y + 5;
+    allParaLines.forEach(line => { doc.text(line, M + 3, ty); ty += 4.8; });
+    y = ty + 2;
+
+    // Next-steps callout
+    const nsLines = doc.splitTextToSize(nextStep, CW - 10);
+    const nsH = nsLines.length * 4.5 + 13;
+    checkPage(nsH + 4);
+    doc.setFillColor(239, 246, 255);
+    doc.setDrawColor(239, 246, 255);
+    doc.rect(M + 1, y, CW - 1, nsH, 'F');
+    doc.setFillColor(59, 130, 246);
+    doc.rect(M, y, 2.5, nsH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(29, 78, 216);
+    doc.text('RECOMMENDED NEXT STEPS', M + 5, y + 5.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(30, 58, 138);
+    doc.text(nsLines, M + 5, y + 10.5);
+    y += nsH + 6;
+
+    // ── HIRING PROBABILITY ───────────────────────────────────────
+    checkPage(30);
+    sectionHead('Hiring Probability Estimates');
+    const probW = (CW - 8) / 3;
+    [{ label: 'Interview Probability', val: intProb },
+     { label: 'Offer Probability',     val: offProb },
+     { label: 'ATS Gatekeeper Pass',   val: atsGate }].forEach((p, i) => {
+      const px = M + i * (probW + 4);
+      const pRgb = barRgb(parseInt(p.val) || 0);
+      doc.setFillColor(248, 250, 252); doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.3);
+      doc.roundedRect(px, y, probW, 18, 2, 2, 'FD');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
+      doc.setTextColor(pRgb[0], pRgb[1], pRgb[2]);
+      doc.text(p.val, px + probW / 2, y + 10, { align: 'center' });
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(100, 116, 139);
+      doc.text(p.label, px + probW / 2, y + 15.5, { align: 'center' });
+    });
+    y += 22;
+
+    // ── SECTION SCORE BREAKDOWN ───────────────────────────────────
+    checkPage(70);
+    sectionHead('Section Score Breakdown');
+    sectionMetrics.forEach(m => {
+      checkPage(11);
+      const rgb = barRgb(m.value);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(55, 65, 81);
+      doc.text(m.label, M, y + 3.5);
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(rgb[0], rgb[1], rgb[2]);
+      doc.text(`${m.value}%`, M + CW, y + 3.5, { align: 'right' });
+      // track
+      doc.setFillColor(243, 244, 246); doc.roundedRect(M, y + 5.5, CW, 2.5, 0.8, 0.8, 'F');
+      doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+      doc.roundedRect(M, y + 5.5, (m.value / 100) * CW, 2.5, 0.8, 0.8, 'F');
+      y += 10.5;
+    });
+
+    // ── MATCHED KEYWORDS ──────────────────────────────────────────
+    y += 3;
+    checkPage(20);
+    sectionHead(`Matched Keywords (${matched.length})`);
+    if (matched.length === 0) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(107, 114, 128);
+      doc.text('No keywords matched.', M, y); y += 7;
+    } else {
+      let kx = M;
+      matched.forEach(kw => {
+        const label = kw.length > 22 ? kw.substring(0, 20) + '…' : kw;
+        const lw = doc.getTextWidth(label) + 7;
+        if (kx + lw > M + CW) { kx = M; y += 8; checkPage(10); }
+        doc.setFillColor(220, 252, 231); doc.setDrawColor(187, 247, 208); doc.setLineWidth(0.2);
+        doc.roundedRect(kx, y - 4, lw, 6, 1.5, 1.5, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(22, 101, 52);
+        doc.text(label, kx + 3.5, y);
+        kx += lw + 3;
+      });
+      y += 10;
+    }
+
+    // ── MISSING KEYWORDS ──────────────────────────────────────────
+    checkPage(20);
+    sectionHead(`Missing / Gap Keywords (${missing.length})`);
+    if (missing.length === 0) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(22, 163, 74);
+      doc.text('All required keywords matched!', M, y); y += 7;
+    } else {
+      let kx = M;
+      missing.forEach(kw => {
+        const label = kw.length > 22 ? kw.substring(0, 20) + '…' : kw;
+        const lw = doc.getTextWidth(label) + 7;
+        if (kx + lw > M + CW) { kx = M; y += 8; checkPage(10); }
+        doc.setFillColor(254, 226, 226); doc.setDrawColor(254, 202, 202); doc.setLineWidth(0.2);
+        doc.roundedRect(kx, y - 4, lw, 6, 1.5, 1.5, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(153, 27, 27);
+        doc.text(label, kx + 3.5, y);
+        kx += lw + 3;
+      });
+      y += 10;
+    }
+
+    // ── ACTION RECOMMENDATIONS ────────────────────────────────────
+    checkPage(20);
+    sectionHead('Action Recommendations');
+    if (recommendations.length === 0) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(107, 114, 128);
+      doc.text('No recommendations generated.', M, y); y += 7;
+    } else {
+      recommendations.forEach((rec, i) => {
+        const recText = typeof rec === 'string' ? rec : JSON.stringify(rec);
+        const lines = doc.splitTextToSize(recText, CW - 14);
+        const rh = lines.length * 4.8 + 8;
+        checkPage(rh + 4);
+        doc.setFillColor(30, 58, 95);
+        doc.circle(M + 4, y + 3, 3.2, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(255, 255, 255);
+        doc.text(`${i + 1}`, M + 4, y + 4.2, { align: 'center' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(55, 65, 81);
+        doc.text(lines, M + 11, y + 3);
+        if (i < recommendations.length - 1) {
+          doc.setDrawColor(243, 244, 246); doc.setLineWidth(0.2);
+          doc.line(M, y + rh - 1, M + CW, y + rh - 1);
+        }
+        y += rh;
+      });
+    }
+
+    // ── SMART REWRITES ────────────────────────────────────────────
+    if (smartRewrites.length > 0) {
+      checkPage(20);
+      sectionHead('AI-Optimized Bullet Rewrites');
+      smartRewrites.forEach(r => {
+        const bLines = doc.splitTextToSize(r.before || '', CW - 8);
+        const aLines = doc.splitTextToSize(r.after  || '', CW - 8);
+        const bh = (bLines.length + aLines.length) * 4.5 + 18;
+        checkPage(bh + 4);
+        doc.setFillColor(250, 250, 250); doc.setDrawColor(229, 231, 235); doc.setLineWidth(0.2);
+        doc.roundedRect(M, y, CW, bh, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(156, 163, 175);
+        doc.text('BEFORE:', M + 4, y + 6);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(55, 65, 81);
+        doc.text(bLines, M + 4, y + 11);
+        const afterY = y + 11 + bLines.length * 4.5 + 3;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(22, 163, 74);
+        doc.text('AI-OPTIMIZED:', M + 4, afterY);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(22, 101, 52);
+        doc.text(aLines, M + 4, afterY + 5);
+        y += bh + 5;
+      });
+    }
+
+    // ── FOOTER (all pages) ────────────────────────────────────────
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFillColor(248, 250, 252);
+      doc.rect(0, PH - 10, PW, 10, 'F');
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(156, 163, 175);
+      doc.text('Generated by ResuAI Studio · ATS Diagnostic Engine', M, PH - 4);
+      doc.text(`Page ${p} of ${totalPages}`, PW - M, PH - 4, { align: 'right' });
+    }
+
+    const safeName = `ATS_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+    doc.save(safeName);
+    if (typeof showToast === 'function') showToast('ATS Diagnostic Report downloaded!', 'success');
   }
 
   /* ─── DOM helpers ─── */
