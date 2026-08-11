@@ -507,10 +507,32 @@ class AtsAnalyzer {
       return;
     }
 
-    // Access jsPDF from the html2pdf bundle or global
-    const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    // Multi-source jsPDF resolver with dynamic script loader fallback
+    const resolveJsPDF = () => {
+      if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+      if (window.jsPDF) return window.jsPDF;
+      if (window.html2pdf && window.html2pdf.Worker && window.html2pdf.Worker.prototype && window.html2pdf.Worker.prototype.jsPDF) {
+        return window.html2pdf.Worker.prototype.jsPDF;
+      }
+      return null;
+    };
+
+    let JsPDF = resolveJsPDF();
     if (!JsPDF) {
-      if (typeof showToast === 'function') showToast('PDF library not ready — please refresh and try again.', 'warning');
+      if (typeof showToast === 'function') showToast('Loading PDF engine, please wait...', 'info');
+      // Inject CDN script dynamically if not present
+      if (!document.getElementById('dynamicJsPdfScript')) {
+        const script = document.createElement('script');
+        script.id = 'dynamicJsPdfScript';
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => {
+          setTimeout(() => this.exportAnalysisPdf(), 100);
+        };
+        script.onerror = () => {
+          if (typeof showToast === 'function') showToast('Failed to load PDF engine. Check internet connection.', 'error');
+        };
+        document.head.appendChild(script);
+      }
       return;
     }
 
