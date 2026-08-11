@@ -580,6 +580,53 @@ class AtsAnalyzer {
         </div>`).join('')
       : `<p style="color:#6b7280;font-style:italic;font-size:11px;">No AI rewrites available (run a full Gemini scan to generate optimized bullets).</p>`;
 
+    // ── Build Executive Summary narrative ──
+    const topMatched    = matched.slice(0, 5).join(', ') || 'none';
+    const topMissing    = missing.slice(0, 5).join(', ') || 'none';
+    const sectionScoreAvg = Math.round(sectionMetrics.reduce((s, m) => s + m.value, 0) / sectionMetrics.length);
+    const weakSections  = sectionMetrics.filter(m => m.value < 60).map(m => m.label);
+    const strongSections= sectionMetrics.filter(m => m.value >= 80).map(m => m.label);
+
+    const overallStatus = score >= 85
+      ? `<strong>${this.escapeHTML(candidateName)}'s</strong> resume demonstrates <strong>excellent ATS compatibility</strong> with a score of <strong>${score}%</strong>. This resume is highly competitive and is likely to clear automated screening filters and reach a human recruiter.`
+      : score >= 70
+      ? `<strong>${this.escapeHTML(candidateName)}'s</strong> resume shows <strong>moderate ATS alignment</strong> with a score of <strong>${score}%</strong>. The resume meets baseline requirements but needs targeted keyword improvements to consistently pass ATS gatekeepers.`
+      : `<strong>${this.escapeHTML(candidateName)}'s</strong> resume shows <strong>significant keyword gaps</strong> with a score of <strong>${score}%</strong>. Immediate improvements are required to make this resume competitive for ATS-filtered job applications.`;
+
+    const keywordSummary = matched.length > 0
+      ? `The resume successfully matched <strong>${matched.length} of ${matched.length + missing.length} required keywords</strong>. Key matched terms include: <em>${this.escapeHTML(topMatched)}</em>.`
+      : `The resume did not match any of the required job description keywords. A full rewrite targeting the specific role requirements is strongly recommended.`;
+
+    const gapSummary = missing.length > 0
+      ? `<strong>${missing.length} critical keywords</strong> are missing from the resume. The most important gaps are: <em>${this.escapeHTML(topMissing)}</em>. These should be incorporated naturally into the work experience and skills sections.`
+      : `<strong>No keyword gaps were detected.</strong> All required terms from the job description were found in the resume.`;
+
+    const strengthSummary = strongSections.length > 0
+      ? `The resume performs strongly in: <strong>${strongSections.map(s => this.escapeHTML(s)).join(', ')}</strong>.`
+      : `No sections scored above 80%. A comprehensive resume revision is recommended.`;
+
+    const weakSummary = weakSections.length > 0
+      ? `Areas requiring improvement: <strong>${weakSections.map(s => this.escapeHTML(s)).join(', ')}</strong>. Focus on these sections first for maximum ATS impact.`
+      : `All sections are performing adequately. Focus on keyword density and metric-driven bullet points to push the score higher.`;
+
+    const nextStepText = score >= 85
+      ? 'Submit your application with confidence. Consider preparing tailored cover letter content that mirrors the matched keywords. Review AI-optimized rewrites for any remaining bullet point improvements.'
+      : score >= 70
+      ? `Incorporate the ${missing.length} missing keywords into your experience bullets before applying. Use the AI-optimized rewrites section below as a guide. Aim for a score above 85% before submitting.`
+      : `Do not submit this resume without significant revision. Add all ${missing.length} missing keywords in context within your work experience. Consider using the AI Copilot feature for a full resume rewrite targeting this specific role.`;
+
+    const executiveSummaryHTML = `
+    <div style="background:#f8faff;border:1.5px solid #dbeafe;border-radius:8px;padding:18px 20px;margin-bottom:20px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#1e40af;margin-bottom:12px;">📋 Executive Summary</div>
+      <p style="font-size:11.5px;color:#1e293b;line-height:1.75;margin:0 0 10px;">${overallStatus}</p>
+      <p style="font-size:11px;color:#374151;line-height:1.75;margin:0 0 10px;">${keywordSummary} ${gapSummary}</p>
+      <p style="font-size:11px;color:#374151;line-height:1.75;margin:0 0 10px;">${strengthSummary} ${weakSummary}</p>
+      <div style="background:#eff6ff;border-left:3px solid #3b82f6;border-radius:0 4px 4px 0;padding:10px 14px;margin-top:12px;">
+        <div style="font-size:10px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Recommended Next Steps</div>
+        <p style="font-size:11px;color:#1e3a8a;line-height:1.65;margin:0;">${nextStepText}</p>
+      </div>
+    </div>`;
+
     const reportHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -615,6 +662,9 @@ class AtsAnalyzer {
     <div style="font-size:16px;font-weight:800;">${verdictLabel}</div>
     <div style="font-size:11px;opacity:0.85;">${this.escapeHTML(recruiterVerdict || (score >= 75 ? 'This candidate demonstrates strong alignment with the role requirements.' : 'Moderate gaps detected. Incorporate missing keywords to boost ATS ranking.'))}</div>
   </div>
+
+  <!-- EXECUTIVE SUMMARY -->
+  ${executiveSummaryHTML}
 
   <!-- HIRING PROBABILITY -->
   <div class="section">
