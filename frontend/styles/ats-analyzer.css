@@ -1154,6 +1154,83 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   29.5  PREMIUM ATS EXPORT BUTTON STYLING
+   ───────────────────────────────────────────────────────────── */
+.ats-export-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+  color: #ffffff !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.ats-export-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: left 0.6s ease;
+}
+
+.ats-export-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #1e3a8a 100%);
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1.5px);
+  color: #ffffff !important;
+}
+
+.ats-export-btn:hover::after {
+  left: 100%;
+}
+
+.ats-export-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 5px rgba(37, 99, 235, 0.3);
+}
+
+.ats-export-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ats-export-btn:hover svg {
+  transform: translateY(1px);
+}
+
+/* Header bar variant */
+.ats-export-btn-header {
+  width: auto;
+  padding: 8px 16px;
+  font-size: 12px;
+  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ats-export-btn-header:hover {
+  background: linear-gradient(135deg, #047857 0%, #0f766e 100%);
+  box-shadow: 0 4px 18px rgba(5, 150, 105, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────
    30. PRINT STYLES
    ───────────────────────────────────────────────────────────── */
 @media print {
