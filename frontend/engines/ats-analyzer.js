@@ -733,19 +733,22 @@ class AtsAnalyzer {
     // Strategy 1: Direct html2pdf PDF File Download
     if (typeof window.html2pdf === 'function') {
       const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'fixed';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '-9999px';
-      tempDiv.style.width = '750px';
+      tempDiv.id = 'atsPdfTempRenderContainer';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '0';
+      tempDiv.style.top = '0';
+      tempDiv.style.zIndex = '999999';
+      tempDiv.style.width = '790px';
       tempDiv.style.background = '#ffffff';
+      tempDiv.style.color = '#111827';
       tempDiv.innerHTML = reportInnerBody;
       document.body.appendChild(tempDiv);
 
       const opt = {
-        margin:       [10, 10, 10, 10],
+        margin:       [8, 8, 8, 8],
         filename:     pdfFileName,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
