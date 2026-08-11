@@ -627,6 +627,86 @@ class AtsAnalyzer {
       </div>
     </div>`;
 
+    const reportInnerBody = `
+<div id="atsReportContainer" style="font-family:'Inter', Arial, sans-serif; font-size:11px; color:#111827; background:#ffffff; padding:24px; width:750px; margin:0 auto; line-height:1.6; box-sizing:border-box;">
+  <!-- HEADER -->
+  <div style="background:#1e3a5f; color:#ffffff; padding:20px 24px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <div style="font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; opacity:0.75; margin-bottom:4px;">ResuAI Studio — ATS Diagnostic Report</div>
+      <div style="font-size:20px; font-weight:800; letter-spacing:-0.02em;">${this.escapeHTML(candidateName)}</div>
+      <div style="font-size:10px; opacity:0.65; margin-top:4px;">Generated: ${timestamp}</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:38px; font-weight:800; color:${scoreColor}; line-height:1;">${score}%</div>
+      <div style="font-size:10px; opacity:0.8; margin-top:2px;">ATS Match Score</div>
+    </div>
+  </div>
+
+  <!-- VERDICT BANNER -->
+  <div style="background:${verdictBg}; color:${verdictFg}; border:1.5px solid ${scoreColor}40; border-radius:6px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:center; gap:12px;">
+    <div style="font-size:15px; font-weight:800; white-space:nowrap;">${verdictLabel}</div>
+    <div style="font-size:11px; opacity:0.9; line-height:1.4;">${this.escapeHTML(recruiterVerdict || (score >= 75 ? 'This candidate demonstrates strong alignment with the role requirements.' : 'Moderate gaps detected. Incorporate missing keywords to boost ATS ranking.'))}</div>
+  </div>
+
+  <!-- EXECUTIVE SUMMARY -->
+  ${executiveSummaryHTML}
+
+  <!-- HIRING PROBABILITY -->
+  <div style="margin-bottom:22px; page-break-inside:avoid;">
+    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">Hiring Probability Estimates</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+      <div style="text-align:center; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
+        <div style="font-size:22px; font-weight:800; color:${barColor(parseInt(intProb))};">${intProb}</div>
+        <div style="font-size:10px; color:#64748b; font-weight:500; margin-top:3px;">Interview Probability</div>
+      </div>
+      <div style="text-align:center; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
+        <div style="font-size:22px; font-weight:800; color:${barColor(parseInt(offProb))};">${offProb}</div>
+        <div style="font-size:10px; color:#64748b; font-weight:500; margin-top:3px;">Offer Probability</div>
+      </div>
+      <div style="text-align:center; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
+        <div style="font-size:22px; font-weight:800; color:${barColor(parseInt(atsGate))};">${atsGate}</div>
+        <div style="font-size:10px; color:#64748b; font-weight:500; margin-top:3px;">ATS Gatekeeper Pass</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE MATRIX -->
+  <div style="margin-bottom:22px; page-break-inside:avoid;">
+    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">Section Score Breakdown</h2>
+    ${metricsHTML}
+  </div>
+
+  <!-- MATCHED KEYWORDS -->
+  <div style="margin-bottom:22px; page-break-inside:avoid;">
+    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">✓ Matched Keywords (${matched.length})</h2>
+    <div style="line-height:2;">${matchedHTML}</div>
+  </div>
+
+  <!-- MISSING KEYWORDS -->
+  <div style="margin-bottom:22px; page-break-inside:avoid;">
+    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">⚠ Missing / Gap Keywords (${missing.length})</h2>
+    <div style="line-height:2;">${missingHTML}</div>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <div style="margin-bottom:22px; page-break-inside:avoid;">
+    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">Action Recommendations</h2>
+    ${recsHTML}
+  </div>
+
+  <!-- SMART REWRITES -->
+  <div style="margin-bottom:22px; page-break-inside:avoid;">
+    <h2 style="font-size:13px; font-weight:700; color:#111827; margin:0 0 10px; padding-bottom:6px; border-bottom:1.5px solid #e5e7eb;">AI-Optimized Bullet Rewrites</h2>
+    ${rewritesHTML}
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:24px; padding-top:12px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-size:9px; color:#9ca3af;">Generated by ResuAI Studio · ATS Diagnostic Engine</span>
+    <span style="font-size:9px; color:#9ca3af;">${timestamp}</span>
+  </div>
+</div>`;
+
     const reportHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -636,121 +716,78 @@ class AtsAnalyzer {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    @page { size: A4 portrait; margin: 16mm 14mm; }
-    html, body { font-family: 'Inter', Arial, sans-serif; font-size: 11px; color: #111827; background: #fff; margin: 0; padding: 0; line-height: 1.6; }
-    h2 { font-size: 13px; font-weight: 700; color: #111827; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid #e5e7eb; }
-    .section { margin-bottom: 22px; page-break-inside: avoid; }
-    @media print { body { font-size: 11px; } }
+    @page { size: A4 portrait; margin: 12mm; }
+    html, body { font-family: 'Inter', Arial, sans-serif; font-size: 11px; color: #111827; background: #ffffff !important; margin: 0; padding: 0; line-height: 1.6; }
+    @media print { body { background: #ffffff !important; } }
   </style>
 </head>
-<body>
-  <!-- HEADER -->
-  <div style="background:#1e3a5f;color:#fff;padding:20px 24px;border-radius:8px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
-    <div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin-bottom:4px;">ResuAI Studio — ATS Diagnostic Report</div>
-      <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;">${this.escapeHTML(candidateName)}</div>
-      <div style="font-size:10px;opacity:0.65;margin-top:4px;">Generated: ${timestamp}</div>
-    </div>
-    <div style="text-align:center;">
-      <div style="font-size:40px;font-weight:800;color:${scoreColor};line-height:1;">${score}%</div>
-      <div style="font-size:10px;opacity:0.8;margin-top:2px;">ATS Match Score</div>
-    </div>
-  </div>
-
-  <!-- VERDICT BANNER -->
-  <div style="background:${verdictBg};color:${verdictFg};border:1.5px solid ${scoreColor}33;border-radius:6px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-    <div style="font-size:16px;font-weight:800;">${verdictLabel}</div>
-    <div style="font-size:11px;opacity:0.85;">${this.escapeHTML(recruiterVerdict || (score >= 75 ? 'This candidate demonstrates strong alignment with the role requirements.' : 'Moderate gaps detected. Incorporate missing keywords to boost ATS ranking.'))}</div>
-  </div>
-
-  <!-- EXECUTIVE SUMMARY -->
-  ${executiveSummaryHTML}
-
-  <!-- HIRING PROBABILITY -->
-  <div class="section">
-    <h2>Hiring Probability Estimates</h2>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-      <div style="text-align:center;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
-        <div style="font-size:24px;font-weight:800;color:${barColor(parseInt(intProb))};">${intProb}</div>
-        <div style="font-size:10px;color:#6b7280;font-weight:500;margin-top:4px;">Interview Probability</div>
-      </div>
-      <div style="text-align:center;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
-        <div style="font-size:24px;font-weight:800;color:${barColor(parseInt(offProb))};">${offProb}</div>
-        <div style="font-size:10px;color:#6b7280;font-weight:500;margin-top:4px;">Offer Probability</div>
-      </div>
-      <div style="text-align:center;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
-        <div style="font-size:24px;font-weight:800;color:${barColor(parseInt(atsGate))};">${atsGate}</div>
-        <div style="font-size:10px;color:#6b7280;font-weight:500;margin-top:4px;">ATS Gatekeeper Pass</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCORE MATRIX -->
-  <div class="section">
-    <h2>Section Score Breakdown</h2>
-    ${metricsHTML}
-  </div>
-
-  <!-- MATCHED KEYWORDS -->
-  <div class="section">
-    <h2>✓ Matched Keywords (${matched.length})</h2>
-    <div style="line-height:2;">${matchedHTML}</div>
-  </div>
-
-  <!-- MISSING KEYWORDS -->
-  <div class="section">
-    <h2>⚠ Missing / Gap Keywords (${missing.length})</h2>
-    <div style="line-height:2;">${missingHTML}</div>
-  </div>
-
-  <!-- RECOMMENDATIONS -->
-  <div class="section">
-    <h2>Action Recommendations</h2>
-    ${recsHTML}
-  </div>
-
-  <!-- SMART REWRITES -->
-  <div class="section">
-    <h2>AI-Optimized Bullet Rewrites</h2>
-    ${rewritesHTML}
-  </div>
-
-  <!-- FOOTER -->
-  <div style="margin-top:28px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:9px;color:#9ca3af;">Generated by ResuAI Studio · ATS Diagnostic Engine</span>
-    <span style="font-size:9px;color:#9ca3af;">${timestamp}</span>
-  </div>
+<body style="background:#ffffff;">
+  ${reportInnerBody}
 </body>
 </html>`;
 
-    // Open report in a dedicated popup window so the browser prints ONLY the report
-    const popup = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
-    if (!popup) {
-      if (typeof showToast === 'function') showToast('Popup blocked — please allow popups for this site and try again.', 'warning');
+    const pdfFileName = `ATS_Diagnostic_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+
+    // Strategy 1: Direct html2pdf PDF File Download
+    if (typeof window.html2pdf === 'function') {
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'fixed';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.width = '750px';
+      tempDiv.style.background = '#ffffff';
+      tempDiv.innerHTML = reportInnerBody;
+      document.body.appendChild(tempDiv);
+
+      const opt = {
+        margin:       [10, 10, 10, 10],
+        filename:     pdfFileName,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      if (typeof showToast === 'function') showToast('Generating ATS Diagnostic PDF Report...', 'info');
+
+      window.html2pdf().set(opt).from(tempDiv).save().then(() => {
+        if (tempDiv.parentNode) tempDiv.parentNode.removeChild(tempDiv);
+        if (typeof showToast === 'function') showToast('ATS Report PDF downloaded successfully!', 'success');
+      }).catch(err => {
+        console.warn('[ATS Export] html2pdf fallback to popup print:', err);
+        if (tempDiv.parentNode) tempDiv.parentNode.removeChild(tempDiv);
+        this._fallbackPopupPrint(reportHTML);
+      });
       return;
     }
 
+    // Strategy 2: Popup Window Document Print
+    this._fallbackPopupPrint(reportHTML);
+  }
+
+  _fallbackPopupPrint(reportHTML) {
+    const popup = window.open('', '_blank', 'width=900,height=750,scrollbars=yes,resizable=yes');
+    if (!popup) {
+      if (typeof showToast === 'function') showToast('Popup blocked — please allow popups for this site.', 'warning');
+      return;
+    }
     popup.document.open();
     popup.document.write(reportHTML);
     popup.document.close();
 
-    // Wait for fonts/assets to load then trigger print dialog
     popup.onload = () => {
       setTimeout(() => {
         popup.focus();
         popup.print();
         if (typeof showToast === 'function') showToast('ATS Report opened — choose "Save as PDF" in the print dialog.', 'success');
-      }, 600);
+      }, 500);
     };
 
-    // Fallback if onload doesn't fire (e.g. same-origin doc.write)
     setTimeout(() => {
       if (!popup.closed) {
         popup.focus();
         popup.print();
-        if (typeof showToast === 'function') showToast('ATS Report opened — choose "Save as PDF" in the print dialog.', 'success');
       }
-    }, 1200);
+    }, 1000);
   }
 
   /* ─── DOM helpers ─── */
