@@ -19,10 +19,9 @@ module.exports = async function handler(req, res) {
       user: { email: emailToUse, name: emailToUse.split('@')[0] || 'Developer' }
     });
   } catch (err) {
-    return res.status(200).json({
-      success: true,
-      token: 'token_fallback_' + Date.now(),
-      user: { email: 'developer@resuai.dev', name: 'Developer' }
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error during login'
     });
   }
 };

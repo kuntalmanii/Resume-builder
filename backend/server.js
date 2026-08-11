@@ -533,12 +533,14 @@ const server = http.createServer((req, res) => {
           user: { email: emailToUse, name: emailToUse.split('@')[0] || 'Developer' }
         }));
       } catch (err) {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          token: 'token_fallback_' + Date.now(),
-          user: { email: 'developer@resuai.dev', name: 'Developer' }
-        }));
+        log('ERROR', `Login request failure: ${err.message}`);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: false,
+            error: 'Internal server error during login'
+          }));
+        }
       }
     })();
     return;

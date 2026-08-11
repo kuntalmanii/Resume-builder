@@ -37,10 +37,10 @@ function callGeminiChat(apiKey, prompt, modelIndex = 0) {
       }
     };
 
-    const req = https.request(options, (res) => {
+    const req = https.request(options, (geminiRes) => {
       let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
+      geminiRes.on('data', chunk => { data += chunk; });
+      geminiRes.on('end', () => {
         try {
           const parsed = JSON.parse(data);
           const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
