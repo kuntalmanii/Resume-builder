@@ -473,15 +473,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const rootDir = path.resolve(__dirname, '../');
-  const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+  const rawRootDir = path.resolve(__dirname, '../');
+  const rootDir = fs.existsSync(rawRootDir) ? fs.realpathSync(rawRootDir) : rawRootDir;
+
+  let decodedPath = pathname;
+  try { decodedPath = decodeURIComponent(pathname); } catch (e) {}
+
+  const safePath = path.normalize(decodedPath).replace(/^(\.\.[\/\\])+/, '');
   
   // Resolve target file path against root project directory
   let filePath = (safePath === '/' || safePath === '/index.html')
     ? path.join(rootDir, 'frontend', 'index.html')
     : path.join(rootDir, safePath);
 
-  if (!filePath.startsWith(rootDir)) {
+  const resolvedPath = path.resolve(filePath);
+
+  if (!resolvedPath.startsWith(rootDir)) {
     log('WARN', `Forbidden path traversal attempt blocked: ${pathname}`);
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden: Access Denied');
