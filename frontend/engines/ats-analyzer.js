@@ -26,11 +26,13 @@ class AtsAnalyzer {
   }
 
   bindExportReportButton() {
-    const btn = document.getElementById('btnExportAtsReport');
-    if (btn && !btn.dataset.boundExport) {
-      btn.dataset.boundExport = 'true';
-      btn.addEventListener('click', e => { e.preventDefault(); this.exportAnalysisPdf(); });
-    }
+    ['btnExportAtsReport', 'btnExportAuditSidebar'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn && !btn.dataset.boundExport) {
+        btn.dataset.boundExport = 'true';
+        btn.addEventListener('click', e => { e.preventDefault(); this.exportAnalysisPdf(); });
+      }
+    });
   }
 
   bindAtsScanButton() {
