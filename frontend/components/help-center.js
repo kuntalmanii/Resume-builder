@@ -135,7 +135,7 @@ class HelpCenter {
         </div>
         <div class="help-search-wrapper">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="help-search-input" id="helpSearchInput" placeholder="Search 11 documentation sections & FAQs..." autocomplete="off" />
+          <input type="text" class="help-search-input" id="helpSearchInput" placeholder="Search ${HelpCenter.getKnowledgeBase().length} documentation sections & FAQs..." autocomplete="off" />
         </div>
       </div>
 
@@ -394,7 +394,12 @@ class HelpCenter {
 
   contactSupport() {
     this.toggle(false);
-    alert('ResuAI Support: Email support@resuai.dev or launch AI Copilot for live assistance.');
+    const msg = 'ResuAI Support: Email support@resuai.dev or launch AI Copilot for live assistance.';
+    if (typeof showToast === 'function') {
+      showToast(msg, 'info');
+    } else {
+      console.log(msg);
+    }
   }
 }
 

@@ -238,81 +238,8 @@ function makeGeminiRequest(modelName, promptText) {
   });
 }
 
-async function callGeminiWithModelFallback(promptText, preferredModel) {
-  let modelsToTry = [...GEMINI_MODELS];
-  if (preferredModel && typeof preferredModel === 'string') {
-    const trimmed = preferredModel.trim();
-    if (trimmed) {
-      modelsToTry = [trimmed, ...GEMINI_MODELS.filter(m => m !== trimmed)];
-    }
-  }
-
-  let lastErr = null;
-  for (const model of modelsToTry) {
-    try {
-      log('INFO', `Attempting Gemini API request with model: ${model}`);
-      return await makeGeminiRequest(model, promptText);
-    } catch (err) {
-      lastErr = err;
-      log('WARN', `Gemini model ${model} failed (${err.message}), trying next fallback model...`);
-      continue;
-    }
-  }
-  throw lastErr || new Error("All Gemini models failed");
-}
-
-
-
-function callGeminiOptimize(jobTitle, experienceText, skills, preferredModel, sensitivity) {
-  const sensVal = parseFloat(sensitivity);
-  let toneGuidance = 'Maintain balanced technical keyword density and quantitative metrics.';
-  if (!isNaN(sensVal)) {
-    if (sensVal <= 0.3) toneGuidance = 'Strictly prioritize exact ATS keyword match and standard industry terms.';
-    else if (sensVal >= 0.8) toneGuidance = 'Focus heavily on creative framing, high-impact leadership verbs, and dramatic performance metrics.';
-  }
-
-  const prompt = `You are a Senior Technical Resume Writer and Google Staff Engineer.
-Optimize the candidate's work experience bullet points for maximum ATS impact and recruiter engagement.
-
-TARGET JOB TITLE: ${jobTitle || 'Senior Software Engineer'}
-SKILLS: ${Array.isArray(skills) ? skills.join(', ') : (skills || 'TypeScript, React')}
-TONE GUIDANCE: ${toneGuidance}
-CURRENT EXPERIENCE BULLET POINTS:
-${experienceText || 'Built frontend UI components.'}
-
-Instructions:
-1. Rewrite the experience text into 3-5 punchy, high-impact bullet points starting with strong action verbs (e.g. Architected, Engineered, Spearheaded, Decreased, Optimized).
-2. Include realistic performance metrics (e.g., "Reduced LCP by 42%", "Built design system serving 2M+ active users").
-3. Respond STRICTLY in JSON format with schema:
-{
-  "optimizedBulletPoints": "Architected high-throughput UI component system serving 2M+ active monthly users.\\nEngineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to <0.05.\\nSpearheaded migration to TypeScript and Next.js, accelerating release velocity by 35% across 4 cross-functional teams.",
-  "suggestedSkills": ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL", "Performance"]
-}`;
-
-  return callGeminiWithModelFallback(prompt, preferredModel);
-}
-
-
-
 // ============================================================================
-// 6. HEURISTIC ENGINE SERVICE (OFFLINE / FALLBACK)
-// ============================================================================
-
-
-function runServerFallbackOptimization(jobTitle, experienceText) {
-  return {
-    optimizedBulletPoints: `• Architected high-performance UI component library serving 2M+ active monthly users.
-• Engineered automated Web Vitals optimization pipeline, reducing LCP by 42% and CLS to < 0.05.
-• Spearheaded frontend migration to TypeScript and Next.js, boosting team release velocity by 35%.
-• Implemented client-side GraphQL caching layer, decreasing server payload size by 60%.`,
-    suggestedSkills: ["TypeScript", "React", "Next.js", "Design Systems", "Web Vitals", "GraphQL"]
-  };
-}
-
-
-
-// ============================================================================
-// 7. ROUTE CONTROLLERS & SERVER INITIALIZATION
+// 6. ROUTE CONTROLLERS & SERVER INITIALIZATION
 // ============================================================================
 const server = http.createServer((req, res) => {
   setSecurityHeaders(req, res);
