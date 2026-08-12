@@ -1626,7 +1626,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const svgChart = document.getElementById('analyticsSvgChart');
     if (svgChart) {
-      const xCoords = [40, 128, 216, 304, 392, 480];
+      const xCoords = [40, 124, 208, 292, 376, 460];
       const yCoords = history.map(score => Math.round(180 - (score / 100) * 160));
 
       let dPath = `M ${xCoords[0]} ${yCoords[0]}`;
@@ -4111,18 +4111,17 @@ Key Requirements:
   let jobApplicationsList = [];
 
   function convertSalaryToINR(str) {
-    if (!str) return str;
-    if (str.includes('$')) {
-      return str.replace(/\$(\d[\d,]*)/g, (match, p1) => {
-        const val = parseInt(p1.replace(/,/g, ''), 10);
-        if (val >= 1000) {
-          const lakhs = Math.round((val * 85) / 100000);
-          return `₹${lakhs},00,000`;
-        }
-        return `₹${val * 85}`;
-      }).replace(/\$235k/g, '₹50 LPA');
-    }
-    return str;
+    if (!str || typeof str !== 'string') return str;
+    return str.replace(/\$(\d+)(?:,000|k)?\s*[-–]\s*\$(\d+)(?:,000|k)?/gi, (m, min, max) => {
+      const minK = parseInt(min, 10);
+      const maxK = parseInt(max, 10);
+      if (minK >= 20 && maxK >= 20) {
+        const minL = Math.round(minK * 0.83);
+        const maxL = Math.round(maxK * 0.83);
+        return `₹${minL}L - ₹${maxL}L ($${minK}k - $${maxK}k)`;
+      }
+      return m;
+    });
   }
 
   function loadJobApplications() {
