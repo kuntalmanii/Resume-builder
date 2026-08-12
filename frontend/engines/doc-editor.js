@@ -705,8 +705,22 @@
   };
 
   /* ── 14. AI WRITING ASSISTANT & CHAT ── */
+  let isAiPending = false;
+
   window.sendAiAction = async function (promptText, explicitSection, explicitText) {
     if (!promptText) return;
+    if (isAiPending) {
+      if (typeof showToast === 'function') showToast('AI is optimizing, please wait a moment…', 'info');
+      return;
+    }
+
+    isAiPending = true;
+    const aiButtons = document.querySelectorAll('.doc-sha-btn, .ai-action-chip, .ai-msg-action-btn');
+    aiButtons.forEach(b => {
+      b.style.pointerEvents = 'none';
+      b.style.opacity = '0.6';
+    });
+
     appendUserMsg(promptText);
     switchRPanel('ai');
 
@@ -895,6 +909,12 @@
         '• Align keywords with your target role: ' + (jobTitle || 'Software Engineer') + '.',
         true
       );
+    } finally {
+      isAiPending = false;
+      aiButtons.forEach(b => {
+        b.style.pointerEvents = '';
+        b.style.opacity = '';
+      });
     }
   };
 
