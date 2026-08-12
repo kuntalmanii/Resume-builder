@@ -69,6 +69,33 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
     ? `Moderate fit. Missing ${missing.length>0?missing.slice(0,3).join(', '):'some key skills'}. With targeted additions in experience sections this could clear ATS filters.`
     : `Significant keyword gaps (${missing.slice(0,3).join(', ')}). Would likely be filtered before a human reviewer sees it.`;
 
+  // Extract actual candidate bullets from resume text for dynamic Smart Rewrites
+  const rawBullets = cleanResume
+    .split(/\n+/)
+    .map(line => line.replace(/^[•\-\*\d\.\s]+/, '').trim())
+    .filter(line => line.length > 20 && !/^(experience|education|skills|projects|summary|contact|certifications|phone|email|linkedin|github)/i.test(line));
+
+  const generatedRewrites = [];
+  if (rawBullets.length > 0) {
+    const topBullet = rawBullets[0];
+    const targetKw = missing[0] || matched[0] || 'Technical Architecture';
+    generatedRewrites.push({
+      before: topBullet,
+      after: `Architected high-performance system architecture incorporating ${targetKw}, improving application throughput by 38% and reducing p99 latency.`,
+      highlights: [`Verb: Architected`, `Metric: +38% Throughput`, `Keywords: ${targetKw}`]
+    });
+
+    if (rawBullets.length > 1) {
+      const secondBullet = rawBullets[1];
+      const targetKw2 = missing[1] || matched[1] || 'CI/CD Pipelines';
+      generatedRewrites.push({
+        before: secondBullet,
+        after: `Spearheaded automated delivery pipelines integrating ${targetKw2}, cutting deployment release latency by 45% with zero downtime.`,
+        highlights: [`Verb: Spearheaded`, `Metric: -45% Latency`, `Keywords: ${targetKw2}`]
+      });
+    }
+  }
+
   return {
     score: finalScore,
     verdict: finalScore>=85?'SHORTLIST':finalScore>=70?'HOLD':'REJECT',
@@ -79,7 +106,7 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
       offer:      finalScore>=85?'82%':finalScore>=70?'61%':'33%',
       atsGatePass:finalScore>=85?'97%':finalScore>=70?'81%':'52%'
     },
-    smartRewrites: [],
+    smartRewrites: generatedRewrites,
     sectionScores: {
       keywordMatch:    finalScore,
       skillsAlignment: Math.min(100,Math.round(finalScore*0.95)),
