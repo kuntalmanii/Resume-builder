@@ -888,7 +888,19 @@ class AtsAnalyzer {
 
   /* ─── DOM helpers ─── */
   setEl(id, text)            { const el=document.getElementById(id); if(el) el.textContent=text; }
-  setBarWidth(id, pct)       { const el=document.getElementById(id); if(el) el.style.width=`${Math.min(100,Math.max(0,pct))}%`; }
+  setBarWidth(id, pct) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = Math.min(100, Math.max(0, pct));
+    el.style.width = `${val}%`;
+    if (val >= 75) {
+      el.className = 'ats-score-bar-fill green';
+    } else if (val < 50) {
+      el.className = 'ats-score-bar-fill red';
+    } else {
+      el.className = 'ats-score-bar-fill';
+    }
+  }
   escapeHTML(str) {
     if (typeof str !== 'string') return '';
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
