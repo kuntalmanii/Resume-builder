@@ -72,16 +72,16 @@
   ></script>
   <!-- jsPDF v2.5.1 for client-side vector PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- html2pdf.js v0.10.1 -->
+  <!-- html2pdf.js v0.10.1 — Client-side HTML to PDF document generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Modular Style Architecture -->
-  <link rel="stylesheet" href="/frontend/styles/variables.css?v=2.5" />
-  <link rel="stylesheet" href="/frontend/styles/layout.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/styles/variables.css?v=3.0" />
+  <link rel="stylesheet" href="/frontend/styles/layout.css?v=3.0" />
   <link rel="stylesheet" href="/frontend/styles/auth.css?v=3.0" />
   <link rel="stylesheet" href="/frontend/styles/components.css?v=2.5" />
   <link rel="stylesheet" href="/frontend/styles/job-tracker.css?v=2.5" />
-  <link rel="stylesheet" href="/frontend/styles/resume-editor.css?v=2.5" />
-  <link rel="stylesheet" href="/frontend/styles/ats-analyzer.css?v=2.5" />
+  <link rel="stylesheet" href="/frontend/styles/resume-editor.css?v=2.8" />
+  <link rel="stylesheet" href="/frontend/styles/ats-analyzer.css?v=4.1" />
   <link rel="stylesheet" href="/frontend/styles/styles.css?v=2.5" />
   <link rel="stylesheet" href="/frontend/components/help-center.css?v=2.5" />
   <link rel="stylesheet" href="/frontend/components/command-palette.css?v=2.5" />
@@ -513,7 +513,7 @@
 
               <div class="topbar-spacer"></div>
               <!-- Action buttons -->
-              <button class="topbar-action-btn" id="sidebarNewResumeBtn" title="Create a new resume version or start from scratch">
+              <button class="topbar-action-btn" id="sidebarNewResumeBtn" onclick="window.openVersionModal()" title="Manage career track versions or start a new resume">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>New Resume</span>
               </button>
@@ -523,12 +523,6 @@
                 <span>Import Resume</span>
               </button>
               <input type="file" id="importResumeFileInput" accept=".pdf,.txt" style="display:none;" />
-
-
-
-
-
-
 
               <button class="topbar-action-btn btn-primary" id="btnPrintPdf" title="Download & Print PDF">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -584,13 +578,6 @@
                     <span class="section-nav-pct" id="navPct-summary">—</span>
                   </div>
                 </nav>
-
-                <div class="editor-left-footer">
-                  <button class="editor-new-section-btn" id="btnNewResumeSidebar" onclick="document.getElementById('btnNewResume')?.click()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    New Resume
-                  </button>
-                </div>
               </aside>
 
               <!-- ─────────────────────────────────────────
@@ -629,58 +616,141 @@
 
                     <!-- §1 PERSONAL INFORMATION -->
                     <div class="doc-section-block" id="docSection-personal" data-section="personal">
-                      <div class="doc-section-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <span>Personal Details</span>
-                      </div>
-                      <!-- Name -->
-                      <div class="doc-field doc-name-field"
-                           contenteditable="true"
-                           spellcheck="true"
-                           data-placeholder="Your Full Name"
-                           data-syncs="inputFullName"
-                           id="docFieldName"
-                           aria-label="Full Name"></div>
-                      <!-- Job Title -->
-                      <div class="doc-field doc-title-field"
-                           contenteditable="true"
-                           spellcheck="true"
-                           data-placeholder="Target Job Title — e.g. Senior Frontend Engineer"
-                           data-syncs="inputJobTitle"
-                           id="docFieldTitle"
-                           aria-label="Job Title"></div>
-                      <!-- Contact Row -->
-                      <div class="doc-contact-grid">
-                        <div class="doc-contact-item">
-                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                          <div class="doc-contact-field" contenteditable="true" data-placeholder="Email" data-syncs="inputEmail" aria-label="Email"></div>
+                      <div class="doc-section-header">
+                        <div class="doc-section-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          <span>Personal Details</span>
+                          <span class="personal-comp-pill" id="personalCompPill" title="Section completeness">0%</span>
                         </div>
-                        <div class="doc-contact-item">
-                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                          <div class="doc-contact-field" contenteditable="true" data-placeholder="Phone" data-syncs="inputPhone" aria-label="Phone"></div>
-                        </div>
-                        <div class="doc-contact-item">
-                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                          <div class="doc-contact-field" contenteditable="true" data-placeholder="Location" data-syncs="inputLocation" aria-label="Location"></div>
-                        </div>
-                        <div class="doc-contact-item">
-                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-                          <div class="doc-contact-field" contenteditable="true" data-placeholder="github.com/username" data-syncs="inputGithub" aria-label="GitHub"></div>
-                        </div>
-                        <div class="doc-contact-item">
-                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                          <div class="doc-contact-field" contenteditable="true" data-placeholder="linkedin.com/in/you" data-syncs="inputLinkedin" aria-label="LinkedIn"></div>
-                        </div>
-                        <div class="doc-contact-item">
-                          <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                          <div class="doc-contact-field" contenteditable="true" data-placeholder="yourportfolio.dev" data-syncs="inputPortfolio" aria-label="Portfolio"></div>
+                        <div class="doc-section-actions">
+                          <button type="button" class="doc-action-chip doc-collapse-btn" id="btnTogglePersonalSec" onclick="toggleDocSection('docSection-personal')" title="Collapse / Expand section" aria-expanded="true" aria-controls="docPersonalContent">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+                          </button>
                         </div>
                       </div>
-                      <!-- Section hover actions -->
-                      <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="Collapse" onclick="toggleDocSection('docSection-personal')">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
-                        </button>
+
+                      <div class="doc-section-content" id="docPersonalContent">
+                        <!-- Candidate Name Field -->
+                        <div class="doc-field-wrapper doc-name-wrapper">
+                          <div class="doc-field doc-name-field is-empty"
+                               contenteditable="true"
+                               spellcheck="false"
+                               data-single-line="true"
+                               data-placeholder="Your Full Name"
+                               data-syncs="inputFullName"
+                               id="docFieldName"
+                               role="textbox"
+                               tabindex="0"
+                               aria-label="Full Name"></div>
+                        </div>
+
+                        <!-- Job Title Field -->
+                        <div class="doc-field-wrapper doc-title-wrapper">
+                          <div class="doc-field doc-title-field is-empty"
+                               contenteditable="true"
+                               spellcheck="false"
+                               data-single-line="true"
+                               data-placeholder="Target Job Title — e.g. Senior Frontend Engineer"
+                               data-syncs="inputJobTitle"
+                               id="docFieldTitle"
+                               role="textbox"
+                               tabindex="0"
+                               aria-label="Job Title"></div>
+                        </div>
+
+                        <!-- Contact Grid -->
+                        <div class="doc-contact-grid" id="docContactGrid">
+                          <!-- Email -->
+                          <div class="doc-contact-item" data-contact-key="email">
+                            <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <div class="doc-contact-field is-empty"
+                                 contenteditable="true"
+                                 spellcheck="false"
+                                 data-single-line="true"
+                                 data-placeholder="Email Address"
+                                 data-syncs="inputEmail"
+                                 id="docFieldEmail"
+                                 role="textbox"
+                                 tabindex="0"
+                                 aria-label="Email Address"></div>
+                            <span class="contact-val-badge" id="badgeEmail" title="Validation status"></span>
+                          </div>
+
+                          <!-- Phone -->
+                          <div class="doc-contact-item" data-contact-key="phone">
+                            <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <div class="doc-contact-field is-empty"
+                                 contenteditable="true"
+                                 spellcheck="false"
+                                 data-single-line="true"
+                                 data-placeholder="Phone Number"
+                                 data-syncs="inputPhone"
+                                 id="docFieldPhone"
+                                 role="textbox"
+                                 tabindex="0"
+                                 aria-label="Phone Number"></div>
+                          </div>
+
+                          <!-- Location -->
+                          <div class="doc-contact-item" data-contact-key="location">
+                            <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <div class="doc-contact-field is-empty"
+                                 contenteditable="true"
+                                 spellcheck="false"
+                                 data-single-line="true"
+                                 data-placeholder="City, Country"
+                                 data-syncs="inputLocation"
+                                 id="docFieldLocation"
+                                 role="textbox"
+                                 tabindex="0"
+                                 aria-label="Location"></div>
+                          </div>
+
+                          <!-- GitHub -->
+                          <div class="doc-contact-item" data-contact-key="github">
+                            <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                            <div class="doc-contact-field is-empty"
+                                 contenteditable="true"
+                                 spellcheck="false"
+                                 data-single-line="true"
+                                 data-placeholder="github.com/username"
+                                 data-syncs="inputGithub"
+                                 id="docFieldGithub"
+                                 role="textbox"
+                                 tabindex="0"
+                                 aria-label="GitHub Profile"></div>
+                          </div>
+
+                          <!-- LinkedIn -->
+                          <div class="doc-contact-item" data-contact-key="linkedin">
+                            <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                            <div class="doc-contact-field is-empty"
+                                 contenteditable="true"
+                                 spellcheck="false"
+                                 data-single-line="true"
+                                 data-placeholder="linkedin.com/in/you"
+                                 data-syncs="inputLinkedin"
+                                 id="docFieldLinkedin"
+                                 role="textbox"
+                                 tabindex="0"
+                                 aria-label="LinkedIn Profile"></div>
+                          </div>
+
+                          <!-- Portfolio -->
+                          <div class="doc-contact-item" data-contact-key="portfolio">
+                            <svg class="doc-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            <div class="doc-contact-field is-empty"
+                                 contenteditable="true"
+                                 spellcheck="false"
+                                 data-single-line="true"
+                                 data-placeholder="yourportfolio.dev"
+                                 data-syncs="inputPortfolio"
+                                 id="docFieldPortfolio"
+                                 role="textbox"
+                                 tabindex="0"
+                                 aria-label="Portfolio URL"></div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1084,44 +1154,39 @@
 
           <div class="tab-pane" id="tab-ats-analyzer">
 
-            <!-- ══════════════════════════════════════════════
-                 1. ATS AUDIT TOP CONTROLS & META BAR
-                 ══════════════════════════════════════════════ -->
+            <!-- 1. ATS AUDIT TOP CONTROLS & META BAR -->
             <div class="ats-audit-header-bar">
               <div class="ats-header-top-row">
                 <div class="ats-top-actions">
                   <button type="button" class="topbar-action-btn" id="btnSelectPdfFile">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Upload New File
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload Resume
                   </button>
                   <button type="button" class="topbar-action-btn btn-primary" id="btnRunAtsAnalysis">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    <span id="btnRunAtsText">⚡ Scan Resume</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span id="btnRunAtsText">&#x26A1; Scan Resume</span>
                   </button>
-                  <button type="button" class="ats-export-btn ats-export-btn-header" id="btnExportAtsReport" style="display:none;" title="Download ATS Analysis PDF Report">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    Export Report PDF
+                  <button type="button" class="topbar-action-btn" id="btnExportAtsReport" style="display:none;" title="Download ATS Analysis PDF Report">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Export Report
                   </button>
-                  <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display: none;" />
+                  <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display:none;" />
                 </div>
               </div>
 
               <div class="ats-header-bottom-row">
-                <!-- ATS Engine Chip Group (Preserved ID) -->
                 <div class="ats-engine-chip-group" id="atsEngineChipsContainer">
-                  <span class="ats-chip-label">Parser Benchmark:</span>
+                  <span class="ats-chip-label">Parser:</span>
                   <button type="button" class="parser-chip active" data-engine="greenhouse">Greenhouse &amp; Lever</button>
-                  <button type="button" class="parser-chip" data-engine="workday">Workday Scanner</button>
-                  <button type="button" class="parser-chip" data-engine="taleo">Taleo Exact Match</button>
-                  <button type="button" class="parser-chip" data-engine="faang">FAANG Executive</button>
+                  <button type="button" class="parser-chip" data-engine="workday">Workday</button>
+                  <button type="button" class="parser-chip" data-engine="taleo">Taleo</button>
+                  <button type="button" class="parser-chip" data-engine="faang">FAANG</button>
                 </div>
-
-                <!-- Sample JD Template Selector (Preserved ID) -->
                 <div class="sample-jd-wrapper">
                   <label for="sampleJdSelect" class="sample-jd-label">Preset JD:</label>
                   <select id="sampleJdSelect" class="sample-jd-select">
-                    <option value="" selected>📋 Select Sample Job Description...</option>
-                    <optgroup label="Software & Engineering">
+                    <option value="" selected>&#x1F4CB; Select Sample Job Description...</option>
+                    <optgroup label="Software &amp; Engineering">
                       <option value="frontend">Senior Frontend Architect</option>
                       <option value="fullstack">Senior Full Stack Engineer</option>
                       <option value="backend">Lead Backend &amp; Systems Engineer</option>
@@ -1130,28 +1195,28 @@
                       <option value="game_developer">Senior Game Developer (Unreal / Unity)</option>
                       <option value="blockchain_web3">Smart Contract &amp; Web3 Engineer</option>
                     </optgroup>
-                    <optgroup label="Cloud, Infrastructure & Security">
+                    <optgroup label="Cloud, Infrastructure &amp; Security">
                       <option value="devops">DevOps &amp; Cloud Infrastructure Lead</option>
                       <option value="solutions_architect">Cloud Solutions Architect</option>
                       <option value="site_reliability">Principal Site Reliability Engineer (SRE)</option>
                       <option value="cybersecurity">Cloud Security Specialist</option>
                     </optgroup>
-                    <optgroup label="AI, Data & Analytics">
+                    <optgroup label="AI, Data &amp; Analytics">
                       <option value="ai">AI / Machine Learning Engineer</option>
                       <option value="data">Data Engineer &amp; Analytics Architect</option>
                     </optgroup>
-                    <optgroup label="Creative, Video & Design">
+                    <optgroup label="Creative, Video &amp; Design">
                       <option value="video_editor">Senior Video Editor &amp; Motion Designer</option>
                       <option value="graphic_designer">Brand &amp; Visual Graphic Designer</option>
                       <option value="ui_ux_designer">Staff UI/UX &amp; Design Systems Lead</option>
                     </optgroup>
-                    <optgroup label="Marketing, Social Media & Growth">
+                    <optgroup label="Marketing, Social Media &amp; Growth">
                       <option value="social_media_manager">Social Media &amp; Content Manager</option>
                       <option value="copywriter">Senior Copywriter &amp; Content Strategist</option>
                       <option value="growth_marketer">Growth &amp; Performance Marketer</option>
                       <option value="seo_specialist">SEO &amp; Organic Growth Lead</option>
                     </optgroup>
-                    <optgroup label="Business, HR & Operations">
+                    <optgroup label="Business, HR &amp; Operations">
                       <option value="product_manager">Technical Product Manager (APIs)</option>
                       <option value="scrum_master">Agile Coach &amp; Senior Scrum Master</option>
                       <option value="sales_engineer">Senior Technical Sales Engineer</option>
@@ -1166,33 +1231,28 @@
               </div>
             </div>
 
-            <!-- HIDDEN FILE BADGE (Preserved for script.js) -->
+            <!-- HIDDEN FORM ELEMENTS (Preserved for script.js) -->
             <div id="selectedFileBadge" style="display:none;"><span id="selectedFileName">resume.pdf</span></div>
             <div id="atsDropZone" style="display:none;"></div>
-
-            <!-- HIDDEN JD TEXTAREA CONTAINER (Preserved for script.js) -->
             <div style="display:none;">
-              <textarea id="atsJdInput" class="form-textarea" rows="4" placeholder="Paste target job description here..."></textarea>
+              <textarea id="atsJdInput" rows="4" placeholder="Paste target job description here..."></textarea>
             </div>
 
-            <!-- ══════════════════════════════════════════════
-                 2. EXECUTIVE SUMMARY SCORE BANNER
-                 ══════════════════════════════════════════════ -->
+            <!-- 2. EXECUTIVE SUMMARY SCORE HERO BANNER -->
             <div class="ats-executive-summary-banner">
               <div class="ats-main-score-box">
-                <div class="ats-score-ring-lg" id="scoreCircle" style="background: conic-gradient(#EDE9E3 0% 100%);">
+                <div class="ats-score-ring-lg" id="scoreCircle" style="background:conic-gradient(#6C63FF 0% 0%,#222840 0% 100%);">
                   <span class="ats-score-ring-val" id="scoreNumber">--</span>
                 </div>
                 <div class="ats-score-details">
                   <div class="ats-score-title" id="scoreSummaryHeading">Ready for ATS Analysis</div>
-                  <div class="ats-score-subtitle" id="scoreSummaryDesc">Select a preset role above or paste a target Job Description, then click '⚡ Scan Resume' to run analysis.</div>
+                  <div class="ats-score-subtitle" id="scoreSummaryDesc">Select a preset role above or paste a target Job Description, then click Scan Resume to run analysis.</div>
                   <div class="ats-score-badge-row">
                     <span class="badge-tag blue" id="analysisStatusBadge">Awaiting Scan</span>
                     <span class="badge-tag blue">Confidence: High</span>
                   </div>
                 </div>
               </div>
-
               <div class="ats-kpi-metrics-grid">
                 <div class="ats-kpi-item">
                   <span class="ats-kpi-label">Est. Pass Rate</span>
@@ -1213,43 +1273,39 @@
               </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════
-                 3. LOADING STATE (Preserved ID)
-                 ══════════════════════════════════════════════ -->
-            <div class="ats-loading-card" id="atsLoadingState" style="display:none;padding:24px;background:#FFFFFF;border-bottom:1px solid #EDE9E3;align-items:center;gap:16px;">
-              <div class="spinner-ring" style="width:24px;height:24px;border:3px solid #EDE9E3;border-top-color:#C98B4A;border-radius:50%;animation:spin 1s linear infinite;"></div>
+            <!-- 3. LOADING STATE (Preserved ID) -->
+            <div class="ats-loading-card" id="atsLoadingState" style="display:none;">
+              <div class="spinner-ring" style="width:22px;height:22px;border:3px solid #222840;border-top-color:#6C63FF;border-radius:50%;animation:ats-spin 0.9s linear infinite;flex-shrink:0;"></div>
               <div class="loading-text" style="flex:1;">
-                <h4 id="loadingStepText" style="font-size:13px;font-weight:600;margin-bottom:6px;">Parsing candidate resume against job requirements...</h4>
-                <div class="progress-bar-container" style="height:6px;background:#F2EEE8;border-radius:9999px;overflow:hidden;">
-                  <div class="progress-bar-fill" id="atsProgressFill" style="height:100%;background:#C98B4A;width:0%;transition:width 0.3s;"></div>
+                <h4 id="loadingStepText" style="font-size:13px;font-weight:600;margin-bottom:8px;">Parsing candidate resume against job requirements...</h4>
+                <div class="progress-bar-container" style="height:6px;border-radius:9999px;overflow:hidden;">
+                  <div class="progress-bar-fill" id="atsProgressFill" style="height:100%;width:0%;transition:width 0.3s;border-radius:9999px;"></div>
                 </div>
               </div>
-              <span class="progress-percent" id="atsProgressPercent" style="font-size:13px;font-weight:700;color:#C98B4A;">0%</span>
+              <span class="progress-percent" id="atsProgressPercent">0%</span>
             </div>
 
-            <!-- ══════════════════════════════════════════════
-                 4. FOUR-COLUMN ANALYTICAL WORKSPACE
-                 ══════════════════════════════════════════════ -->
-            <div class="ats-4col-workspace" id="ats-results">
+            <!-- 4. THREE-COLUMN ANALYTICAL WORKSPACE -->
+            <div class="ats-workspace-columns">
 
-              <!-- ── COL 1: Left Audit Categories (220px) ── -->
-              <aside class="ats-col-left">
-                <span class="ats-col-title">Audit Categories</span>
+              <!-- COL 1: Audit Navigation Sidebar -->
+              <aside class="ats-col-sidebar">
+                <div class="ats-sidebar-title">Audit Navigator</div>
                 <div class="ats-cat-item active" data-target="ats-sec-overview" onclick="switchAtsCategory('ats-sec-overview', this)">
-                  <span>Keyword Match</span>
-                  <span class="ats-cat-badge pass" id="catBadgeKw">--</span>
+                  <span>Executive Summary</span>
+                  <span class="ats-cat-badge pass">Score</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-experience" onclick="switchAtsCategory('ats-sec-experience', this)">
-                  <span>Experience Level</span>
-                  <span class="ats-cat-badge pass" id="catBadgeExp">--</span>
+                <div class="ats-cat-item" data-target="ats-sec-keywords" onclick="switchAtsCategory('ats-sec-keywords', this)">
+                  <span>Keyword Matrix</span>
+                  <span class="ats-cat-badge" id="catBadgeKeywords">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-skills" onclick="switchAtsCategory('ats-sec-skills', this)">
                   <span>Skills Alignment</span>
-                  <span class="ats-cat-badge pass" id="catBadgeSkills">--</span>
+                  <span class="ats-cat-badge warn" id="catBadgeSkills">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-education" onclick="switchAtsCategory('ats-sec-education', this)">
-                  <span>Education &amp; Certs</span>
-                  <span class="ats-cat-badge pass" id="catBadgeEdu">--</span>
+                <div class="ats-cat-item" data-target="ats-sec-impact" onclick="switchAtsCategory('ats-sec-impact', this)">
+                  <span>Experience Impact</span>
+                  <span class="ats-cat-badge warn" id="catBadgeImpact">--</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-formatting" onclick="switchAtsCategory('ats-sec-formatting', this)">
                   <span>Formatting &amp; Parsing</span>
@@ -1266,143 +1322,120 @@
                 <div class="ats-cat-item" data-target="ats-sec-verbs" onclick="switchAtsCategory('ats-sec-verbs', this)">
                   <span>Action Verbs</span>
                   <span class="ats-cat-badge pass" id="catBadgeVerbs">--</span>
-                </div>
-
-                <div style="margin-top:auto;padding-top:16px;border-top:1px solid #EDE9E3;">
-                  <button type="button" class="ats-export-btn" id="btnExportAuditSidebar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    Export Audit PDF
-                  </button>
-                </div>
               </aside>
 
-              <!-- ── COL 2 & 3: Detailed AI Audit Report (Flex 1) ── -->
+              <!-- COL 2+3: Detailed AI Audit Report -->
               <main class="ats-col-center">
 
-                <!-- Multi-score Breakdown Grid -->
+                <!-- Score Matrix -->
                 <div class="ats-score-matrix-grid">
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Keyword Match</span>
                       <span class="ats-score-card-val" id="matrixScoreKw">--</span>
                     </div>
-                    <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill green" id="matrixFillKw" style="width:0%;"></div>
-                    </div>
+                    <div class="ats-score-bar-bg"><div class="ats-score-bar-fill green" id="matrixFillKw" style="width:0%;"></div></div>
                   </div>
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Experience Match</span>
                       <span class="ats-score-card-val" id="matrixScoreExp">--</span>
                     </div>
-                    <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill green" id="matrixFillExp" style="width:0%;"></div>
-                    </div>
+                    <div class="ats-score-bar-bg"><div class="ats-score-bar-fill green" id="matrixFillExp" style="width:0%;"></div></div>
                   </div>
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Skills Alignment</span>
                       <span class="ats-score-card-val" id="matrixScoreSkills">--</span>
                     </div>
-                    <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill green" id="matrixFillSkills" style="width:0%;"></div>
-                    </div>
+                    <div class="ats-score-bar-bg"><div class="ats-score-bar-fill green" id="matrixFillSkills" style="width:0%;"></div></div>
                   </div>
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Metric Density</span>
                       <span class="ats-score-card-val" id="matrixScoreMetric">--</span>
                     </div>
-                    <div class="ats-score-bar-bg">
-                      <div class="ats-score-bar-fill" id="matrixFillMetric" style="width:0%;"></div>
-                    </div>
+                    <div class="ats-score-bar-bg"><div class="ats-score-bar-fill" id="matrixFillMetric" style="width:0%;"></div></div>
                   </div>
                 </div>
 
-                <!-- KEYWORD INTELLIGENCE CENTER -->
-                <div class="ats-keyword-intelligence-box" id="ats-sec-overview">
-                  <div class="ats-kw-sec-header">
-                    <div class="ats-kw-sec-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <!-- Keyword Intelligence -->
+                <div class="ats-keyword-intelligence-box ats-report-block" id="ats-sec-overview">
+                  <div class="ats-report-header" onclick="toggleReportBlock(this)" style="cursor:pointer;">
+                    <div class="ats-report-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                       Keyword Intelligence &amp; Gap Analysis
                     </div>
-                    <span style="font-size:12px;color:#8A8A8A;" id="kwCountsSubtitle">0 Matched · 0 Gaps</span>
+                    <span id="kwCountsSubtitle" style="font-size:12px;color:#4B5568;font-weight:600;">0 Matched &middot; 0 Gaps</span>
                   </div>
-
-                  <!-- Matched Keywords (Preserved IDs) -->
-                  <div style="margin-bottom:16px;">
-                    <div style="font-size:11px;font-weight:700;color:#2E9B64;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px;" id="matchedKeywordsTitle">
-                      ✓ Matched Required Keywords (0)
+                  <div class="ats-report-body" style="display:block;">
+                    <div style="margin-bottom:18px;">
+                      <div id="matchedKeywordsTitle" style="font-size:10.5px;font-weight:700;color:#22D3A3;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        &#x2713; Matched Required Keywords (0)
+                      </div>
+                      <div class="ats-kw-grid" id="matchedKeywordsContainer">
+                        <span class="badge-tag blue">Run ATS scan to view matched keywords</span>
+                      </div>
                     </div>
-                    <div class="ats-kw-grid" id="matchedKeywordsContainer">
-                      <span class="badge-tag amber">Run ATS scan to view matched keywords</span>
-                    </div>
-                  </div>
-
-                  <!-- Missing Keywords (Preserved IDs) -->
-                  <div>
-                    <div style="font-size:11px;font-weight:700;color:#D14A4A;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px;" id="missingKeywordsTitle">
-                      ⚠ Missing / Gap Keywords (0)
-                    </div>
-                    <div class="ats-kw-grid" id="missingKeywordsContainer">
-                      <span class="badge-tag amber">Run ATS scan to view missing keywords</span>
+                    <div>
+                      <div id="missingKeywordsTitle" style="font-size:10.5px;font-weight:700;color:#F87171;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        &#x26A0; Missing / Gap Keywords (0)
+                      </div>
+                      <div class="ats-kw-grid" id="missingKeywordsContainer">
+                        <span class="badge-tag amber">Run ATS scan to view missing keywords</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- DETAILED RECOMMENDATIONS GRID (Preserved ID) -->
+                <!-- AI Recommendations -->
                 <div class="ats-report-block">
                   <div class="ats-report-header" onclick="toggleReportBlock(this)">
                     <div class="ats-report-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                       High-Impact AI Optimization Recommendations
                     </div>
-                    <span style="font-size:12px;color:#8A8A8A;">Expand / Collapse</span>
+                    <span style="font-size:11.5px;color:#4B5568;">Expand / Collapse</span>
                   </div>
                   <div class="ats-report-body">
                     <div id="recommendationsGridContainer" class="recommendations-grid">
                       <div class="rec-card">
-                        <div class="rec-number">⚡</div>
+                        <div class="rec-number">&#x26A1;</div>
                         <div class="rec-content">
-                          <strong>Ready for ATS Analysis:</strong>
-                          <p>Select a preset role above or paste a target job description, then click '⚡ Scan Resume' to generate AI optimization recommendations.</p>
+                          <strong>Ready for ATS Analysis</strong>
+                          <p>Select a preset role above or paste a target job description, then click Scan Resume to generate AI optimization recommendations.</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- SMART REWRITES (BEFORE / AFTER COMPARISON) -->
+                <!-- Smart Rewrites -->
                 <div class="ats-report-block" id="ats-sec-experience">
                   <div class="ats-report-header" onclick="toggleReportBlock(this)">
                     <div class="ats-report-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#2E9B64" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#22D3A3" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       Smart Rewrites (Current vs. AI-Optimized)
                     </div>
-                    <span style="font-size:12px;color:#2E9B64;font-weight:600;">+12% ATS Boost</span>
+                    <span style="font-size:12px;color:#22D3A3;font-weight:700;">+12% ATS Boost</span>
                   </div>
                   <div class="ats-report-body">
                     <div class="diff-rewrite-card">
-                      <div style="font-size:11px;font-weight:700;color:#7A7A7A;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
+                      <div style="font-size:10.5px;font-weight:700;color:#4B5568;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
                       <div class="diff-orig-text">Worked on frontend application and improved page load performance using React and Next.js.</div>
-
-                      <div style="font-size:11px;font-weight:700;color:#2E9B64;text-transform:uppercase;letter-spacing:0.06em;margin-top:6px;">AI-Optimized Bullet Point:</div>
+                      <div style="font-size:10.5px;font-weight:700;color:#22D3A3;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">AI-Optimized Bullet Point:</div>
                       <div class="diff-improved-text">Architected high-performance React &amp; Next.js frontend architecture, optimizing Web Vitals (LCP &lt; 1.2s) and reducing p99 page load latency by 42%.</div>
-
                       <div class="diff-highlights">
                         <span class="diff-badge verb">Verb: Architected</span>
-                        <span class="diff-badge metric">Metric: -42% Latency</span>
+                        <span class="diff-badge metric">Metric: &minus;42% Latency</span>
                         <span class="diff-badge kw">Keywords: Web Vitals, LCP</span>
                       </div>
                     </div>
-
                     <div class="diff-rewrite-card">
-                      <div style="font-size:11px;font-weight:700;color:#7A7A7A;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
+                      <div style="font-size:10.5px;font-weight:700;color:#4B5568;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
                       <div class="diff-orig-text">Helped team with deployment pipelines and cloud servers.</div>
-
-                      <div style="font-size:11px;font-weight:700;color:#2E9B64;text-transform:uppercase;letter-spacing:0.06em;margin-top:6px;">AI-Optimized Bullet Point:</div>
+                      <div style="font-size:10.5px;font-weight:700;color:#22D3A3;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">AI-Optimized Bullet Point:</div>
                       <div class="diff-improved-text">Spearheaded automated CI/CD deployment pipelines on Kubernetes, achieving zero-downtime releases for 2M+ monthly active users.</div>
-
                       <div class="diff-highlights">
                         <span class="diff-badge verb">Verb: Spearheaded</span>
                         <span class="diff-badge metric">Scale: 2M+ Users</span>
@@ -1412,66 +1445,37 @@
                   </div>
                 </div>
 
-                <!-- RECRUITER VERDICT & HIRING PROBABILITY GAUGES -->
-                <div class="recruiter-verdict-box" id="ats-sec-readability">
-                  <div class="recruiter-verdict-title">Recruiter 6-Second Screen Summary</div>
-                  <div class="recruiter-verdict-quote">
-                    "A hiring manager at Stripe or Vercel would view this candidate as an exceptionally strong Frontend Architect with proven design system experience. Adding Kubernetes &amp; CI/CD metrics would elevate this to a top 1% candidate."
-                  </div>
-
-                  <div class="hiring-gauges-grid">
-                    <div class="hiring-gauge-card">
-                      <div class="hiring-gauge-val" style="color:#2E9B64;">92%</div>
-                      <div class="hiring-gauge-lbl">Interview Probability</div>
-                    </div>
-                    <div class="hiring-gauge-card">
-                      <div class="hiring-gauge-val" style="color:#C98B4A;">84%</div>
-                      <div class="hiring-gauge-lbl">Offer Probability</div>
-                    </div>
-                    <div class="hiring-gauge-card">
-                      <div class="hiring-gauge-val" style="color:#2E9B64;">96%</div>
-                      <div class="hiring-gauge-lbl">ATS Gatekeeper Pass</div>
-                    </div>
-                  </div>
-                </div>
-
               </main>
 
-              <!-- ── COL 4: Right AI Chat Assistant & Actions (320px) ── -->
+              <!-- COL 4: Right AI Chat Assistant -->
               <aside class="ats-col-right">
                 <div class="ats-ai-chat-card">
                   <div class="ats-chat-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#C98B4A" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                     <span class="ats-chat-title">ATS AI Career Coach</span>
                   </div>
-
                   <div class="ats-chat-messages" id="atsChatMsgContainer">
                     <div class="ats-chat-msg ai">
-                      Hello! I am your ATS AI Career Coach. Select a role above or ask me anything about improving your match rate, positioning keywords, or passing recruiter gatekeepers!
+                      Hello! I'm your ATS AI Career Coach. Select a role above or ask me anything about improving your match rate, positioning keywords, or passing recruiter gatekeepers!
                     </div>
                   </div>
-
                   <div class="ats-chat-prompts">
                     <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Why did I lose points?')">Why did I lose points?</span>
                     <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('How to format bullet points for ATS?')">ATS bullet format</span>
-                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Workday ATS scanner tips')">Workday ATS tips</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Workday ATS scanner tips')">Workday tips</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('Top keywords I am missing')">Missing keywords</span>
+                    <span class="chat-prompt-chip" onclick="sendAtsChatPrompt('How to get past FAANG ATS?')">FAANG ATS tips</span>
                   </div>
-
                   <div class="ats-chat-input-row">
-                    <input type="text" id="atsChatInputField" placeholder="Ask AI coach..." onkeydown="if(event.key==='Enter') submitAtsChat()" />
-                    <button type="button" class="topbar-action-btn btn-primary" onclick="submitAtsChat()" style="padding:4px 8px;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <input type="text" id="atsChatInputField" placeholder="Ask AI coach anything..." onkeydown="if(event.key==='Enter') submitAtsChat()" />
+                    <button type="button" class="topbar-action-btn btn-primary" onclick="submitAtsChat()" style="padding:7px 12px;min-width:auto;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                   </div>
                 </div>
               </aside>
 
-            </div><!-- /ats-4col-workspace -->
-
-            <!-- ══════════════════════════════════════════════
-                 5. ATS INTERACTIVE BRIDGE SCRIPT
-                 ══════════════════════════════════════════════ -->
-            <!-- ATS UI helpers moved to: /frontend/engines/doc-editor.js -->
+            </div><!-- /ats-workspace-columns -->
 
           </div>
 
@@ -1538,11 +1542,11 @@
 
                       <!-- X axis labels -->
                       <text x="40" y="200" class="chart-axis-text">Scan 1</text>
-                      <text x="128" y="200" class="chart-axis-text">Scan 2</text>
-                      <text x="216" y="200" class="chart-axis-text">Scan 3</text>
-                      <text x="304" y="200" class="chart-axis-text">Scan 4</text>
-                      <text x="392" y="200" class="chart-axis-text">Scan 5</text>
-                      <text x="475" y="200" text-anchor="end" class="chart-axis-text">Scan 6 (Latest)</text>
+                      <text x="124" y="200" class="chart-axis-text">Scan 2</text>
+                      <text x="208" y="200" class="chart-axis-text">Scan 3</text>
+                      <text x="292" y="200" class="chart-axis-text">Scan 4</text>
+                      <text x="376" y="200" class="chart-axis-text">Scan 5</text>
+                      <text x="460" y="200" text-anchor="middle" class="chart-axis-text">Scan 6 (Latest)</text>
 
                       <!-- Y axis labels -->
                       <text x="15" y="24" class="chart-axis-text">100%</text>
@@ -2056,12 +2060,12 @@
     </div>
   </div>
 
-  <script src="/frontend/engines/doc-editor.js?v=2.5"></script>
+  <script src="/frontend/engines/doc-editor.js?v=2.6"></script>
   <script src="/frontend/engines/editor-engine.js?v=2.5"></script>
   <script src="/frontend/engines/ats-analyzer.js?v=2.5"></script>
   <script src="/frontend/engines/job-tracker.js?v=2.5"></script>
   <script src="/frontend/engines/pdf-exporter.js?v=2.5"></script>
-  <script src="/frontend/engines/script.js?v=2.5"></script>
+  <script src="/frontend/engines/script.js?v=3.3"></script>
   <script src="/frontend/components/help-center.js?v=2.5"></script>
   <script src="/frontend/components/command-palette.js?v=2.5"></script>
 </body>
