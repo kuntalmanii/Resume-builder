@@ -4318,6 +4318,38 @@ Key Requirements:
 
   // Render Kanban Board
   function renderKanbanBoard(filteredList) {
+    const container = document.getElementById('kanbanBoardContainer');
+    if (!container) return;
+
+    const STAGE_META = [
+      { id: 'wishlist',  label: '⭐ Wishlist',      color: '#6366f1' },
+      { id: 'applied',   label: '📤 Applied',        color: '#3b82f6' },
+      { id: 'interview', label: '🎯 Interviewing',   color: '#f59e0b' },
+      { id: 'offer',     label: '🏆 Offer',          color: '#22c55e' },
+      { id: 'rejected',  label: '❌ Rejected',       color: '#ef4444' }
+    ];
+
+    // Build column scaffolding if it doesn't already exist
+    if (!document.getElementById('column-cards-wishlist')) {
+      container.innerHTML = STAGE_META.map(s => `
+        <div class="kanban-column" data-stage="${s.id}" style="
+          background:var(--bg-card,#1e1e2e);
+          border:1px solid var(--border,#2d2d44);
+          border-radius:12px; padding:12px; min-height:200px;
+          display:flex; flex-direction:column; gap:8px;
+        ">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.05em;color:var(--text-muted,#94a3b8);">${s.label}</span>
+            <span id="count-${s.id}" style="
+              background:var(--bg-hover,#252540);border-radius:20px;
+              padding:1px 8px;font-size:0.7rem;color:var(--text-muted,#94a3b8);
+            ">0</span>
+          </div>
+          <div id="column-cards-${s.id}" style="display:flex;flex-direction:column;gap:8px;flex:1;"></div>
+        </div>
+      `).join('');
+    }
+
     const stages = ['wishlist', 'applied', 'interview', 'offer', 'rejected'];
 
     stages.forEach(stage => {
@@ -4769,19 +4801,25 @@ Key Requirements:
   const kanbanBoardContainer = document.getElementById('kanbanBoardContainer');
   const tableViewContainer = document.getElementById('tableViewContainer');
 
+  let currentJobView = 'table'; // track active view so renderPipelineViews uses it
+
   if (btnViewKanban && btnViewTable) {
     btnViewKanban.addEventListener('click', () => {
+      currentJobView = 'kanban';
       btnViewKanban.classList.add('active');
       btnViewTable.classList.remove('active');
       if (kanbanBoardContainer) kanbanBoardContainer.style.display = 'grid';
-      if (tableViewContainer) tableViewContainer.style.display = 'none';
+      if (tableViewContainer)   tableViewContainer.style.display   = 'none';
+      renderPipelineViews(); // populate kanban cards on switch
     });
 
     btnViewTable.addEventListener('click', () => {
+      currentJobView = 'table';
       btnViewTable.classList.add('active');
       btnViewKanban.classList.remove('active');
       if (kanbanBoardContainer) kanbanBoardContainer.style.display = 'none';
-      if (tableViewContainer) tableViewContainer.style.display = 'block';
+      if (tableViewContainer)   tableViewContainer.style.display   = 'block';
+      renderPipelineViews(); // refresh table on switch
     });
   }
 
