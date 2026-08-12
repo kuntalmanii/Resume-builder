@@ -666,6 +666,12 @@
   font-weight: 400;
 }
 
+.doc-field:not(.is-empty)::before,
+.doc-contact-field:not(.is-empty)::before {
+  content: none !important;
+  display: none !important;
+}
+
 .doc-field-wrapper {
   position: relative;
   margin-bottom: 6px;

@@ -74,14 +74,14 @@ function heuristicParse(text) {
 
   // Helper check for location or header text
   const isLocationStr = (str) => /^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(str.trim()) || /\b(bengaluru|bangalore|mumbai|delhi|hyderabad|pune|chennai|seattle|san francisco|new york|london|india|usa|uk|canada)\b/i.test(str);
-  const isHeaderOrSocial = (str) => /^(linkedin|github|portfolio|website|contact|email|phone|address|education|bachelor|master|degree|school|university|coursework|technical expertise|competencies)/i.test(str.trim());
+  const isHeaderOrSocial = (str) => /^(linkedin|github|portfolio|website|contact|email|phone|address|education|experience|professional|work|summary|projects|skills|certifications|achievements|bachelor|master|degree|school|university|coursework|technical expertise|competencies)/i.test(str.trim());
 
   // Location clean extraction
   const locMatch = text.match(/\b([A-Z][a-zA-Z\s]{2,20},\s*(?:[A-Z]{2}|[A-Za-z]{2,20}))\b/);
   let location = locMatch ? locMatch[1].trim() : '';
   if (location) {
-    // Only strip a leading word if it looks like a noise word (e.g. "Located in San Francisco")
-    // Do NOT strip the first word of legitimate two-word city names like "San Francisco" or "New York"
+    const locLines = location.split(/[\r\n]+/);
+    location = locLines[locLines.length - 1].trim();
     location = location.replace(/^(?:located\s+in|city\s*[:=]|location\s*[:=])\s*/i, '').trim();
   }
 
@@ -103,7 +103,7 @@ function heuristicParse(text) {
     if (foundName && line !== fullName) {
       if (!line.includes('@') && !/^\+?\d/.test(line) && !isLocationStr(line) && !isHeaderOrSocial(line)
           && line.length >= 3 && line.length <= 60
-          && !/^(summary|profile|objective|experience|education|skills)/i.test(line)) {
+          && !/(?:summary|profile|objective|experience|education|skills|work|projects|certifications|professional|contact|employment|history)/i.test(line)) {
         jobTitle = line;
         break;
       }

@@ -3390,15 +3390,21 @@ document.addEventListener('DOMContentLoaded', () => {
           const githubMatch = text.match(/github\.com\/([^\s,/<>"]+)/i);
           const portfolioMatch = text.match(/https?:\/\/(?!linkedin|github)([^\s,<>"]+)/i);
 
-          const isLocationStr = (str) => /^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(str) || /\b(bengaluru|bangalore|mumbai|delhi|hyderabad|pune|chennai|seattle|san francisco|new york|london|india|usa|uk|canada)\b/i.test(str);
+          const isLocationStr = (str) => /^[A-Za-z\s]+,\s*[A-Za-z\s]+$/.test(str.trim()) || /\b(bengaluru|bangalore|mumbai|delhi|hyderabad|pune|chennai|seattle|san francisco|new york|london|india|usa|uk|canada)\b/i.test(str);
+          const isHeaderOrSocial = (str) => /^(linkedin|github|portfolio|website|contact|email|phone|address|education|experience|professional|work|summary|projects|skills|certifications|achievements|bachelor|master|degree|school|university|coursework|technical expertise|competencies)/i.test(str.trim());
           const locMatch = text.match(/\b([A-Z][a-zA-Z\s]{2,25},\s*(?:[A-Z]{2}|[A-Za-z]{2,20}))\b/);
-          const location = locMatch ? locMatch[1].trim() : '';
+          let location = locMatch ? locMatch[1].trim() : '';
+          if (location) {
+            const locLines = location.split(/[\r\n]+/);
+            location = locLines[locLines.length - 1].trim();
+            location = location.replace(/^(?:located\s+in|city\s*[:=]|location\s*[:=])\s*/i, '').trim();
+          }
 
           let name = '';
           for (const line of lines.slice(0, 6)) {
             if (!line.includes('@') && !/\d{5,}/.test(line) && line.length >= 2 && line.length <= 50
                 && !/^(summary|profile|objective|resume|cv|experience|education|skills|certifications|projects)/i.test(line)
-                && !isLocationStr(line)) {
+                && !isLocationStr(line) && !isHeaderOrSocial(line)) {
               name = line; break;
             }
           }
@@ -3407,9 +3413,9 @@ document.addEventListener('DOMContentLoaded', () => {
           let nameFound = false;
           for (const line of lines.slice(0, 10)) {
             if (nameFound && line !== name) {
-              if (!line.includes('@') && !/^\+?\d/.test(line) && !isLocationStr(line)
+              if (!line.includes('@') && !/^\+?\d/.test(line) && !isLocationStr(line) && !isHeaderOrSocial(line)
                   && line.length >= 3 && line.length <= 60
-                  && !/^(summary|profile|objective|experience|education|skills)/i.test(line)) {
+                  && !/(?:summary|profile|objective|experience|education|skills|work|projects|certifications|professional|contact|employment|history)/i.test(line)) {
                 title = line; break;
               }
             }
@@ -3444,8 +3450,6 @@ document.addEventListener('DOMContentLoaded', () => {
             achievements: parsed?.achievements || ''
           };
         }
-
-
 
         // Auto-fill legacy form fields
         if (parsed.fullName && inputFullName) inputFullName.value = parsed.fullName;
@@ -3485,6 +3489,19 @@ document.addEventListener('DOMContentLoaded', () => {
           if (syncKey === 'inputCertifications' && parsed.certifications) el.innerText = parsed.certifications;
           if (syncKey === 'inputProjects' && parsed.projects) el.innerText = parsed.projects;
           if (syncKey === 'inputAchievements' && parsed.achievements) el.innerText = parsed.achievements;
+        });
+
+        // CRITICAL: Update empty state classes on all editable document fields
+        document.querySelectorAll('.doc-field, .doc-contact-field, [contenteditable="true"]').forEach(el => {
+          const txt = (el.innerText || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+          if (txt) {
+            el.classList.remove('is-empty');
+          } else {
+            el.classList.add('is-empty');
+          }
+          if (window.personalEngine && typeof window.personalEngine.updateEmptyState === 'function') {
+            window.personalEngine.updateEmptyState(el);
+          }
         });
 
         // Populate inline experience bullets
