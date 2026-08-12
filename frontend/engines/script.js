@@ -2886,8 +2886,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
 
     const pageSizeCss = (paperSize === 'a4') 
-      ? '@page { size: A4 portrait; margin: 12mm; }' 
-      : '@page { size: letter portrait; margin: 0.5in; }';
+      ? '@page { size: A4 portrait; margin: 0; }' 
+      : '@page { size: letter portrait; margin: 0; }';
 
     let fontLink = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap";
     let bodyFont = "'Inter', Arial, sans-serif";
