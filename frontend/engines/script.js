@@ -2950,25 +2950,12 @@ document.addEventListener('DOMContentLoaded', () => {
       renderCustomSectionInputs();
     }
 
-    // 2. Clear contenteditable doc fields
-    const docFields = [
-      'docFieldName', 'docFieldTitle', 'docFieldEmail', 'docFieldPhone',
-      'docFieldLocation', 'docFieldGithub', 'docFieldLinkedin', 'docFieldPortfolio',
-      'docFieldSummary', 'docFieldProjects', 'docFieldEducation', 'docFieldCerts',
-      'docFieldAchievements', 'docFieldCustom'
-    ];
-    docFields.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.innerText = '';
-        if (window.personalEngine && typeof window.personalEngine.updateEmptyState === 'function') {
-          window.personalEngine.updateEmptyState(el);
-        }
-      }
-    });
+    // 2. Clear doc-editor closure data (bullets & skills) and contenteditable canvas elements
+    if (typeof window.clearDocEditorData === 'function') {
+      window.clearDocEditorData();
+    }
 
     // 3. Clear skill tags & skills wrapper
-    window.docSkills = [];
     const skillsWrapper = document.getElementById('docSkillsWrapper');
     if (skillsWrapper) {
       skillsWrapper.querySelectorAll('.doc-skill-tag').forEach(t => t.remove());
@@ -2982,17 +2969,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 4. Clear experience bullets
+    // 4. Clear experience bullets list DOM
     const bulletsList = document.getElementById('docBulletsList');
     if (bulletsList) {
       bulletsList.innerHTML = '';
     }
 
-    // 5. Reset live preview to blank defaults
-    syncLivePreview();
+    // 5. Save explicit blank state to localStorage and clear active profile cache
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ isBlank: true }));
+      localStorage.removeItem(ACTIVE_PROFILE_KEY);
+    } catch(e) {}
 
-    // 6. Save explicit blank state to localStorage
-    try { localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ isBlank: true })); } catch(e) {}
+    // 6. Reset live preview to blank defaults
+    syncLivePreview();
 
     // 7. Update section percentages and profile strength
     if (typeof window.updateSectionPct === 'function') {

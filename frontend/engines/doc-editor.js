@@ -469,6 +469,44 @@
   /* ── 6. SKILLS inline system ── */
   var docSkills = [];
 
+  window.setDocSkills = function (skillsArray) {
+    if (Array.isArray(skillsArray)) {
+      docSkills = skillsArray.filter(Boolean);
+    } else {
+      docSkills = [];
+    }
+    renderDocSkills();
+    syncSkillsToTagSystem();
+  };
+
+  window.clearDocEditorData = function () {
+    docBullets = ['', '', ''];
+    docSkills  = [];
+
+    var docFields = [
+      'docFieldName', 'docFieldTitle', 'docFieldEmail', 'docFieldPhone',
+      'docFieldLocation', 'docFieldGithub', 'docFieldLinkedin', 'docFieldPortfolio',
+      'docFieldSummary', 'docFieldProjects', 'docFieldEducation', 'docFieldCerts',
+      'docFieldAchievements', 'docFieldCustom'
+    ];
+    docFields.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.innerText = '';
+        if (window.personalEngine && typeof window.personalEngine.updateEmptyState === 'function') {
+          window.personalEngine.updateEmptyState(el);
+        }
+      }
+    });
+
+    renderBullets();
+    syncBulletsToTextarea();
+    renderDocSkills();
+
+    var previewSkillsEl = document.getElementById('previewSkills');
+    if (previewSkillsEl) previewSkillsEl.textContent = '';
+  };
+
   function renderDocSkills() {
     var wrapper  = document.getElementById('docSkillsWrapper');
     var addInput = document.getElementById('docSkillInput');
