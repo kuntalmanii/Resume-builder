@@ -4423,7 +4423,7 @@ Key Requirements:
               <h3 class="empty-state-headline">No job applications tracked yet</h3>
               <p class="empty-state-desc">Organize your job search across Wishlist, Applied, Interviewing, and Offer stages with real-time application pipelines.</p>
               <div class="empty-state-actions">
-                <button class="empty-cta-btn empty-cta-primary" onclick="document.getElementById('btnAddNewJob')?.click()">
+                <button type="button" class="empty-cta-btn empty-cta-primary btn-add-first-app" onclick="if (typeof window.openJobModal === 'function') window.openJobModal();">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Add First Application</span>
                 </button>
@@ -4650,9 +4650,11 @@ Key Requirements:
   const btnCancelJobModal = document.getElementById('btnCancelJobModal');
 
   function openJobModal(jobId = null) {
-    if (!jobModal || !jobForm) return;
+    const jobModalEl = document.getElementById('jobModal');
+    const jobFormEl  = document.getElementById('jobForm');
+    if (!jobModalEl || !jobFormEl) return;
 
-    jobForm.reset();
+    jobFormEl.reset();
 
     const jobIdEl        = document.getElementById('jobId');
     const jobTitleEl     = document.getElementById('jobModalTitle');
@@ -4690,20 +4692,33 @@ Key Requirements:
       if (jobDateEl)  jobDateEl.value        = new Date().toISOString().split('T')[0];
     }
 
-    jobModal.style.display = 'flex';
+    jobModalEl.style.display = 'flex';
   }
 
   function closeJobModal() {
-    if (jobModal) jobModal.style.display = 'none';
+    const jobModalEl = document.getElementById('jobModal');
+    if (jobModalEl) jobModalEl.style.display = 'none';
   }
 
-  if (btnAddNewJob) btnAddNewJob.addEventListener('click', () => openJobModal());
-  if (btnCloseJobModal) btnCloseJobModal.addEventListener('click', closeJobModal);
-  if (btnCancelJobModal) btnCancelJobModal.addEventListener('click', closeJobModal);
+  window.openJobModal = openJobModal;
+  window.closeJobModal = closeJobModal;
 
-  if (jobModal) {
-    jobModal.addEventListener('click', (e) => {
-      if (e.target === jobModal) closeJobModal();
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('#btnAddNewJob, .btn-add-first-app, #btnCloseJobModal, #btnCancelJobModal');
+    if (!target) return;
+    if (target.id === 'btnAddNewJob' || target.classList.contains('btn-add-first-app')) {
+      e.preventDefault();
+      openJobModal();
+    } else if (target.id === 'btnCloseJobModal' || target.id === 'btnCancelJobModal') {
+      e.preventDefault();
+      closeJobModal();
+    }
+  });
+
+  const jobModalEl = document.getElementById('jobModal');
+  if (jobModalEl) {
+    jobModalEl.addEventListener('click', (e) => {
+      if (e.target === jobModalEl) closeJobModal();
     });
   }
 
