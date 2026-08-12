@@ -904,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Close any open modals
-      const openModals = document.querySelectorAll('.modal-overlay');
+      const openModals = document.querySelectorAll('.modal-overlay, #userProfileModal, #versionManagerModal, #helpCenterDrawer');
       openModals.forEach(m => { m.style.display = 'none'; });
 
       const sb = getSupabase();
@@ -936,6 +936,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch(err) {}
 
+      // Reset URL hash tag cleanly
+      if (window.location.hash) {
+        try {
+          history.pushState('', document.title, window.location.pathname + window.location.search);
+        } catch (hErr) {
+          window.location.hash = '';
+        }
+      }
+
       // Reset in-memory application state
       jobApplicationsList = [];
 
@@ -944,6 +953,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const topUserAvatar = document.getElementById('topUserAvatar');
       if (topUserName) topUserName.textContent = 'Developer';
       if (topUserAvatar) topUserAvatar.textContent = 'DV';
+
+      // Reset auth form input fields
+      const authInputs = document.querySelectorAll('#authForm input');
+      authInputs.forEach(inp => { if (inp.type !== 'submit') inp.value = ''; });
 
       // Reset form fields
       const formIds = ['inputFullName','inputJobTitle','inputEmail','inputPhone','inputLocation',
@@ -962,14 +975,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof syncLiveSkills === 'function') syncLiveSkills();
       showToast('Signed out successfully.', 'success');
     } finally {
-      isSigningOut = false;
+      setTimeout(() => { isSigningOut = false; }, 300);
     }
   }
 
-  // Direct element listeners
-  if (topSignoutBtn) topSignoutBtn.addEventListener('click', handleSignOut);
+  window.handleSignOut = handleSignOut;
 
-  // Global delegation for any signout button across the DOM
+  // Single global delegation for any signout button across the DOM
   document.addEventListener('click', function(e) {
     const targetBtn = e.target.closest('.btn-signout, .sidebar-signout-btn, #topSignoutBtn, #profileModalSignoutBtn, .btn-logout, [data-action="signout"]');
     if (targetBtn) {
