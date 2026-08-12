@@ -78,7 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Storage Keys & Core Constants
-  const DRAFT_STORAGE_KEY = 'resuai-draft-resume';
+  const DRAFT_STORAGE_KEY     = 'resuai-draft-resume';
+  const THEME_STORAGE_KEY     = 'resuai-dashboard-theme';
+  const AUTH_STORAGE_KEY      = 'resuai-logged-in';
+  const SIDEBAR_COLLAPSED_KEY = 'resuai-sidebar-collapsed';
+  const ANALYTICS_HISTORY_KEY = 'resuai-analytics-history';
+  const SYNC_QUEUE_KEY        = 'resuai_offline_sync_queue';
+  const RESUME_PROFILES_KEY   = 'resuai_resume_profiles_v1';
+  const ACTIVE_PROFILE_KEY    = 'resuai_active_profile_id';
+  const JOB_APPS_STORAGE_KEY  = 'resuai_job_applications';
+  const ACCENT_STORAGE_KEY    = 'resuai_accent_color';
+
+  let jobApplicationsList = [];
 
   // Initialize Feather Vector Icons
   if (window.feather) {
@@ -88,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      1. Theme Management (Custom UI Themes via body[data-theme])
      ========================================================================== */
-  const THEME_STORAGE_KEY = 'resuai-dashboard-theme';
   const themeButtons = document.querySelectorAll('.theme-btn');
   const body = document.body;
 
@@ -144,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      2. Auth State & Screen View Toggle — Supabase Integration
      ========================================================================== */
-  const AUTH_STORAGE_KEY = 'resuai-logged-in';
 
   // Dynamic helper to retrieve live Supabase client instance
   const getSupabase = () => window.supabase;
@@ -1377,7 +1386,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Sidebar Collapse Toggle (desktop) */
   const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
-  const SIDEBAR_COLLAPSED_KEY = 'resuai-sidebar-collapsed';
 
   function applySidebarCollapsed(collapsed) {
     if (!sidebar) return;
@@ -1553,8 +1561,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (topUserName)   topUserName.textContent = fullName;
     if (topUserRole)   topUserRole.textContent = jobTitle;
   }
-
-  const ANALYTICS_HISTORY_KEY = 'resuai-analytics-history';
 
   // Floating Chart Tooltip Binder helper
   function bindChartDotEvents() {
@@ -1793,9 +1799,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     OFFLINE-FIRST SYNCHRONIZATION ENGINE (ResuAI.SyncEngine)
+     6. Offline Synchronization Queue System
      ========================================================================== */
-  const SYNC_QUEUE_KEY = 'resuai_offline_sync_queue';
   let isSyncing = false;
   let syncRetryTimeout = null;
 
@@ -3005,8 +3010,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      MULTI-PROFILE RESUME VERSION MANAGER ENGINE
      ========================================================================== */
-  const RESUME_PROFILES_KEY = 'resuai_resume_profiles_v1';
-  const ACTIVE_PROFILE_KEY = 'resuai_active_profile_id';
 
   const DEFAULT_CAREER_PROFILES = {
     'google-dev-template': {
@@ -4105,7 +4108,6 @@ Key Requirements:
      13. Job Applications Pipeline & Kanban Tracker Module
      ========================================================================== */
 
-  const JOB_APPS_STORAGE_KEY = 'resuai_job_applications';
   let activeQuickFilterChip = 'all';
 
   const DEFAULT_SEED_JOBS = [
@@ -4180,8 +4182,6 @@ Key Requirements:
       notes: 'Tailoring specific resume version with focus on performance optimization metrics.'
     }
   ];
-
-  let jobApplicationsList = [];
 
   function convertSalaryToINR(str) {
     if (!str || typeof str !== 'string') return str;
@@ -4799,7 +4799,6 @@ Key Requirements:
   /* ==========================================================================
      RESUME ACCENT COLOR PALETTE SWATCHES ENGINE
      ========================================================================== */
-  const ACCENT_STORAGE_KEY = 'resuai_accent_color';
 
   function setResumeAccentColor(colorHex) {
     if (!colorHex) return;
