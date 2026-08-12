@@ -1118,10 +1118,8 @@
       'Git', 'GitHub', 'VS Code', 'Maven',
       'DSA', 'OOP', 'DBMS', 'REST APIs', 'Computer Networks'
     ];
-    if (typeof window.addDocSkill === 'function') {
-      skillsList.forEach(function(skill) {
-        window.addDocSkill(skill);
-      });
+    if (typeof window.setDocSkills === 'function') {
+      window.setDocSkills(skillsList);
     }
 
     // 4. Projects (Exact User Template Structure)

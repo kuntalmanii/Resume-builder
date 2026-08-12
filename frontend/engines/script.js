@@ -3081,16 +3081,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const p = profiles[profileId];
     if (!p) return;
 
-    if (inputFullName && !inputFullName.value.trim()) inputFullName.value = p.name || 'YOUR NAME';
-    if (inputJobTitle) inputJobTitle.value = p.title || '';
-    if (inputSummary) inputSummary.value = p.summary || '';
+    // Force update all form inputs with the selected profile version content
+    if (inputJobTitle)  inputJobTitle.value  = p.title || '';
+    if (inputSummary)   inputSummary.value   = p.summary || '';
     if (inputEducation) inputEducation.value = p.education || '';
-    if (inputProjects && p.projects) inputProjects.value = p.projects;
-    if (bulletPoints) bulletPoints.value = p.bullets || '';
+    if (inputProjects)  inputProjects.value  = p.projects || '';
+    if (bulletPoints)   bulletPoints.value   = p.bullets || '';
 
+    // Update experience bullets in doc-editor.js closure & canvas
+    if (p.bullets) {
+      const bulletsArray = p.bullets.split('\n').map(b => b.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
+      if (typeof window.setDocBullets === 'function') {
+        window.setDocBullets(bulletsArray);
+      }
+    } else {
+      if (typeof window.setDocBullets === 'function') {
+        window.setDocBullets(['', '', '']);
+      }
+    }
+
+    // Update skills in doc-editor.js closure & tag system
     if (Array.isArray(p.skills)) {
-      window.docSkills = [...p.skills];
-      if (typeof window.renderDocSkills === 'function') window.renderDocSkills();
+      if (typeof window.setDocSkills === 'function') {
+        window.setDocSkills(p.skills);
+      }
       const tagsContainer = document.getElementById('skillsTagsContainer');
       const skillInput = document.getElementById('skillInputField');
       if (tagsContainer) {
@@ -3101,7 +3115,7 @@ document.addEventListener('DOMContentLoaded', () => {
           span.innerHTML = `${escapeHTML(skill)} <span class="tag-remove">&times;</span>`;
           span.querySelector('.tag-remove').addEventListener('click', () => {
             span.remove();
-            syncLiveSkills();
+            if (typeof syncLiveSkills === 'function') syncLiveSkills();
             autoSaveFormFields();
           });
           if (skillInput) tagsContainer.insertBefore(span, skillInput);
@@ -3110,17 +3124,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    try { localStorage.setItem(ACTIVE_PROFILE_KEY, profileId); } catch(e) {}
+    try {
+      localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch(e) {}
 
     syncFormInputsToCenterCanvas();
     syncLivePreview();
-    syncLiveSkills();
+    if (typeof syncLiveSkills === 'function') syncLiveSkills();
     autoSaveFormFields();
 
     if (typeof window.updateSectionPct === 'function') window.updateSectionPct();
+    updateCharCounter();
+    calculateProfileStrength();
 
     if (typeof showToast === 'function') {
-      showToast(`Loaded ${p.name || p.title} profile version!`, 'success');
+      showToast(`Loaded ${p.name || p.title} career version!`, 'success');
     }
   }
 
