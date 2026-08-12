@@ -274,6 +274,33 @@ class AtsAnalyzer {
     const hasNums  = /\d+[%x+]|\$\d+/.test(resumeText);
     const hasVerbs = /(managed|led|architected|engineered|built|optimized|spearheaded|implemented|developed)\b/i.test(resumeText);
 
+    // Extract actual bullets from candidate's resume text for dynamic Smart Rewrites
+    const rawBullets = resumeText
+      .split(/\n+/)
+      .map(line => line.replace(/^[•\-\*\d\.\s]+/, '').trim())
+      .filter(line => line.length > 20 && !/^(experience|education|skills|projects|summary|contact|certifications|phone|email|linkedin|github)/i.test(line));
+
+    const generatedRewrites = [];
+    if (rawBullets.length > 0) {
+      const topBullet = rawBullets[0];
+      const targetKw = missing[0] || matched[0] || 'Technical Stack';
+      generatedRewrites.push({
+        before: topBullet,
+        after: `Architected high-performance architecture incorporating ${targetKw}, improving application throughput by 38% and reducing p99 latency.`,
+        highlights: [`Verb: Architected`, `Metric: +38% Throughput`, `Keywords: ${targetKw}`]
+      });
+
+      if (rawBullets.length > 1) {
+        const secondBullet = rawBullets[1];
+        const targetKw2 = missing[1] || matched[1] || 'CI/CD Pipelines';
+        generatedRewrites.push({
+          before: secondBullet,
+          after: `Spearheaded automated delivery pipelines integrating ${targetKw2}, cutting deployment release latency by 45% with zero downtime.`,
+          highlights: [`Verb: Spearheaded`, `Metric: -45% Latency`, `Keywords: ${targetKw2}`]
+        });
+      }
+    }
+
     return {
       score,
       verdict: score>=85?'SHORTLIST':score>=70?'HOLD':'REJECT',
@@ -293,7 +320,7 @@ class AtsAnalyzer {
         offer:      score>=85?'80%':score>=70?'58%':'30%',
         atsGatePass:score>=85?'96%':score>=70?'78%':'49%'
       },
-      smartRewrites: [],
+      smartRewrites: generatedRewrites,
       sectionScores: {
         keywordMatch:    score,
         skillsAlignment: Math.min(100,Math.round(score*0.95)),
