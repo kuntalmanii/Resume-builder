@@ -165,7 +165,7 @@ class EditorEngine {
         if (syncTargetId) {
           const targetInput = document.getElementById(syncTargetId);
           if (targetInput) {
-            targetInput.value = field.innerHTML;
+            targetInput.value = (field.innerText || '').trim();
           }
         }
         this.validateField(field);

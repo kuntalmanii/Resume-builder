@@ -12,11 +12,12 @@
 
 class JobTracker {
   constructor() {
-    this.storageKey  = 'resuai_job_applications';
+    this.storageKey   = 'resuai_job_applications';
     this.applications = [];
     this.currentView  = 'table';   // 'table' | 'kanban'
     this.searchQuery  = '';
     this.stageFilter  = 'all';
+    this.chipFilter   = 'all';
     this.initialized  = false;
   }
 
@@ -84,7 +85,8 @@ class JobTracker {
       chip.addEventListener('click', () => {
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        // chips are cosmetic for now — extend with tag-based filtering if needed
+        this.chipFilter = chip.dataset.chip || 'all';
+        this.renderAll();
       });
     });
   }
@@ -254,7 +256,18 @@ class JobTracker {
       const appStage = app.stage === 'interview' ? 'interviewing' : app.stage;
       const targetStage = this.stageFilter === 'interview' ? 'interviewing' : this.stageFilter;
       const matchStage = this.stageFilter === 'all' || appStage === targetStage;
-      return matchSearch && matchStage;
+
+      let matchChip = true;
+      if (this.chipFilter === 'faang') {
+        const bigTech = ['google', 'meta', 'facebook', 'amazon', 'apple', 'netflix', 'stripe', 'microsoft', 'vercel'];
+        matchChip = bigTech.some(b => (app.company || '').toLowerCase().includes(b));
+      } else if (this.chipFilter === 'remote') {
+        matchChip = (app.location || '').toLowerCase().includes('remote');
+      } else if (this.chipFilter === 'high-ats') {
+        matchChip = parseInt(app.atsScore || 0, 10) >= 90;
+      }
+
+      return matchSearch && matchStage && matchChip;
     });
   }
 
