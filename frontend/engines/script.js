@@ -3343,6 +3343,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return "";
     }
   }
+  window.extractPdfText = extractPdfText;
 
   // ── Import Existing Resume (PDF / TXT) into Builder Fields ──
   const btnImportResume = document.getElementById('btnImportResume');

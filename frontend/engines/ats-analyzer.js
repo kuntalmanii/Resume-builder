@@ -67,7 +67,7 @@ class AtsAnalyzer {
     }
     if (input && !input.dataset.boundAts) {
       input.dataset.boundAts = 'true';
-      input.addEventListener('change', e => {
+      input.addEventListener('change', async e => {
         const file = e.target.files?.[0];
         if (!file) return;
         const fn   = document.getElementById('selectedFileName');
@@ -75,9 +75,19 @@ class AtsAnalyzer {
         if (fn) fn.textContent = file.name;
         if (badge) badge.style.display = 'inline-flex';
 
-        const reader = new FileReader();
-        reader.onload = ev => { window.uploadedFileText = ev.target.result || ''; };
-        reader.readAsText(file);
+        try {
+          if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            if (typeof window.extractPdfText === 'function') {
+              window.uploadedFileText = await window.extractPdfText(file);
+            }
+          } else {
+            const reader = new FileReader();
+            reader.onload = ev => { window.uploadedFileText = ev.target.result || ''; };
+            reader.readAsText(file);
+          }
+        } catch (err) {
+          console.warn('[ATS Analyzer] PDF text extraction fallback:', err);
+        }
       });
     }
   }
@@ -95,6 +105,8 @@ class AtsAnalyzer {
         tag.className = 'tag';
         tag.innerHTML = `${this.escapeHTML(keyword)}<span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
         container.appendChild(tag);
+        if (typeof window.syncLivePreview === 'function') window.syncLivePreview();
+        if (typeof window.autoSaveFormFields === 'function') window.autoSaveFormFields();
       }
       btn.textContent = 'Added ✓';
       btn.classList.add('added');

@@ -986,9 +986,23 @@
           matchedKeywords: matchedKeywords
         })
       });
-      loadingMsg.innerHTML = response.ok
-        ? ((await response.json()).reply || 'Here is how you can improve your resume...')
-        : FALLBACK_MSG;
+
+      function formatAiMarkdownResponse(str) {
+        if (!str) return '';
+        return str
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+          .replace(/\*(.*?)\*/g, '<i>$1</i>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\r?\n/g, '<br>');
+      }
+
+      if (response.ok) {
+        var replyJson = await response.json();
+        loadingMsg.innerHTML = formatAiMarkdownResponse(replyJson.reply || 'Here is how you can improve your resume...');
+      } else {
+        loadingMsg.innerHTML = FALLBACK_MSG;
+      }
     } catch (err) {
       loadingMsg.innerHTML = FALLBACK_MSG;
     }
