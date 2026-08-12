@@ -4725,6 +4725,7 @@ Key Requirements:
     }
 
     jobModalEl.style.display = 'flex';
+    jobModalEl.style.zIndex = '10000';
   }
 
   function closeJobModal() {
@@ -4754,8 +4755,8 @@ Key Requirements:
     });
   }
 
-  if (jobForm) {
-    jobForm.addEventListener('submit', (e) => {
+  document.addEventListener('submit', (e) => {
+    if (e.target && e.target.id === 'jobForm') {
       e.preventDefault();
 
       const id      = document.getElementById('jobId')?.value || '';
@@ -4792,8 +4793,8 @@ Key Requirements:
       if (typeof showToast === 'function') {
         showToast(id ? 'Application updated successfully!' : 'New application added to pipeline!', 'success');
       }
-    });
-  }
+    }
+  });
 
   // View Switcher (Board vs Table)
   const btnViewKanban = document.getElementById('btnViewKanban');

@@ -1707,7 +1707,7 @@
                   <button type="button" class="topbar-action-btn" id="btnViewKanban" title="Kanban Board View" style="padding:6px 10px;">
                     <i data-feather="grid"></i>
                   </button>
-                  <button class="btn-primary btn-sm btn-glow-effect" id="btnAddNewJob">
+                  <button type="button" class="btn-primary btn-sm btn-glow-effect" id="btnAddNewJob" onclick="if (typeof window.openJobModal === 'function') window.openJobModal();">
                     <i data-feather="plus"></i>
                     <span>Add Application</span>
                   </button>
@@ -2060,7 +2060,7 @@
   <script src="/frontend/engines/ats-analyzer.js?v=2.5"></script>
   <script src="/frontend/engines/job-tracker.js?v=3.0"></script>
   <script src="/frontend/engines/pdf-exporter.js?v=2.6"></script>
-  <script src="/frontend/engines/script.js?v=4.0"></script>
+  <script src="/frontend/engines/script.js?v=4.1"></script>
   <script src="/frontend/components/help-center.js?v=2.5"></script>
   <script src="/frontend/components/command-palette.js?v=2.5"></script>
 </body>
