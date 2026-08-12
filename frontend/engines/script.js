@@ -1303,6 +1303,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Update live Score Analytics when navigating to analytics tab
+    if (tabId === 'score-analytics' && typeof updateAnalyticsDashboard === 'function') {
+      updateAnalyticsDashboard();
+    }
+
     // Close mobile drawer if active
     closeMobileSidebar();
   }
@@ -2058,6 +2063,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
       queueOfflineTask('resume', 'UPSERT', draftData);
+      if (typeof updateAnalyticsDashboard === 'function') updateAnalyticsDashboard();
     } catch (e) {
       console.warn('Could not auto-save form fields to LocalStorage:', e);
     }
