@@ -4755,7 +4755,7 @@ Key Requirements:
   window._openJobModalInternal = openJobModal;
 
   document.addEventListener('click', (e) => {
-    const target = e.target.closest('#btnAddNewJob, .btn-add-first-app, #btnCloseJobModal, #btnCancelJobModal');
+    const target = e.target.closest('#btnAddNewJob, .btn-add-first-app, #btnCloseJobModal, #btnCancelJobModal, .modal-close-btn');
     if (!target) return;
     if (target.id === 'btnAddNewJob' || target.classList.contains('btn-add-first-app')) {
       e.preventDefault();
@@ -4763,6 +4763,10 @@ Key Requirements:
     } else if (target.id === 'btnCloseJobModal' || target.id === 'btnCancelJobModal') {
       e.preventDefault();
       closeJobModal();
+    } else if (target.classList.contains('modal-close-btn')) {
+      e.preventDefault();
+      const parentModal = target.closest('.modal-overlay');
+      if (parentModal) parentModal.style.display = 'none';
     }
   });
 

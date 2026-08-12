@@ -1760,7 +1760,7 @@
           <i data-feather="briefcase"></i>
           <h3 id="jobModalTitle">Add Job Application</h3>
         </div>
-        <button class="modal-close-btn" id="btnCloseJobModal" aria-label="Close modal">
+        <button type="button" class="modal-close-btn" id="btnCloseJobModal" aria-label="Close modal" onclick="if (typeof window.closeJobModal === 'function') window.closeJobModal(); else { var m = this.closest('.modal-overlay'); if (m) m.style.display = 'none'; }">
           <i data-feather="x"></i>
         </button>
       </div>
@@ -1851,7 +1851,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-ghost-sm" id="btnCancelJobModal">Cancel</button>
+          <button type="button" class="btn-ghost-sm" id="btnCancelJobModal" onclick="if (typeof window.closeJobModal === 'function') window.closeJobModal(); else { var m = this.closest('.modal-overlay'); if (m) m.style.display = 'none'; }">Cancel</button>
           <button type="submit" class="btn-primary btn-sm" id="btnSaveJob">
             <i data-feather="check"></i>
             <span id="btnSaveJobText">Save Application</span>
@@ -1869,7 +1869,7 @@
           <i data-feather="layers" style="color: var(--accent-primary);"></i>
           <h3 id="versionProfilesModalTitle" style="font-size: 1.15rem; font-weight: 700; margin: 0;">Career Version Profiles</h3>
         </div>
-        <button class="modal-close-btn" id="btnCloseVersionModal" aria-label="Close modal" style="background: transparent; border: none; cursor: pointer; color: var(--text-muted);">
+        <button type="button" class="modal-close-btn" id="btnCloseVersionModal" aria-label="Close modal" onclick="var m = this.closest('.modal-overlay'); if (m) m.style.display = 'none';" style="background: transparent; border: none; cursor: pointer; color: var(--text-muted);">
           <i data-feather="x"></i>
         </button>
       </div>
@@ -1905,7 +1905,7 @@
           <i data-feather="mail"></i>
           <h3>Reset Your Password</h3>
         </div>
-        <button class="modal-close-btn" id="forgotModalClose"><i data-feather="x"></i></button>
+        <button type="button" class="modal-close-btn" id="forgotModalClose" onclick="var m = this.closest('.modal-overlay'); if (m) m.style.display = 'none';"><i data-feather="x"></i></button>
       </div>
       <div style="padding: 1.5rem 2rem 2rem;">
         <p style="color:var(--text-secondary); margin-bottom:1.25rem; font-size:0.9rem;">
@@ -1935,7 +1935,7 @@
           <i data-feather="key"></i>
           <h3>Set New Password</h3>
         </div>
-        <button class="modal-close-btn" id="resetPasswordModalClose"><i data-feather="x"></i></button>
+        <button type="button" class="modal-close-btn" id="resetPasswordModalClose" onclick="var m = this.closest('.modal-overlay'); if (m) m.style.display = 'none';"><i data-feather="x"></i></button>
       </div>
       <div style="padding: 1.5rem 2rem 2rem;">
         <p style="color:var(--text-secondary); margin-bottom:1.25rem; font-size:0.9rem;">
@@ -1975,7 +1975,7 @@
             <span class="modal-subtitle">Manage profile details &amp; authentication</span>
           </div>
         </div>
-        <button class="modal-close-btn" id="profileModalClose" title="Close"><i data-feather="x"></i></button>
+        <button type="button" class="modal-close-btn" id="profileModalClose" title="Close" onclick="var m = this.closest('.modal-overlay'); if (m) m.style.display = 'none';"><i data-feather="x"></i></button>
       </div>
       <div class="account-modal-body">
         <!-- Account Card Banner -->
@@ -2060,7 +2060,7 @@
   <script src="/frontend/engines/ats-analyzer.js?v=2.5"></script>
   <script src="/frontend/engines/job-tracker.js?v=3.0"></script>
   <script src="/frontend/engines/pdf-exporter.js?v=2.6"></script>
-  <script src="/frontend/engines/script.js?v=4.2"></script>
+  <script src="/frontend/engines/script.js?v=4.3"></script>
   <script src="/frontend/components/help-center.js?v=2.5"></script>
   <script src="/frontend/components/command-palette.js?v=2.5"></script>
 </body>
