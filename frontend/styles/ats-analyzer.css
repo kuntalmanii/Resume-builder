@@ -686,10 +686,9 @@
   background: #FFFFFF;
   border: 1px solid var(--ats-border);
   border-radius: var(--ats-radius);
-  padding: 22px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 .ats-keyword-intelligence-box::before {
   content: '';
@@ -815,7 +814,7 @@
   background: #FFFFFF;
   border: 1px solid var(--ats-border);
   border-radius: var(--ats-radius);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   transition: box-shadow 0.2s;
 }
@@ -824,7 +823,7 @@
 .ats-report-header {
   padding: 16px 20px;
   background: #FCFBF8;
-  border-bottom: 1px solid var(--ats-border);
+  border-radius: var(--ats-radius);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -849,6 +848,7 @@
   font-size: 13px;
   line-height: 1.65;
   color: var(--ats-text-secondary);
+  border-top: 1px solid var(--ats-border);
 }
 
 .recommendations-grid {
