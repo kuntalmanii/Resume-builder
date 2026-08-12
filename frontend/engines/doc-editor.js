@@ -688,7 +688,15 @@
     var name       = (document.getElementById('docFieldName')?.innerText   || '').trim();
     var jobTitle   = (document.getElementById('docFieldTitle')?.innerText  || document.getElementById('inputJobTitle')?.value || '').trim();
     var summary    = (document.getElementById('docFieldSummary')?.innerText || document.getElementById('inputSummary')?.value  || '').trim();
-    var experience = docBullets.filter(Boolean).join('\n') || (document.getElementById('bulletPoints')?.value || '').trim();
+
+    var domBullets = Array.from(document.querySelectorAll('#docBulletsList .doc-bullet-text'))
+      .map(function(el) { return (el.innerText || '').replace(/^[\s•\-\*]+/, '').trim(); })
+      .filter(Boolean);
+
+    var experience = (window.docBullets && window.docBullets.filter(Boolean).length > 0)
+      ? window.docBullets.filter(Boolean).join('\n')
+      : (domBullets.length > 0 ? domBullets.join('\n') : (document.getElementById('bulletPoints')?.value || '').trim());
+
     var skills     = docSkills.length > 0 ? docSkills.join(', ') : (document.getElementById('previewSkills')?.textContent || '');
 
     // Determine target section
@@ -696,16 +704,16 @@
     var targetText    = summary;
     if (/summary|about/i.test(promptText)) {
       targetSection = 'summary';
-      targetText    = summary || experience;
+      targetText    = summary || experience || 'Results-driven software engineer with expertise in building scalable applications.';
     } else if (/bullet|experience|work|quantify|star|achievement|action/i.test(promptText)) {
       targetSection = 'experience';
-      targetText    = experience || summary;
+      targetText    = experience || 'Engineered high-performance web applications and optimized system latency.';
     } else if (/skill|tag/i.test(promptText)) {
       targetSection = 'skills';
-      targetText    = skills;
+      targetText    = skills || 'TypeScript, React, Node.js, System Design';
     } else if (/ats|executive|technical|tone|improve/i.test(promptText)) {
-      targetSection = summary.length > 20 ? 'summary' : 'experience';
-      targetText    = targetSection === 'summary' ? summary : experience;
+      targetSection = (summary && summary.length > 20) ? 'summary' : 'experience';
+      targetText    = targetSection === 'summary' ? (summary || 'Results-driven developer shipping high-impact products.') : (experience || 'Architected scalable software solutions.');
     }
 
     try {
@@ -750,6 +758,8 @@
         } else if (targetSection === 'experience') {
           const bulletsArr = rewrittenText.split('\n').map(b => b.replace(/^[\s•\-\*]+/, '').trim()).filter(Boolean);
           if (typeof window.setDocBullets === 'function') window.setDocBullets(bulletsArr);
+          if (typeof syncLivePreview === 'function')     syncLivePreview();
+          if (typeof autoSaveFormFields === 'function')  autoSaveFormFields();
           if (typeof showToast === 'function') showToast('Experience bullets optimized with AI!', 'success');
         } else if (targetSection === 'skills') {
           const newSkills = rewrittenText
@@ -757,6 +767,8 @@
             .map(s => s.trim().replace(/^[\s•\-\*]+/, ''))
             .filter(Boolean);
           newSkills.forEach(s => window.addDocSkill?.(s));
+          if (typeof syncLivePreview === 'function')     syncLivePreview();
+          if (typeof autoSaveFormFields === 'function')  autoSaveFormFields();
           if (typeof showToast === 'function') showToast('Skills updated with AI!', 'success');
         }
 
