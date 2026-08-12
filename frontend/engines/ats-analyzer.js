@@ -322,6 +322,9 @@ class AtsAnalyzer {
 
     const score = Math.min(100, Math.max(0, parseInt(rawScore,10)||0));
 
+    // Ensure all report bodies are visible after scan completes
+    document.querySelectorAll('#ats-results .ats-report-body').forEach(b => b.style.display = 'block');
+
     // ── Score ring ──
     const scoreEl   = document.getElementById('scoreNumber');
     const circle    = document.getElementById('scoreCircle');

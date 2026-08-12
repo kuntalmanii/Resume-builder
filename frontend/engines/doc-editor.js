@@ -892,13 +892,23 @@
 
   /* Collapse / expand an ATS report block */
   window.toggleReportBlock = function (headerEl) {
-    var block = headerEl.closest('.ats-report-block');
+    if (!headerEl) return;
+    var block = headerEl.closest('.ats-report-block, .ats-keyword-intelligence-box');
     if (!block) return;
     var body = block.querySelector('.ats-report-body');
-    if (body) {
-      var isHidden = body.style.display === 'none';
-      body.style.display = isHidden ? 'block' : 'none';
+    if (!body) {
+      var children = Array.from(block.children);
+      var nonHeaders = children.filter(function(c) {
+        return c !== headerEl && !c.classList.contains('ats-kw-sec-header') && !c.classList.contains('ats-report-header');
+      });
+      if (nonHeaders.length > 0) {
+        var isHidden = window.getComputedStyle(nonHeaders[0]).display === 'none';
+        nonHeaders.forEach(function(c) { c.style.display = isHidden ? 'block' : 'none'; });
+      }
+      return;
     }
+    var currentDisp = window.getComputedStyle(body).display;
+    body.style.display = (currentDisp === 'none') ? 'block' : 'none';
   };
 
   /* Insert a suggested keyword sentence into the ATS chat */
