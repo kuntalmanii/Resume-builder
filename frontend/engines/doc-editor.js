@@ -1107,12 +1107,25 @@
 
       function formatAiMarkdownResponse(str) {
         if (!str) return '';
-        return str
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        var safe = String(str)
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+          .replace(/\son\w+="[^"]*"/gi, '')
+          .replace(/\son\w+='[^']*'/gi, '');
+
+        safe = safe
           .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
           .replace(/\*(.*?)\*/g, '<i>$1</i>')
           .replace(/`([^`]+)`/g, '<code>$1</code>')
-          .replace(/\r?\n/g, '<br>');
+          .replace(/^###?\s+(.*$)/gim, '<b style="display:block;margin-top:6px;font-size:0.92rem;">$1</b>')
+          .replace(/^\s*[\-\*]\s+(.*$)/gim, '• $1')
+          .replace(/^\s*(\d+)\.\s+(.*$)/gim, '$1. $2');
+
+        if (!/<br\s*\/?>/i.test(safe) && !/<p>/i.test(safe)) {
+          safe = safe.replace(/\r?\n/g, '<br>');
+        }
+
+        return safe;
       }
 
       if (response.ok) {
