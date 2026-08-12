@@ -119,15 +119,20 @@ module.exports = async (req, res) => {
   try {
     let body = req.body;
     if (!body || typeof body !== 'object') {
-      try {
-        body = await new Promise((resolve) => {
-          let data = '';
-          req.on('data', chunk => { data += chunk; });
-          req.on('end', () => {
-            try { resolve(JSON.parse(data)); } catch (e) { resolve({}); }
+      if (req.readableEnded || req.complete) {
+        body = {};
+      } else {
+        try {
+          body = await new Promise((resolve) => {
+            let data = '';
+            req.on('data', chunk => { data += chunk; });
+            req.on('end', () => {
+              try { resolve(JSON.parse(data)); } catch (e) { resolve({}); }
+            });
+            req.on('error', () => resolve({}));
           });
-        });
-      } catch (e) { body = {}; }
+        } catch (e) { body = {}; }
+      }
     }
 
     const { userMessage, jobTitle, jobDescription, resumeText, currentScore, missingKeywords, matchedKeywords } = body || {};

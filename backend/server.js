@@ -152,19 +152,22 @@ function safeParseJson(rawText) {
 function readJsonBody(req, res, maxBytes = 5 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let body = '';
+    let receivedBytes = 0;
     let isOverLimit = false;
 
     req.on('data', chunk => {
       if (isOverLimit) return;
-      body += chunk;
-      if (Buffer.byteLength(body, 'utf8') > maxBytes) {
+      receivedBytes += chunk.length;
+      if (receivedBytes > maxBytes) {
         isOverLimit = true;
         setCorsHeaders(req, res);
         res.writeHead(413, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Payload too large. Maximum allowed size is 5MB.' }));
         req.destroy();
         reject(new Error('Payload too large'));
+        return;
       }
+      body += chunk.toString('utf8');
     });
 
     req.on('end', () => {
