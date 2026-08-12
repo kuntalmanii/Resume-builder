@@ -3451,6 +3451,34 @@ document.addEventListener('DOMContentLoaded', () => {
           };
         }
 
+        function optimizeImportedResume(p) {
+          if (!p) return p;
+          if (!p.jobTitle || /(?:summary|profile|objective|experience|education|skills|work|projects|certifications|professional|contact|employment|history)/i.test(p.jobTitle)) {
+            p.jobTitle = 'Software Developer | Full Stack Developer';
+          }
+          if (!p.summary || p.summary.length < 20) {
+            p.summary = `B.Tech Computer Science student with strong foundations in Java, JavaScript, SQL, DSA, OOP, and web development. Experienced in building full-stack applications and solving real-world problems through software projects. Seeking opportunities to apply technical skills in software development and contribute to scalable, user-focused products.`;
+          }
+          if (p.experience) {
+            const rawLines = p.experience.split(/\r?\n/).map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
+            const actionVerbs = ['Developed', 'Architected', 'Engineered', 'Implemented', 'Designed', 'Optimized', 'Spearheaded', 'Built'];
+            const optimizedLines = rawLines.map((line, idx) => {
+              if (/^(Developed|Architected|Engineered|Implemented|Designed|Optimized|Spearheaded|Built)\b/i.test(line)) {
+                return line.startsWith('•') ? line : `• ${line}`;
+              }
+              const verb = actionVerbs[idx % actionVerbs.length];
+              return `• ${verb} ${line.charAt(0).toLowerCase() + line.slice(1)}`;
+            });
+            p.experience = optimizedLines.join('\n');
+          }
+          if (!Array.isArray(p.skills) || p.skills.length === 0) {
+            p.skills = ['Java', 'JavaScript', 'SQL', 'DSA', 'OOP', 'React.js', 'Node.js', 'Express.js', 'PostgreSQL', 'Supabase', 'Git', 'REST APIs'];
+          }
+          return p;
+        }
+
+        parsed = optimizeImportedResume(parsed);
+
         // Auto-fill legacy form fields
         if (parsed.fullName && inputFullName) inputFullName.value = parsed.fullName;
         if (parsed.jobTitle && inputJobTitle) inputJobTitle.value = parsed.jobTitle;

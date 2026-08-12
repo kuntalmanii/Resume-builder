@@ -181,35 +181,36 @@ module.exports = async function parseResumeHandler(req, res) {
       return res.status(200).json({ ...heuristicParse(rawText), _source: 'heuristic' });
     }
 
-    const prompt = `You are an expert resume parser. Extract all structured data from the resume text below.
+    const prompt = `You are an elite AI Executive Resume Editor & ATS Optimization Specialist.
+Extract AND OPTIMIZE all structured data from the raw resume text below into a high-impact, ATS-optimized professional resume.
 
-RESUME TEXT:
+RAW RESUME TEXT:
 ${rawText.slice(0, 5000)}
 
 Respond STRICTLY with a single valid JSON object — no markdown fences, no extra prose:
 {
   "fullName": "<candidate full name>",
-  "jobTitle": "<target job title e.g. Senior Software Engineer. MUST be empty string if line is a location or header>",
+  "jobTitle": "<target job title e.g. Software Developer | Full Stack Developer>",
   "email": "<email address>",
   "phone": "<phone number>",
   "location": "<city, state or country strictly e.g. Bengaluru, India>",
   "linkedin": "<full LinkedIn URL if present, else empty string>",
   "github": "<full GitHub URL if present, else empty string>",
   "portfolio": "<personal website/portfolio URL if present, else empty string>",
-  "summary": "<professional summary or objective paragraph>",
-  "experience": "<work experience bullet points only. MUST NOT contain education degree or university info>",
-  "skills": ["<skill1>", "<skill2>", "<skill3>"],
-  "education": "<education degree and university text only>",
-  "certifications": "<certifications or licenses text>",
-  "projects": "<projects section text>",
-  "achievements": "<achievements, awards, or honors text>"
+  "summary": "<high-impact ATS-optimized professional summary statement highlighting key technical skills, experience, and problem-solving track record>",
+  "experience": "<work experience bullet points transformed into Google XYZ formula: Accomplished [X] as measured by [Y] by doing [Z]. Start each bullet with '• ' and a strong action verb (e.g. Developed, Architected, Engineered, Optimized, Delivered).>",
+  "skills": ["<skill1>", "<skill2>", "<skill3>", "<skill4>", "<skill5>"],
+  "education": "<education degree, major, and institution name formatted cleanly>",
+  "certifications": "<certifications or licenses text formatted cleanly>",
+  "projects": "<key projects with tech stack and concise bullet descriptions>",
+  "achievements": "<key achievements or awards text>"
 }
 
 Rules:
-- Do NOT set jobTitle to "LINKEDIN | GITHUB" or location strings
-- Do NOT include candidate name in location string
-- Do NOT duplicate degree/university lines in experience section
-- If a field is not present, use empty string "" or empty array []`;
+- MUST OPTIMIZE raw experience bullets into high-impact Google XYZ action-verb bullet points.
+- Do NOT set jobTitle to section headers (e.g. "Professional Experience").
+- Do NOT include candidate name or phone numbers in location string.
+- If a field is missing, supply a clean professional default or leave as empty string/array.`;
 
     const models = [...new Set(GEMINI_MODELS.filter(Boolean))];
     let result = null;
