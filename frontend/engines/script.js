@@ -36,6 +36,23 @@ function escapeHTML(str) {
     .replace(/'/g,  '&#39;');
 }
 
+window.openJobModal = window.openJobModal || function(jobId = null) {
+  if (typeof window._openJobModalInternal === 'function') {
+    window._openJobModalInternal(jobId);
+  } else {
+    const el = document.getElementById('jobModal');
+    if (el) {
+      el.style.display = 'flex';
+      el.style.zIndex = '10000';
+    }
+  }
+};
+
+window.closeJobModal = window.closeJobModal || function() {
+  const el = document.getElementById('jobModal');
+  if (el) el.style.display = 'none';
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   // Toast Notifications Engine — defined & bound early to avoid race conditions
   function showToast(message, type = 'success') {
@@ -4735,6 +4752,7 @@ Key Requirements:
 
   window.openJobModal = openJobModal;
   window.closeJobModal = closeJobModal;
+  window._openJobModalInternal = openJobModal;
 
   document.addEventListener('click', (e) => {
     const target = e.target.closest('#btnAddNewJob, .btn-add-first-app, #btnCloseJobModal, #btnCancelJobModal');
