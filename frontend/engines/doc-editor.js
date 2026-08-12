@@ -214,6 +214,7 @@
         if (val) el.innerText = val;
       }
       this.updateEmptyState(el);
+      this.syncField(el);
     },
 
     formatLinks: function() {

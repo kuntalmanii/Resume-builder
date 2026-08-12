@@ -2027,6 +2027,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bulletPoints && typeof window.setDocBullets === 'function') {
       window.setDocBullets(bulletPoints.value || '');
     }
+
+    document.querySelectorAll('.doc-field, .doc-contact-field, [contenteditable="true"]').forEach(el => {
+      const txt = (el.innerText || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+      if (txt) {
+        el.classList.remove('is-empty');
+      } else {
+        el.classList.add('is-empty');
+      }
+    });
   }
 
   window.syncFormInputsToCenterCanvas = syncFormInputsToCenterCanvas;
