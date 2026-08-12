@@ -97,7 +97,7 @@ function makeGeminiRequest(model, prompt, apiKey) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+      generationConfig: { temperature: 0.2, maxOutputTokens: 4096, responseMimeType: 'application/json' }
     });
     const opts = {
       hostname: 'generativelanguage.googleapis.com', port: 443,
@@ -111,12 +111,29 @@ function makeGeminiRequest(model, prompt, apiKey) {
       res.on('end', () => {
         if (res.statusCode>=200 && res.statusCode<300) {
           try {
-            const raw = JSON.parse(body).candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-            const brace = raw.match(/(\{[\s\S]*\})/);
-            const str   = fence ? fence[1] : (brace ? brace[1] : null);
-            if (!str) throw new Error('No JSON in Gemini response');
-            const a = JSON.parse(str);
+            const parsed = JSON.parse(body);
+            const candidate = parsed.candidates?.[0];
+            const parts = candidate?.content?.parts || [];
+
+            // Filter out thought parts, get text content
+            let textContent = parts.filter(p => !p.thought).map(p => p.text || '').join('\n').trim();
+            if (!textContent && parts.length > 0) {
+              textContent = parts[parts.length - 1].text || '';
+            }
+
+            // Try direct JSON parse first (responseMimeType should give clean JSON)
+            let a = null;
+            try { a = JSON.parse(textContent); } catch(_) {}
+
+            // Fallback: extract from fences or braces
+            if (!a) {
+              const fence = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+              const brace = textContent.match(/(\{[\s\S]*\})/);
+              const str   = fence ? fence[1] : (brace ? brace[1] : null);
+              if (!str) throw new Error('No JSON in Gemini response');
+              a = JSON.parse(str);
+            }
+
             const s = a.score ?? 75;
             const missingAll = a.missingKeywords || [...(a.missing_must_have_skills||[]),...(a.missing_nice_to_have_skills||[])];
             const recs = a.recommendations || a.actionable_fixes

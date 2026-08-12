@@ -271,16 +271,19 @@ p  { line-height: 1.65; }
 }
 .main-content:has(#tab-ats-analyzer.active) {
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: #0A0D14;
 }
 .main-content:has(#tab-resume-builder.active) .tab-content-container,
 .main-content:has(#tab-ats-analyzer.active) .tab-content-container {
-  flex: 1;
-  display: flex;
+  flex: 1 1 0%;
+  display: flex !important;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 .main-content::-webkit-scrollbar { width: 6px; }

@@ -60,7 +60,7 @@ function makeGeminiRequest(model, promptText, apiKey) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
       contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048, responseMimeType: 'application/json' }
     });
 
     const options = {
@@ -81,13 +81,45 @@ function makeGeminiRequest(model, promptText, apiKey) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
             const parsed = JSON.parse(body);
-            const rawContent = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              const analysisObj = JSON.parse(jsonMatch[0]);
-              resolve(analysisObj);
+            const candidate = parsed.candidates?.[0];
+            const parts = candidate?.content?.parts || [];
+            
+            // Filter out thought parts if any
+            let textContent = parts.filter(p => !p.thought).map(p => p.text || '').join('\n').trim();
+            if (!textContent && parts.length > 0) {
+              textContent = parts[parts.length - 1].text || '';
+            }
+
+            // Extract JSON code block or object
+            let jsonString = '';
+            const codeBlockMatch = textContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/i);
+            if (codeBlockMatch) {
+              jsonString = codeBlockMatch[1];
             } else {
-              reject(new Error("Failed to parse JSON response from Gemini API"));
+              const objectMatch = textContent.match(/\{[\s\S]*\}/);
+              if (objectMatch) jsonString = objectMatch[0];
+            }
+
+            if (jsonString) {
+              try {
+                const analysisObj = JSON.parse(jsonString);
+                resolve(analysisObj);
+                return;
+              } catch (e) {
+                console.warn('Failed to parse extracted JSON string:', e.message);
+              }
+            }
+
+            if (textContent) {
+              const cleanText = textContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+              resolve({
+                section: 'summary',
+                optimizedText: cleanText,
+                optimizedBulletPoints: cleanText,
+                suggestedSkills: []
+              });
+            } else {
+              reject(new Error("Failed to parse response from Gemini API"));
             }
           } catch (e) {
             reject(new Error("Gemini response JSON parse error: " + e.message));

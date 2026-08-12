@@ -70,10 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global Error Boundary & Monitoring Hooks
   window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.error('[ResuAI Error Boundary]', { msg, url, lineNo, columnNo, error });
-    if (typeof showToast === 'function') {
-      showToast('An unexpected UI error occurred. All progress is saved locally.', 'error');
-    }
-    return false;
+    return true; // Prevent default error popup and preserve clean UI
   };
 
   window.addEventListener('unhandledrejection', function (event) {
@@ -1719,23 +1716,46 @@ document.addEventListener('DOMContentLoaded', () => {
       btnAutoOptimize.disabled = true;
       if (window.feather) feather.replace();
 
-      const jobTitle = inputJobTitle ? inputJobTitle.value : '';
-      const expText = bulletPoints ? bulletPoints.value : '';
-      const skills = Array.from(document.querySelectorAll('#skillsTagsContainer .tag')).map(t => getSkillTagName(t)).filter(Boolean);
+      const jobTitle = (document.getElementById('docFieldTitle')?.innerText || inputJobTitle?.value || '').trim();
+      const summary  = (document.getElementById('docFieldSummary')?.innerText || inputSummary?.value || '').trim();
+      const expText  = (window.docBullets && window.docBullets.length > 0)
+        ? window.docBullets.filter(Boolean).join('\n')
+        : (bulletPoints ? bulletPoints.value : '');
 
       try {
-        const activeSettings = getActiveSettings();
+        const activeSettings = typeof getActiveSettings === 'function' ? getActiveSettings() : {};
         const response = await fetch('/api/optimize-resume', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobTitle, experienceText: expText, skills, geminiModel: activeSettings.geminiModel, sensitivity: activeSettings.sensitivity })
+          body: JSON.stringify({
+            jobTitle: jobTitle || 'Software Engineer',
+            text: expText || summary || 'Engineered high-performance web applications',
+            section: 'experience',
+            action: 'Improve Writing and Quantify Results',
+            geminiModel: activeSettings.geminiModel
+          })
         });
+
         const data = await response.json();
         
-        if (data && data.optimizedBulletPoints && bulletPoints) {
-          bulletPoints.value = data.optimizedBulletPoints;
-          syncLivePreview();
-          autoSaveFormFields();
+        if (data) {
+          let bullets = data.optimizedBulletPoints || data.optimizedText || '';
+          if (Array.isArray(bullets)) bullets = bullets.join('\n');
+
+          if (bullets) {
+            const bulletsArr = bullets.split('\n').map(b => b.replace(/^[\s•\-\*]+/, '').trim()).filter(Boolean);
+            if (typeof window.setDocBullets === 'function') {
+              window.setDocBullets(bulletsArr);
+            }
+          }
+
+          if (Array.isArray(data.suggestedSkills)) {
+            data.suggestedSkills.forEach(s => window.addDocSkill?.(s));
+          }
+
+          if (typeof syncLivePreview === 'function') syncLivePreview();
+          if (typeof autoSaveFormFields === 'function') autoSaveFormFields();
+          if (typeof showToast === 'function') showToast('Resume optimized with AI!', 'success');
         }
 
         btnAutoOptimize.innerHTML = `<i data-feather="check"></i> <span>Optimized with AI!</span>`;
@@ -1956,29 +1976,33 @@ document.addEventListener('DOMContentLoaded', () => {
    * Saves all current form fields and skill tags to localStorage automatically.
    */
   function syncFormInputsToCenterCanvas() {
-    const docName = document.getElementById('docFieldName');
-    if (docName && inputFullName) docName.innerText = inputFullName.value || '';
+    if (window.personalEngine && typeof window.personalEngine.syncFromInputs === 'function') {
+      window.personalEngine.syncFromInputs();
+    } else {
+      const docName = document.getElementById('docFieldName');
+      if (docName && inputFullName) docName.innerText = inputFullName.value || '';
 
-    const docTitle = document.getElementById('docFieldTitle');
-    if (docTitle && inputJobTitle) docTitle.innerText = inputJobTitle.value || '';
+      const docTitle = document.getElementById('docFieldTitle');
+      if (docTitle && inputJobTitle) docTitle.innerText = inputJobTitle.value || '';
 
-    const docEmail = document.querySelector('[data-syncs="inputEmail"]');
-    if (docEmail && inputEmail) docEmail.innerText = inputEmail.value || '';
+      const docEmail = document.getElementById('docFieldEmail') || document.querySelector('[data-syncs="inputEmail"]');
+      if (docEmail && inputEmail) docEmail.innerText = inputEmail.value || '';
 
-    const docPhone = document.querySelector('[data-syncs="inputPhone"]');
-    if (docPhone && inputPhone) docPhone.innerText = inputPhone.value || '';
+      const docPhone = document.getElementById('docFieldPhone') || document.querySelector('[data-syncs="inputPhone"]');
+      if (docPhone && inputPhone) docPhone.innerText = inputPhone.value || '';
 
-    const docLoc = document.querySelector('[data-syncs="inputLocation"]');
-    if (docLoc && inputLocation) docLoc.innerText = inputLocation.value || '';
+      const docLoc = document.getElementById('docFieldLocation') || document.querySelector('[data-syncs="inputLocation"]');
+      if (docLoc && inputLocation) docLoc.innerText = inputLocation.value || '';
 
-    const docGh = document.querySelector('[data-syncs="inputGithub"]');
-    if (docGh && inputGithub) docGh.innerText = inputGithub.value || '';
+      const docGh = document.getElementById('docFieldGithub') || document.querySelector('[data-syncs="inputGithub"]');
+      if (docGh && inputGithub) docGh.innerText = inputGithub.value || '';
 
-    const docLi = document.querySelector('[data-syncs="inputLinkedin"]');
-    if (docLi && inputLinkedin) docLi.innerText = inputLinkedin.value || '';
+      const docLi = document.getElementById('docFieldLinkedin') || document.querySelector('[data-syncs="inputLinkedin"]');
+      if (docLi && inputLinkedin) docLi.innerText = inputLinkedin.value || '';
 
-    const docPort = document.querySelector('[data-syncs="inputPortfolio"]');
-    if (docPort && inputPortfolio) docPort.innerText = inputPortfolio.value || '';
+      const docPort = document.getElementById('docFieldPortfolio') || document.querySelector('[data-syncs="inputPortfolio"]');
+      if (docPort && inputPortfolio) docPort.innerText = inputPortfolio.value || '';
+    }
 
     const docSum = document.getElementById('docFieldSummary');
     if (docSum && inputSummary) docSum.innerText = inputSummary.value || '';
@@ -2045,37 +2069,54 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadSavedFormFields() {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+      let loaded = false;
       if (saved) {
         const draft = JSON.parse(saved);
-        if (draft.fullName && inputFullName) inputFullName.value = draft.fullName;
-        if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
-        if (draft.email && inputEmail) inputEmail.value = draft.email;
-        if (draft.phone && inputPhone) inputPhone.value = draft.phone;
-        if (draft.location && inputLocation) inputLocation.value = draft.location;
-        if (draft.github && inputGithub) inputGithub.value = draft.github;
-        if (draft.linkedin && inputLinkedin) inputLinkedin.value = draft.linkedin;
-        if (draft.portfolio && inputPortfolio) inputPortfolio.value = draft.portfolio;
-        if (draft.summary && inputSummary) inputSummary.value = draft.summary;
-        if (draft.education && inputEducation) inputEducation.value = draft.education;
-        if (draft.certifications && inputCertifications) inputCertifications.value = draft.certifications;
-        if (draft.projects && inputProjects) inputProjects.value = draft.projects;
-        if (draft.achievements && inputAchievements) inputAchievements.value = draft.achievements;
-        if (Array.isArray(draft.customSections)) {
-          customSectionsList = draft.customSections;
-          renderCustomSectionInputs();
+        if (draft.isBlank) {
+          // Explicit blank state requested by user
+          syncFormInputsToCenterCanvas();
+          syncLivePreview();
+          return;
         }
-        if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
-        if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
+        if (draft.fullName || draft.summary || draft.projects || draft.education || draft.bulletPoints) {
+          if (draft.fullName && inputFullName) inputFullName.value = draft.fullName;
+          if (draft.jobTitle && inputJobTitle) inputJobTitle.value = draft.jobTitle;
+          if (draft.email && inputEmail) inputEmail.value = draft.email;
+          if (draft.phone && inputPhone) inputPhone.value = draft.phone;
+          if (draft.location && inputLocation) inputLocation.value = draft.location;
+          if (draft.github && inputGithub) inputGithub.value = draft.github;
+          if (draft.linkedin && inputLinkedin) inputLinkedin.value = draft.linkedin;
+          if (draft.portfolio && inputPortfolio) inputPortfolio.value = draft.portfolio;
+          if (draft.summary && inputSummary) inputSummary.value = draft.summary;
+          if (draft.education && inputEducation) inputEducation.value = draft.education;
+          if (draft.certifications && inputCertifications) inputCertifications.value = draft.certifications;
+          if (draft.projects && inputProjects) inputProjects.value = draft.projects;
+          if (draft.achievements && inputAchievements) inputAchievements.value = draft.achievements;
+          if (Array.isArray(draft.customSections)) {
+            customSectionsList = draft.customSections;
+            renderCustomSectionInputs();
+          }
+          if (draft.bulletPoints && bulletPoints) bulletPoints.value = draft.bulletPoints;
+          if (draft.atsJdText && atsJdInput) atsJdInput.value = draft.atsJdText;
 
-        syncFormInputsToCenterCanvas();
-        syncLivePreview();
-        syncLiveSkills();
-      } else {
-        syncFormInputsToCenterCanvas();
-        syncLivePreview();
+          syncFormInputsToCenterCanvas();
+          syncLivePreview();
+          syncLiveSkills();
+          loaded = true;
+        }
+      }
+      if (!loaded) {
+        if (typeof window.loadGoogleDevTemplate === 'function') {
+          window.loadGoogleDevTemplate();
+        } else {
+          syncFormInputsToCenterCanvas();
+          syncLivePreview();
+        }
       }
     } catch (e) {
       console.warn('Could not restore form fields from LocalStorage:', e);
+      syncFormInputsToCenterCanvas();
+      syncLivePreview();
     }
   }
 
@@ -2254,12 +2295,45 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  function updateTextNode(el, newText) {
-    if (!el) return;
-    if (el.textContent !== newText) {
-      el.textContent = newText;
-    }
+  function parseFormattedSectionHTML(rawText) {
+    if (!rawText || typeof rawText !== 'string') return '';
+
+    const lines = rawText.split('\n');
+    let html = '';
+    let inList = false;
+
+    lines.forEach(line => {
+      let trimmed = line.trim();
+      if (!trimmed) {
+        if (inList) { html += '</ul>'; inList = false; }
+        return;
+      }
+
+      if (trimmed.startsWith('### ') || trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+        if (inList) { html += '</ul>'; inList = false; }
+        const headerText = trimmed.replace(/^#+\s*/, '');
+        html += `<div class="preview-block-heading">${escapeHTML(headerText)}</div>`;
+        return;
+      }
+
+      if (/^[\*\-\•]\s+/.test(trimmed)) {
+        if (!inList) { html += '<ul class="preview-block-list">'; inList = true; }
+        let bulletContent = trimmed.replace(/^[\*\-\•]\s+/, '');
+        bulletContent = escapeHTML(bulletContent).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html += `<li>${bulletContent}</li>`;
+        return;
+      }
+
+      if (inList) { html += '</ul>'; inList = false; }
+      let lineContent = escapeHTML(trimmed).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html += `<div class="preview-block-line">${lineContent}</div>`;
+    });
+
+    if (inList) { html += '</ul>'; }
+    return html;
   }
+  window.parseFormattedSectionHTML = parseFormattedSectionHTML;
+  window.formatEducationHTML = parseFormattedSectionHTML;
 
   function syncLivePreview() {
     const docName = document.getElementById('docFieldName')?.innerText?.trim();
@@ -2323,7 +2397,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const docEdu = document.getElementById('docFieldEducation')?.innerText?.trim();
     const eduVal = docEdu || (inputEducation ? inputEducation.value.trim() : '');
     if (previewEducation) {
-      const newHtml = eduVal ? formatEducationHTML(eduVal) : '';
+      const newHtml = eduVal ? parseFormattedSectionHTML(eduVal) : '';
       if (previewEducation.innerHTML !== newHtml) previewEducation.innerHTML = newHtml;
     }
 
@@ -2331,34 +2405,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const certsVal = docCerts || (inputCertifications ? inputCertifications.value.trim() : '');
     if (previewCertifications && previewCertificationsSection) {
       if (certsVal) {
-        updateTextNode(previewCertifications, certsVal);
+        previewCertifications.innerHTML = parseFormattedSectionHTML(certsVal);
         previewCertificationsSection.style.display = 'block';
       } else {
-        updateTextNode(previewCertifications, '');
+        previewCertifications.innerHTML = '';
         previewCertificationsSection.style.display = 'none';
       }
     }
 
-    if (inputProjects && previewProjects && previewProjectsSection) {
-      const docProj = document.getElementById('docFieldProjects')?.innerText?.trim();
-      const val = docProj || (inputProjects ? inputProjects.value.trim() : '');
-      if (val) {
-        updateTextNode(previewProjects, val);
+    const docProj = document.getElementById('docFieldProjects')?.innerText?.trim();
+    const projVal = docProj || (inputProjects ? inputProjects.value.trim() : '');
+    if (previewProjects && previewProjectsSection) {
+      if (projVal) {
+        previewProjects.innerHTML = parseFormattedSectionHTML(projVal);
         previewProjectsSection.style.display = 'block';
       } else {
-        updateTextNode(previewProjects, '');
+        previewProjects.innerHTML = '';
         previewProjectsSection.style.display = 'none';
       }
     }
 
-    if (inputAchievements && previewAchievements && previewAchievementsSection) {
-      const docAch = document.getElementById('docFieldAchievements')?.innerText?.trim();
-      const val = docAch || (inputAchievements ? inputAchievements.value.trim() : '');
-      if (val) {
-        updateTextNode(previewAchievements, val);
+    const docAch = document.getElementById('docFieldAchievements')?.innerText?.trim();
+    const achVal = docAch || (inputAchievements ? inputAchievements.value.trim() : '');
+    if (previewAchievements && previewAchievementsSection) {
+      if (achVal) {
+        previewAchievements.innerHTML = parseFormattedSectionHTML(achVal);
         previewAchievementsSection.style.display = 'block';
       } else {
-        updateTextNode(previewAchievements, '');
+        previewAchievements.innerHTML = '';
         previewAchievementsSection.style.display = 'none';
       }
     }
@@ -2378,10 +2452,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (previewSkills) {
-      const tagEls = document.querySelectorAll('#docSkillsWrapper .tag, #skillsTagsContainer .tag');
-      const skillList = Array.from(tagEls).map(tag => getSkillTagName(tag)).filter(Boolean);
+      const tagEls = document.querySelectorAll('#docSkillsWrapper .doc-skill-tag');
+      const skillList = Array.from(tagEls).map(tag => tag.textContent.replace('×', '').trim()).filter(Boolean);
       if (skillList.length > 0) {
         previewSkills.textContent = skillList.join(', ');
+      } else if (typeof window.docSkills !== 'undefined' && Array.isArray(window.docSkills) && window.docSkills.length > 0) {
+        previewSkills.textContent = window.docSkills.join(', ');
       } else {
         previewSkills.textContent = '';
       }
@@ -2816,12 +2892,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // PDF Export integration — delegated cleanly to window.pdfExporter module
   window.getPdfExportStyles = getPdfExportStyles;
 
-  // New Resume Version Handler — clears all fields and resets to Step 1
+  // New Resume Version Handler — clears all fields and resets to blank state
   function triggerNewResumeFlow() {
     const confirmed = window.confirm('Start a new resume? This will clear all current fields.');
     if (!confirmed) return;
 
-    // Clear all text inputs and textareas
+    // 1. Clear text inputs & textareas
     if (inputFullName)       inputFullName.value       = '';
     if (inputJobTitle)       inputJobTitle.value       = '';
     if (inputEmail)          inputEmail.value          = '';
@@ -2838,9 +2914,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bulletPoints)        bulletPoints.value        = '';
 
     customSectionsList = [];
-    renderCustomSectionInputs();
+    if (typeof renderCustomSectionInputs === 'function') {
+      renderCustomSectionInputs();
+    }
 
-    // Reset skill tags
+    // 2. Clear contenteditable doc fields
+    const docFields = [
+      'docFieldName', 'docFieldTitle', 'docFieldEmail', 'docFieldPhone',
+      'docFieldLocation', 'docFieldGithub', 'docFieldLinkedin', 'docFieldPortfolio',
+      'docFieldSummary', 'docFieldProjects', 'docFieldEducation', 'docFieldCerts',
+      'docFieldAchievements', 'docFieldCustom'
+    ];
+    docFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerText = '';
+        if (window.personalEngine && typeof window.personalEngine.updateEmptyState === 'function') {
+          window.personalEngine.updateEmptyState(el);
+        }
+      }
+    });
+
+    // 3. Clear skill tags & skills wrapper
+    window.docSkills = [];
+    const skillsWrapper = document.getElementById('docSkillsWrapper');
+    if (skillsWrapper) {
+      skillsWrapper.querySelectorAll('.doc-skill-tag').forEach(t => t.remove());
+    }
     const tagsContainer = document.getElementById('skillsTagsContainer');
     const skillInput    = document.getElementById('skillInputField');
     if (tagsContainer) {
@@ -2850,24 +2950,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Reset live preview to blank defaults
+    // 4. Clear experience bullets
+    const bulletsList = document.getElementById('docBulletsList');
+    if (bulletsList) {
+      bulletsList.innerHTML = '';
+    }
+
+    // 5. Reset live preview to blank defaults
     syncLivePreview();
 
-    // Clear saved draft from localStorage
-    try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch(e) {}
+    // 6. Save explicit blank state to localStorage
+    try { localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ isBlank: true })); } catch(e) {}
 
-    // Reset step progress back to Step 1
-    setStep(1);
-
-    // Update character counter
+    // 7. Update section percentages and profile strength
+    if (typeof window.updateSectionPct === 'function') {
+      window.updateSectionPct();
+    }
     updateCharCounter();
+    calculateProfileStrength();
 
-    // Scroll to the top of the form
-    const editorCard = document.querySelector('.editor-card');
-    if (editorCard) editorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    if (window.feather) feather.replace();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Started a new blank resume!', 'info');
+    }
   }
+  window.triggerNewResumeFlow = triggerNewResumeFlow;
 
   /* ==========================================================================
      MULTI-PROFILE RESUME VERSION MANAGER ENGINE
@@ -2876,6 +2982,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const ACTIVE_PROFILE_KEY = 'resuai_active_profile_id';
 
   const DEFAULT_CAREER_PROFILES = {
+    'google-dev-template': {
+      id: 'google-dev-template',
+      name: 'Software Developer (Full Stack Grade)',
+      title: 'Software Developer | Full Stack Developer',
+      summary: 'B.Tech Computer Science student with strong foundations in Java, JavaScript, SQL, DSA, OOP and web development, experienced in building full-stack applications and solving real-world problems through software projects.',
+      skills: ['Java', 'JavaScript', 'C++', 'Python', 'SQL', 'HTML5', 'CSS3', 'React.js', 'Node.js', 'Express.js', 'Spring Boot', 'MySQL', 'PostgreSQL', 'MongoDB', 'Git', 'GitHub', 'VS Code', 'Maven', 'DSA', 'OOP', 'DBMS', 'REST APIs', 'Computer Networks'],
+      education: '### Bachelor of Technology — Computer Science & Engineering\n**University / College Name**, City, India\n2025 – 2029 | CGPA: X.XX / 10',
+      projects: `### Project Name — Full Stack Web Application\n**Tech Stack:** React.js, Node.js, Express.js, PostgreSQL, Supabase\n* Developed a full-stack web application for [problem/use case].\n* Implemented [important feature] using [technology].\n* Designed responsive and accessible user interfaces using React.js and CSS.\n* Built secure REST APIs and integrated PostgreSQL/Supabase for data management.\n* Improved [performance/security/usability] by X% through [specific implementation].`,
+      bullets: `* Developed and maintained [application/system] using [technologies].\n* Implemented [feature], improving [metric/result].\n* Collaborated with [team] to deliver [feature/project].\n* Debugged and optimized [system/application].`
+    },
     'frontend-lead': {
       id: 'frontend-lead',
       name: 'Staff Frontend Engineer',
@@ -2892,36 +3008,40 @@ document.addEventListener('DOMContentLoaded', () => {
       summary: 'Versatile Full Stack Architect with 7+ years of experience engineering high-throughput Node.js microservices, Python APIs, PostgreSQL databases, and cloud infrastructure.',
       skills: ['Node.js', 'Express', 'Python', 'PostgreSQL', 'Docker', 'Kubernetes', 'Redis', 'AWS'],
       education: 'M.S. in Software Engineering — MIT (2019)',
-      bullets: `• Engineered distributed Node.js microservices processing 50,000+ API requests per second with 99.99% uptime.\n• Optimized PostgreSQL relational queries and added B-Tree indexes, cutting p99 database query latency from 450ms to 12ms.\n• Containerized 12 core backend services with Docker and Kubernetes, reducing AWS cloud infrastructure costs by 28%.\n• Designed Redis caching layer and pub/sub message brokers to handle peak real-time WebSocket traffic spikes.`
+      bullets: `• Designed and deployed distributed event-driven microservices architecture processing 50k+ req/sec with < 50ms P99 latency.\n• Led backend overhaul using Node.js, Express, and PostgreSQL, scaling system capacity by 3x while cutting cloud spend by $120k/yr.\n• Implemented robust OAuth2/JWT authentication framework and RBAC policies across 12 API gateways.\n• Spearheaded DevOps transformation, containerizing 20+ applications with Docker and automated Kubernetes deployment pipelines.`
     },
     'engineering-manager': {
       id: 'engineering-manager',
       name: 'Engineering Manager',
       title: 'Senior Engineering Manager',
-      summary: 'Strategic Engineering Leader with 10+ years of technical management experience growing cross-functional teams, managing $5M+ engineering budgets, and driving technical excellence.',
-      skills: ['Engineering Leadership', 'Agile/Scrum', 'Budget Management', 'System Design', 'Resource Allocation', 'Sprint Planning'],
-      education: 'M.B.A. in Technology Management — Harvard Business School (2016)',
-      bullets: `• Managed and scaled a cross-functional engineering organization of 24+ engineers and 3 engineering managers.\n• Spearheaded quarterly sprint planning and resource allocation, achieving 94% on-time feature delivery rate over 8 consecutive quarters.\n• Mentored 6 senior engineers into staff & lead engineering roles, resulting in 0% voluntary turnover in 24 months.\n• Oversaw a $4.5M annual cloud & tooling budget, optimizing AWS and third-party vendor contracts to save $650K annually.`
+      summary: 'Engineering leader with 10+ years of software development and management experience guiding cross-functional teams of 15+ engineers across frontend, backend, and DevOps.',
+      skills: ['Engineering Leadership', 'Agile/Scrum', 'Budget Management', 'System Design', 'Hiring', 'Okrs'],
+      education: 'B.S. in Computer Engineering — UC Berkeley (2015)',
+      bullets: `• Scaled engineering organization from 6 to 18 developers across 3 agile pods while maintaining high delivery velocity.\n• Spearheaded technical strategy and quarterly roadmap planning, aligning engineering outputs directly with business KPIs.\n• Mentored 8 mid-level and senior engineers, resulting in 4 internal promotions within 12 months.\n• Reduced production incident resolution time (MTTR) by 55% through automated monitoring and SLA alerts.`
     },
-    'devops-engineer': {
-      id: 'devops-engineer',
+    'devops-lead': {
+      id: 'devops-lead',
       name: 'Lead DevOps & Cloud Engineer',
       title: 'Lead DevOps & Site Reliability Engineer',
-      summary: 'SRE & Cloud Infrastructure Specialist with 6+ years of expertise automating CI/CD deployment pipelines, Kubernetes cluster orchestration, and infrastructure-as-code.',
-      skills: ['AWS', 'Kubernetes', 'Docker', 'Terraform', 'CI/CD', 'Prometheus', 'Grafana', 'Linux'],
-      education: 'B.Tech in Computer Engineering — IIT Bombay (2020)',
-      bullets: `• Built zero-downtime multi-region Kubernetes clusters on AWS EKS supporting 10M+ daily active sessions.\n• Automated CI/CD deployment pipelines using GitHub Actions and Terraform, reducing deployment lead time from 3 hours to 6 minutes.\n• Implemented real-time Prometheus & Grafana monitoring dashboards, improving Mean Time to Detect (MTTD) incidents by 55%.\n• Enforced strict IAM security policies and automated SOC2 compliance audits across cloud environments.`
+      summary: 'Site Reliability Engineer with deep expertise in AWS, Kubernetes, Terraform, CI/CD automation, and high-availability cloud architectures.',
+      skills: ['AWS', 'Kubernetes', 'Docker', 'Terraform', 'Prometheus', 'Grafana', 'Github Actions'],
+      education: 'B.S. in Information Technology — UT Austin (2017)',
+      bullets: `• Provisioned production infrastructure on AWS using Terraform, achieving 99.99% uptime across multi-region clusters.\n• Built zero-downtime deployment pipelines using GitHub Actions and ArgoCD, accelerating deployment frequency from weekly to daily.\n• Configured comprehensive observability stack with Prometheus and Grafana, capturing metric anomalies before customer impact.`
     }
   };
 
   function getSavedProfiles() {
+    let custom = {};
     try {
       const saved = localStorage.getItem(RESUME_PROFILES_KEY);
       if (saved) {
-        return { ...DEFAULT_CAREER_PROFILES, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          custom = parsed;
+        }
       }
     } catch(e) {}
-    return { ...DEFAULT_CAREER_PROFILES };
+    return Object.assign({}, DEFAULT_CAREER_PROFILES, custom);
   }
 
   function saveProfiles(profilesObj) {
@@ -2931,17 +3051,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function loadProfileVersion(profileId) {
+    if (profileId === 'google-dev-template' && typeof window.loadGoogleDevTemplate === 'function') {
+      window.loadGoogleDevTemplate();
+      try { localStorage.setItem(ACTIVE_PROFILE_KEY, profileId); } catch(e) {}
+      return;
+    }
+
     const profiles = getSavedProfiles();
     const p = profiles[profileId];
     if (!p) return;
 
-    if (inputFullName && !inputFullName.value.trim()) inputFullName.value = 'Jane Doe';
+    if (inputFullName && !inputFullName.value.trim()) inputFullName.value = p.name || 'YOUR NAME';
     if (inputJobTitle) inputJobTitle.value = p.title || '';
     if (inputSummary) inputSummary.value = p.summary || '';
     if (inputEducation) inputEducation.value = p.education || '';
+    if (inputProjects && p.projects) inputProjects.value = p.projects;
     if (bulletPoints) bulletPoints.value = p.bullets || '';
 
     if (Array.isArray(p.skills)) {
+      window.docSkills = [...p.skills];
+      if (typeof window.renderDocSkills === 'function') window.renderDocSkills();
       const tagsContainer = document.getElementById('skillsTagsContainer');
       const skillInput = document.getElementById('skillInputField');
       if (tagsContainer) {
@@ -2963,9 +3092,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try { localStorage.setItem(ACTIVE_PROFILE_KEY, profileId); } catch(e) {}
 
+    syncFormInputsToCenterCanvas();
     syncLivePreview();
     syncLiveSkills();
     autoSaveFormFields();
+
+    if (typeof window.updateSectionPct === 'function') window.updateSectionPct();
 
     if (typeof showToast === 'function') {
       showToast(`Loaded ${p.name || p.title} profile version!`, 'success');
@@ -2977,7 +3109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!grid) return;
 
     const profiles = getSavedProfiles();
-    const activeId = localStorage.getItem(ACTIVE_PROFILE_KEY) || 'frontend-lead';
+    const activeId = localStorage.getItem(ACTIVE_PROFILE_KEY) || 'google-dev-template';
 
     grid.innerHTML = Object.values(profiles).map(p => {
       const isActive = p.id === activeId;
@@ -3028,6 +3160,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (activeCard) activeCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
   }
+  window.openVersionModal = openVersionModal;
 
   function closeVersionModal() {
     const modal = document.getElementById('versionProfilesModal');

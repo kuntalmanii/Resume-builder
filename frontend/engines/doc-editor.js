@@ -75,6 +75,230 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // GOOGLE-GRADE PERSONAL DETAILS ENGINE
+  // ─────────────────────────────────────────────────────────────
+  const PersonalDetailsEngine = {
+    fields: [
+      { id: 'docFieldName',     syncId: 'inputFullName',  key: 'fullName' },
+      { id: 'docFieldTitle',    syncId: 'inputJobTitle',  key: 'jobTitle' },
+      { id: 'docFieldEmail',    syncId: 'inputEmail',     key: 'email' },
+      { id: 'docFieldPhone',    syncId: 'inputPhone',     key: 'phone' },
+      { id: 'docFieldLocation', syncId: 'inputLocation',  key: 'location' },
+      { id: 'docFieldGithub',   syncId: 'inputGithub',    key: 'github' },
+      { id: 'docFieldLinkedin', syncId: 'inputLinkedin',  key: 'linkedin' },
+      { id: 'docFieldPortfolio',syncId: 'inputPortfolio', key: 'portfolio' }
+    ],
+
+    init: function() {
+      const self = this;
+      this.fields.forEach(function(f) {
+        const el = document.getElementById(f.id);
+        if (!el) return;
+
+        // Plain text paste listener to strip HTML formatting
+        el.addEventListener('paste', function(e) {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
+          const cleanText = el.dataset.singleLine ? text.replace(/[\r\n]+/g, ' ').trim() : text;
+          document.execCommand('insertText', false, cleanText);
+          self.updateEmptyState(el);
+          self.syncField(el);
+        });
+
+        // Focus & Blur for link formatting + placeholder toggles
+        el.addEventListener('focus', function() {
+          el.classList.remove('is-empty');
+        });
+
+        el.addEventListener('blur', function() {
+          if (f.key === 'github' || f.key === 'linkedin' || f.key === 'portfolio') {
+            self.formatSingleLink(el, f.key);
+          }
+          self.updateEmptyState(el);
+          self.syncField(el);
+        });
+
+        // Input & Keydown
+        el.addEventListener('input', function() {
+          self.updateEmptyState(el);
+          self.syncField(el);
+        });
+
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && el.dataset.singleLine) {
+            e.preventDefault();
+            self.focusNextField(f.id);
+          }
+        });
+
+        // Initial empty state check
+        self.updateEmptyState(el);
+      });
+
+      window.personalEngine = this;
+      this.calculateCompleteness();
+    },
+
+    updateEmptyState: function(el) {
+      if (!el) return;
+      const val = (el.innerText || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+      if (!val) {
+        el.classList.add('is-empty');
+      } else {
+        el.classList.remove('is-empty');
+      }
+    },
+
+    focusNextField: function(currentId) {
+      const order = [
+        'docFieldName', 'docFieldTitle', 'docFieldEmail',
+        'docFieldPhone', 'docFieldLocation', 'docFieldGithub',
+        'docFieldLinkedin', 'docFieldPortfolio'
+      ];
+      const idx = order.indexOf(currentId);
+      if (idx >= 0 && idx < order.length - 1) {
+        const next = document.getElementById(order[idx + 1]);
+        if (next) next.focus();
+      }
+    },
+
+    syncField: function(el) {
+      const targetId = el.dataset.syncs;
+      if (!targetId) return;
+      const target = document.getElementById(targetId);
+      const text = (el.innerText || '').trim();
+      if (target) {
+        target.value = text;
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      this.validateField(el);
+      this.calculateCompleteness();
+      updateAutosave();
+      if (typeof window.syncLivePreview === 'function') {
+        window.syncLivePreview();
+      }
+    },
+
+    validateField: function(el) {
+      if (el.id === 'docFieldEmail') {
+        const badge = document.getElementById('badgeEmail');
+        const text = (el.innerText || '').trim();
+        if (!badge) return;
+        if (!text) {
+          badge.className = 'contact-val-badge';
+        } else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+          badge.className = 'contact-val-badge val-valid';
+        } else {
+          badge.className = 'contact-val-badge val-invalid';
+        }
+      }
+    },
+
+    formatSingleLink: function(el, key) {
+      let val = (el.innerText || '').trim();
+      if (!val) return;
+
+      if (key === 'github') {
+        val = val.replace(/^https?:\/\/(www\.)?github\.com\//i, '')
+                 .replace(/^github\.com\//i, '')
+                 .replace(/\/$/, '');
+        if (val) el.innerText = 'github.com/' + val;
+      } else if (key === 'linkedin') {
+        val = val.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, '')
+                 .replace(/^linkedin\.com\/in\//i, '')
+                 .replace(/\/$/, '');
+        if (val) el.innerText = 'linkedin.com/in/' + val;
+      } else if (key === 'portfolio') {
+        val = val.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+        if (val) el.innerText = val;
+      }
+      this.updateEmptyState(el);
+    },
+
+    formatLinks: function() {
+      const gh = document.getElementById('docFieldGithub');
+      const li = document.getElementById('docFieldLinkedin');
+      const pf = document.getElementById('docFieldPortfolio');
+      if (gh) this.formatSingleLink(gh, 'github');
+      if (li) this.formatSingleLink(li, 'linkedin');
+      if (pf) this.formatSingleLink(pf, 'portfolio');
+      if (typeof window.showToast === 'function') {
+        window.showToast('Social handle links cleaned & formatted!', 'success');
+      }
+    },
+
+    fillSample: function() {
+      if (typeof window.loadGoogleDevTemplate === 'function') {
+        window.loadGoogleDevTemplate();
+      } else {
+        const sample = {
+          docFieldName: 'YOUR NAME',
+          docFieldTitle: 'Software Developer | Full Stack Developer',
+          docFieldEmail: 'email@example.com',
+          docFieldPhone: '+91 XXXXX XXXXX',
+          docFieldLocation: 'City, India',
+          docFieldGithub: 'github.com/yourgithub',
+          docFieldLinkedin: 'linkedin.com/in/yourlinkedin',
+          docFieldPortfolio: 'yourportfolio.dev'
+        };
+        const self = this;
+        Object.keys(sample).forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.innerText = sample[id];
+            self.updateEmptyState(el);
+            self.syncField(el);
+          }
+        });
+        if (typeof window.showToast === 'function') {
+          window.showToast('Sample contact details populated!', 'success');
+        }
+      }
+    },
+
+    calculateCompleteness: function() {
+      let score = 0;
+      const weights = {
+        docFieldName: 25,
+        docFieldTitle: 25,
+        docFieldEmail: 20,
+        docFieldPhone: 10,
+        docFieldLocation: 10,
+        docFieldGithub: 5,
+        docFieldLinkedin: 5
+      };
+
+      Object.keys(weights).forEach(function(id) {
+        const el = document.getElementById(id);
+        const val = (el?.innerText || '').trim();
+        if (val) score += weights[id];
+      });
+
+      const pill = document.getElementById('personalCompPill');
+      if (pill) {
+        pill.textContent = score + '%';
+        pill.className = 'personal-comp-pill ' +
+          (score >= 80 ? 'comp-complete' : (score > 0 ? 'comp-partial' : ''));
+      }
+      updateNavPct('personal', score);
+    },
+
+    syncFromInputs: function() {
+      const self = this;
+      this.fields.forEach(function(f) {
+        const docEl = document.getElementById(f.id);
+        const inputEl = document.getElementById(f.syncId);
+        if (docEl && inputEl) {
+          docEl.innerText = inputEl.value || '';
+          self.updateEmptyState(docEl);
+          self.validateField(docEl);
+        }
+      });
+      this.calculateCompleteness();
+    }
+  };
+
   function syncField(editorEl) {
     const targetId = editorEl.dataset.syncs;
     if (!targetId) return;
@@ -92,7 +316,8 @@
 
   /* ── 3. WIRE all contenteditable fields ── */
   function wireEditorFields() {
-    document.querySelectorAll('[data-syncs]').forEach(function (el) {
+    PersonalDetailsEngine.init();
+    document.querySelectorAll('[data-syncs]:not([id^="docField"])').forEach(function (el) {
       el.addEventListener('input',  function () { syncField(el); });
       el.addEventListener('blur',   function () { syncField(el); });
       el.addEventListener('keydown', function (e) {
@@ -452,7 +677,7 @@
     loadingDiv.className = 'ai-msg from-ai loading';
     loadingDiv.innerHTML =
       '<div class="ai-msg-meta">AI Copilot</div>' +
-      '<span class="pulse" style="font-style:italic;color:#6b7280;">Rewriting and optimizing text with AI…</span>';
+      '<span class="pulse" style="font-style:italic;color:#6b7280;">Generating AI optimization suggestions…</span>';
     if (area) {
       area.appendChild(loadingDiv);
       area.scrollTop = area.scrollHeight;
@@ -460,71 +685,85 @@
 
     // Gather current document state
     var name       = (document.getElementById('docFieldName')?.innerText   || '').trim();
-    var jobTitle   = (document.getElementById('inputJobTitle')?.value       || document.getElementById('docFieldTitle')?.innerText || '').trim();
-    var summary    = (document.getElementById('inputSummary')?.value        || document.getElementById('docFieldSummary')?.innerText || '').trim();
-    var experience = (document.getElementById('bulletPoints')?.value        || '').trim();
+    var jobTitle   = (document.getElementById('docFieldTitle')?.innerText  || document.getElementById('inputJobTitle')?.value || '').trim();
+    var summary    = (document.getElementById('docFieldSummary')?.innerText || document.getElementById('inputSummary')?.value  || '').trim();
+    var experience = docBullets.filter(Boolean).join('\n') || (document.getElementById('bulletPoints')?.value || '').trim();
+    var skills     = docSkills.length > 0 ? docSkills.join(', ') : (document.getElementById('previewSkills')?.textContent || '');
 
-    // Determine which section to rewrite
+    // Determine target section
     var targetSection = 'summary';
     var targetText    = summary;
-    if (/summary/i.test(promptText)) {
+    if (/summary|about/i.test(promptText)) {
       targetSection = 'summary';
-      targetText    = summary;
-    } else if (/bullet|experience|work|quantify/i.test(promptText)) {
+      targetText    = summary || experience;
+    } else if (/bullet|experience|work|quantify|star|achievement|action/i.test(promptText)) {
       targetSection = 'experience';
-      targetText    = experience;
-    } else if (/skill/i.test(promptText)) {
+      targetText    = experience || summary;
+    } else if (/skill|tag/i.test(promptText)) {
       targetSection = 'skills';
-      targetText    = (document.getElementById('previewSkills')?.textContent || docSkills.join(', ') || '').trim();
+      targetText    = skills;
+    } else if (/ats|executive|technical|tone|improve/i.test(promptText)) {
+      targetSection = summary.length > 20 ? 'summary' : 'experience';
+      targetText    = targetSection === 'summary' ? summary : experience;
     }
 
     try {
       const optResp = await fetch('/api/optimize-resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section: targetSection, text: targetText, action: promptText, jobTitle })
+        body: JSON.stringify({ section: targetSection, text: targetText, action: promptText, jobTitle, skills })
       });
 
       let rewrittenText = '';
+      let suggestedSkills = [];
+
       if (optResp.ok) {
         const optData = await optResp.json();
-        if (targetSection === 'summary') {
-          rewrittenText = optData.optimizedText || optData.optimizedBulletPoints || '';
-          // Strip any leading bullets if AI added them
-          rewrittenText = rewrittenText.replace(/^[\s•\-\*]+/gm, '').replace(/\s+/g, ' ').trim();
-        } else {
-          rewrittenText = optData.optimizedBulletPoints || optData.optimizedText || '';
+        if (optData) {
+          if (Array.isArray(optData.suggestedSkills)) {
+            suggestedSkills = optData.suggestedSkills;
+          }
+
+          let rawRes = optData.optimizedText || optData.optimizedBulletPoints || '';
+          if (Array.isArray(rawRes)) {
+            rewrittenText = rawRes.join('\n');
+          } else if (typeof rawRes === 'string') {
+            rewrittenText = rawRes;
+          }
         }
       }
 
       if (loadingDiv && loadingDiv.parentNode) loadingDiv.parentNode.removeChild(loadingDiv);
 
       if (rewrittenText) {
-        // Apply rewritten text directly to the document
+        // Clean text formatting
         if (targetSection === 'summary') {
+          rewrittenText = rewrittenText.replace(/^[\s•\-\*]+/gm, '').replace(/\s+/g, ' ').trim();
           const sumEl    = document.getElementById('docFieldSummary');
           const inputSum = document.getElementById('inputSummary');
           if (sumEl)    sumEl.innerText  = rewrittenText;
           if (inputSum) inputSum.value   = rewrittenText;
           if (typeof syncLivePreview === 'function')     syncLivePreview();
           if (typeof autoSaveFormFields === 'function')  autoSaveFormFields();
-          if (typeof showToast === 'function') showToast('Professional Summary rewritten & optimized with AI!', 'success');
+          if (typeof showToast === 'function') showToast('Summary optimized with AI!', 'success');
         } else if (targetSection === 'experience') {
-          const expEl = document.getElementById('bulletPoints');
-          if (expEl) {
-            expEl.value = rewrittenText;
-            expEl.dispatchEvent(new Event('input', { bubbles: true }));
-      if (typeof window.setDocBullets === 'function') window.setDocBullets(rewrittenText.split('\n'));
-            if (typeof showToast === 'function') showToast('Experience bullets rewritten with AI!', 'success');
-          }
+          const bulletsArr = rewrittenText.split('\n').map(b => b.replace(/^[\s•\-\*]+/, '').trim()).filter(Boolean);
+          if (typeof window.setDocBullets === 'function') window.setDocBullets(bulletsArr);
+          if (typeof showToast === 'function') showToast('Experience bullets optimized with AI!', 'success');
         } else if (targetSection === 'skills') {
           const newSkills = rewrittenText
             .split(/[,•\n]+/)
             .map(s => s.trim().replace(/^[\s•\-\*]+/, ''))
             .filter(Boolean);
           newSkills.forEach(s => window.addDocSkill?.(s));
-          if (typeof showToast === 'function') showToast('Technical Skills updated & optimized with AI!', 'success');
+          if (typeof showToast === 'function') showToast('Skills updated with AI!', 'success');
         }
+
+        // Add suggested skills if returned
+        if (suggestedSkills.length > 0) {
+          suggestedSkills.forEach(s => window.addDocSkill?.(s));
+        }
+
         appendAiMsg(
           '<b>AI Rewritten Content:</b><br>' +
           escapeHTML(rewrittenText).replace(/\n/g, '<br>') +
@@ -532,7 +771,7 @@
           true
         );
       } else {
-        // Fallback: use ats-chat for general advice if no rewritten text was returned
+        // Fallback: call ats-chat API for conversational reply
         const chatResp = await fetch('/api/ats-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -545,14 +784,16 @@
         if (chatResp.ok) {
           const chatData = await chatResp.json();
           appendAiMsg(chatData.reply || chatData.response || 'AI suggestion ready.');
+        } else {
+          appendAiMsg('<b>AI Advice:</b> Focus on metrics and strong action verbs (e.g. <i>Architected, Scaled, Decreased</i>).');
         }
       }
     } catch (err) {
       if (loadingDiv && loadingDiv.parentNode) loadingDiv.parentNode.removeChild(loadingDiv);
       appendAiMsg(
-        '<b>AI Advice for "' + escapeHTML(promptText) + '":</b><br>' +
-        '• Focus on quantified outcomes: Add metrics (%, $, numbers) to each experience bullet.<br>' +
-        '• Use industry-standard terms matching target job descriptions.',
+        '<b>AI Suggestion for "' + escapeHTML(promptText) + '":</b><br>' +
+        '• Quantify impacts: Add numbers (e.g., <i>"Scaled system by 250% to 50k req/sec"</i>).<br>' +
+        '• Align keywords with your target role: ' + (jobTitle || 'Software Engineer') + '.',
         true
       );
     }
@@ -753,5 +994,182 @@
 
     chatContainer.scrollTop = chatContainer.scrollHeight;
   };
+
+  /* ─────────────────────────────────────────────────────────────
+     GOOGLE SOFTWARE DEVELOPER RESUME TEMPLATE ENGINE
+     ───────────────────────────────────────────────────────────── */
+  window.loadGoogleDevTemplate = function() {
+    // 1. Personal Details
+    const personal = {
+      docFieldName: 'YOUR NAME',
+      docFieldTitle: 'Software Developer | Full Stack Developer',
+      docFieldEmail: 'email@example.com',
+      docFieldPhone: '+91 XXXXX XXXXX',
+      docFieldLocation: 'City, India',
+      docFieldLinkedin: 'linkedin.com/in/yourname',
+      docFieldGithub: 'github.com/yourname',
+      docFieldPortfolio: 'yourportfolio.dev'
+    };
+
+    if (window.personalEngine) {
+      Object.keys(personal).forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerText = personal[id];
+          window.personalEngine.updateEmptyState(el);
+          window.personalEngine.syncField(el);
+        }
+      });
+    }
+    const fn = document.getElementById('inputFullName');
+    const jt = document.getElementById('inputJobTitle');
+    const em = document.getElementById('inputEmail');
+    const ph = document.getElementById('inputPhone');
+    const lc = document.getElementById('inputLocation');
+    const li = document.getElementById('inputLinkedin');
+    const gh = document.getElementById('inputGithub');
+    const pf = document.getElementById('inputPortfolio');
+    if (fn) fn.value = personal.docFieldName;
+    if (jt) jt.value = personal.docFieldTitle;
+    if (em) em.value = personal.docFieldEmail;
+    if (ph) ph.value = personal.docFieldPhone;
+    if (lc) lc.value = personal.docFieldLocation;
+    if (li) li.value = personal.docFieldLinkedin;
+    if (gh) gh.value = personal.docFieldGithub;
+    if (pf) pf.value = personal.docFieldPortfolio;
+
+    // 2. Professional Summary
+    const summaryText = 'B.Tech Computer Science student with strong foundations in Java, JavaScript, SQL, DSA, OOP and web development, experienced in building full-stack applications and solving real-world problems through software projects. Seeking opportunities to apply technical skills in software development and contribute to scalable, user-focused products.';
+    const sumEl = document.getElementById('docFieldSummary');
+    const inputSum = document.getElementById('inputSummary');
+    if (sumEl) sumEl.innerText = summaryText;
+    if (inputSum) inputSum.value = summaryText;
+
+    // 3. Technical Skills
+    const skillsList = [
+      'Java', 'JavaScript', 'C++', 'Python', 'SQL',
+      'HTML5', 'CSS3', 'React.js', 'Node.js', 'Express.js', 'Spring Boot',
+      'MySQL', 'PostgreSQL', 'MongoDB',
+      'Git', 'GitHub', 'VS Code', 'Maven',
+      'DSA', 'OOP', 'DBMS', 'REST APIs', 'Computer Networks'
+    ];
+    if (typeof window.addDocSkill === 'function') {
+      skillsList.forEach(function(skill) {
+        window.addDocSkill(skill);
+      });
+    }
+
+    // 4. Projects (Exact User Template Structure)
+    const projectsText = [
+      '### Project Name — Full Stack Web Application',
+      '**Tech Stack:** React.js, Node.js, Express.js, PostgreSQL, Supabase',
+      '* Developed a full-stack web application for [problem/use case].',
+      '* Implemented [important feature] using [technology].',
+      '* Designed responsive and accessible user interfaces using React.js and CSS.',
+      '* Built secure REST APIs and integrated PostgreSQL/Supabase for data management.',
+      '* Improved [performance/security/usability] by X% through [specific implementation].',
+      '',
+      '### Project Name — Java Application',
+      '**Tech Stack:** Java, JDBC, MySQL, Maven',
+      '* Built a Java-based application for [purpose].',
+      '* Implemented CRUD operations using JDBC and MySQL.',
+      '* Applied OOP principles including encapsulation, inheritance and polymorphism.',
+      '* Added input validation and exception handling for reliable application behavior.',
+      '',
+      '### Project Name — [Project Type]',
+      '**Tech Stack:** HTML, CSS, JavaScript / React / [Other Technologies]',
+      '* Developed [what the application does].',
+      '* Implemented [2–3 major technical features].',
+      '* Created a responsive interface optimized for desktop and mobile devices.',
+      '* Used [API/database/authentication/etc.] to provide [functionality].'
+    ].join('\n');
+
+    const projEl = document.getElementById('docFieldProjects');
+    const inputProj = document.getElementById('inputProjects');
+    if (projEl) projEl.innerText = projectsText;
+    if (inputProj) inputProj.value = projectsText;
+
+    // 5. Education
+    const eduText = [
+      '### Bachelor of Technology — Computer Science & Engineering',
+      '**University / College Name**, City, India',
+      '2025 – 2029 | CGPA: X.XX / 10'
+    ].join('\n');
+    const eduEl = document.getElementById('docFieldEducation');
+    const inputEdu = document.getElementById('inputEducation');
+    if (eduEl) eduEl.innerText = eduText;
+    if (inputEdu) inputEdu.value = eduText;
+
+    // 6. Experience / Internships bullets
+    const expBullets = [
+      'Developed and maintained [application/system] using [technologies].',
+      'Implemented [feature], improving [metric/result].',
+      'Collaborated with [team] to deliver [feature/project].',
+      'Debugged and optimized [system/application].'
+    ];
+    if (typeof window.setDocBullets === 'function') {
+      window.setDocBullets(expBullets);
+    }
+    const bpInput = document.getElementById('bulletPoints');
+    if (bpInput) {
+      bpInput.value = expBullets.map(b => '* ' + b).join('\n');
+    }
+
+    // 7. Achievements
+    const achText = [
+      '* Participated in [Hackathon Name] and developed [project].',
+      '* Secured [rank/position] in [competition].',
+      '* Solved XXX+ coding problems across [platforms].',
+      '* [Other relevant achievement].'
+    ].join('\n');
+    const achEl = document.getElementById('docFieldAchievements');
+    const inputAch = document.getElementById('inputAchievements');
+    if (achEl) achEl.innerText = achText;
+    if (inputAch) inputAch.value = achText;
+
+    // 8. Certifications
+    const certsText = [
+      '* Certification Name — Issuing Organization',
+      '* Certification Name — Issuing Organization',
+      '* Certification Name — Issuing Organization'
+    ].join('\n');
+    const certsEl = document.getElementById('docFieldCerts');
+    const inputCerts = document.getElementById('inputCertifications');
+    if (certsEl) certsEl.innerText = certsText;
+    if (inputCerts) inputCerts.value = certsText;
+
+    // 9. Leadership / Extracurricular Activities
+    const leadText = [
+      '* Position/Role, Organization — Brief contribution.',
+      '* Position/Role, Organization — Brief contribution.'
+    ].join('\n');
+    const leadEl = document.getElementById('docFieldCustom');
+    const inputLead = document.getElementById('inputCustom');
+    if (leadEl) leadEl.innerText = leadText;
+    if (inputLead) inputLead.value = leadText;
+
+    if (typeof window.updateSectionPct === 'function') {
+      window.updateSectionPct();
+    }
+    if (typeof window.syncLivePreview === 'function') {
+      window.syncLivePreview();
+    }
+    if (typeof window.autoSaveFormFields === 'function') {
+      window.autoSaveFormFields();
+    }
+    if (typeof window.showToast === 'function') {
+      window.showToast('Software Developer Resume Template Loaded!', 'success');
+    }
+  };
+
+  // Auto-initialize default template if empty
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      const docName = document.getElementById('docFieldName');
+      if (docName && (!docName.innerText || docName.innerText.trim() === '' || docName.innerText.trim() === 'Alex Rivera')) {
+        window.loadGoogleDevTemplate();
+      }
+    }, 200);
+  });
 
 })();
