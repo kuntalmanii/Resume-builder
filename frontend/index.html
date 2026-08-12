@@ -1360,28 +1360,30 @@
                 </div>
 
                 <!-- Keyword Intelligence -->
-                <div class="ats-keyword-intelligence-box" id="ats-sec-overview">
-                  <div class="ats-kw-sec-header" onclick="toggleReportBlock(this)" style="cursor:pointer;">
-                    <div class="ats-kw-sec-title">
+                <div class="ats-keyword-intelligence-box ats-report-block" id="ats-sec-overview">
+                  <div class="ats-report-header" onclick="toggleReportBlock(this)" style="cursor:pointer;">
+                    <div class="ats-report-title">
                       <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                       Keyword Intelligence &amp; Gap Analysis
                     </div>
-                    <span id="kwCountsSubtitle">0 Matched &middot; 0 Gaps</span>
+                    <span id="kwCountsSubtitle" style="font-size:12px;color:#4B5568;font-weight:600;">0 Matched &middot; 0 Gaps</span>
                   </div>
-                  <div style="margin-bottom:18px;">
-                    <div id="matchedKeywordsTitle" style="font-size:10.5px;font-weight:700;color:#22D3A3;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                      &#x2713; Matched Required Keywords (0)
+                  <div class="ats-report-body" style="display:block;">
+                    <div style="margin-bottom:18px;">
+                      <div id="matchedKeywordsTitle" style="font-size:10.5px;font-weight:700;color:#22D3A3;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        &#x2713; Matched Required Keywords (0)
+                      </div>
+                      <div class="ats-kw-grid" id="matchedKeywordsContainer">
+                        <span class="badge-tag blue">Run ATS scan to view matched keywords</span>
+                      </div>
                     </div>
-                    <div class="ats-kw-grid" id="matchedKeywordsContainer">
-                      <span class="badge-tag blue">Run ATS scan to view matched keywords</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div id="missingKeywordsTitle" style="font-size:10.5px;font-weight:700;color:#F87171;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                      &#x26A0; Missing / Gap Keywords (0)
-                    </div>
-                    <div class="ats-kw-grid" id="missingKeywordsContainer">
-                      <span class="badge-tag amber">Run ATS scan to view missing keywords</span>
+                    <div>
+                      <div id="missingKeywordsTitle" style="font-size:10.5px;font-weight:700;color:#F87171;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        &#x26A0; Missing / Gap Keywords (0)
+                      </div>
+                      <div class="ats-kw-grid" id="missingKeywordsContainer">
+                        <span class="badge-tag amber">Run ATS scan to view missing keywords</span>
+                      </div>
                     </div>
                   </div>
                 </div>

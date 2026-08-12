@@ -896,17 +896,7 @@
     var block = headerEl.closest('.ats-report-block, .ats-keyword-intelligence-box');
     if (!block) return;
     var body = block.querySelector('.ats-report-body');
-    if (!body) {
-      var children = Array.from(block.children);
-      var nonHeaders = children.filter(function(c) {
-        return c !== headerEl && !c.classList.contains('ats-kw-sec-header') && !c.classList.contains('ats-report-header');
-      });
-      if (nonHeaders.length > 0) {
-        var isHidden = window.getComputedStyle(nonHeaders[0]).display === 'none';
-        nonHeaders.forEach(function(c) { c.style.display = isHidden ? 'block' : 'none'; });
-      }
-      return;
-    }
+    if (!body) return;
     var currentDisp = window.getComputedStyle(body).display;
     body.style.display = (currentDisp === 'none') ? 'block' : 'none';
   };
