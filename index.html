@@ -779,17 +779,17 @@
                         <button class="doc-verb-chip" onclick="addBulletFromPreset('Automated test suite coverage from 40% to 92%, decreasing production release bugs by 68%.')">Tests 40→92%</button>
                       </div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Improve Bullets" onclick="sendAiAction('Improve my experience bullet points with stronger action verbs and metrics')">
+                        <button class="doc-sha-btn" title="AI: Improve Bullets" onclick="sendAiAction('Improve my experience bullet points with stronger action verbs and metrics', 'experience')">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                           <span>✦ Improve Bullet</span>
                         </button>
                         <button class="doc-sha-btn" title="AI: Convert to XYZ" onclick="document.getElementById('btnXyzTransform')?.click()">
                           <span>✦ Convert to XYZ</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Quantify" onclick="sendAiAction('Add quantifiable metrics and numbers to my experience bullets')">
+                        <button class="doc-sha-btn" title="AI: Quantify" onclick="sendAiAction('Add quantifiable metrics and numbers to my experience bullets', 'experience')">
                           <span>✦ Quantify</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Rewrite" onclick="sendAiAction('Rewrite my experience bullet points for stronger impact')">
+                        <button class="doc-sha-btn" title="AI: Rewrite" onclick="sendAiAction('Rewrite my experience bullet points for stronger impact', 'experience')">
                           <span>✦ Rewrite</span>
                         </button>
                       </div>
@@ -827,10 +827,10 @@
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                           <span>✦ AI Suggest Skills</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Categorize Skills" onclick="sendAiAction('Categorize my skills into clean groups')">
+                        <button class="doc-sha-btn" title="AI: Categorize Skills" onclick="sendAiAction('Categorize my skills into clean groups', 'skills')">
                           <span>✦ Categorize</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Tailor to Role" onclick="sendAiAction('Tailor my skills to match top industry job requirements')">
+                        <button class="doc-sha-btn" title="AI: Tailor to Role" onclick="sendAiAction('Tailor my skills to match top industry job requirements', 'skills')">
                           <span>✦ Tailor to Role</span>
                         </button>
                       </div>
@@ -850,7 +850,7 @@
                            id="docFieldEducation"
                            aria-label="Education"></div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format education for high ATS parser score')">
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format education for high ATS parser score', 'education')">
                           <span>✦ ATS Format</span>
                         </button>
                       </div>
@@ -870,10 +870,10 @@
                            id="docFieldCerts"
                            aria-label="Certifications"></div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the professional credibility of my certifications')">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the professional credibility of my certifications', 'certifications')">
                           <span>✦ Highlight Impact</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format certifications for optimal ATS scanning')">
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format certifications for optimal ATS scanning', 'certifications')">
                           <span>✦ ATS Format</span>
                         </button>
                       </div>
@@ -895,10 +895,10 @@
                            id="docFieldProjects"
                            aria-label="Projects"></div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight technical architecture and measurable impact of my projects')">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight technical architecture and measurable impact of my projects', 'projects')">
                           <span>✦ Highlight Impact</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format key projects for high ATS parser score')">
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format key projects for high ATS parser score', 'projects')">
                           <span>✦ ATS Format</span>
                         </button>
                       </div>
@@ -918,10 +918,10 @@
                            id="docFieldAchievements"
                            aria-label="Achievements"></div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the honor and impact of my achievements')">
+                        <button class="doc-sha-btn" title="AI: Highlight Impact" onclick="sendAiAction('Highlight the honor and impact of my achievements', 'achievements')">
                           <span>✦ Highlight Impact</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format achievements for optimal ATS scanning')">
+                        <button class="doc-sha-btn" title="AI: ATS Format" onclick="sendAiAction('Format achievements for optimal ATS scanning', 'achievements')">
                           <span>✦ ATS Format</span>
                         </button>
                       </div>
@@ -942,20 +942,20 @@
                            aria-label="Professional Summary"
                            style="min-height:80px;"></div>
                       <div class="doc-section-hover-actions">
-                        <button class="doc-sha-btn" title="AI: Improve Writing" onclick="sendAiAction('Improve the writing of my professional summary')">
+                        <button class="doc-sha-btn" title="AI: Improve Writing" onclick="sendAiAction('Improve the writing of my professional summary', 'summary')">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                           <span>✦ Improve Writing</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Shorten" onclick="sendAiAction('Shorten my summary to be concise and punchy')">
+                        <button class="doc-sha-btn" title="AI: Shorten" onclick="sendAiAction('Shorten my summary to be concise and punchy', 'summary')">
                           <span>✦ Shorten</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Executive" onclick="sendAiAction('Rewrite my summary with an executive leadership tone')">
+                        <button class="doc-sha-btn" title="AI: Executive" onclick="sendAiAction('Rewrite my summary with an executive leadership tone', 'summary')">
                           <span>✦ Executive</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: Technical" onclick="sendAiAction('Rewrite my summary with a strong technical focus')">
+                        <button class="doc-sha-btn" title="AI: Technical" onclick="sendAiAction('Rewrite my summary with a strong technical focus', 'summary')">
                           <span>✦ Technical</span>
                         </button>
-                        <button class="doc-sha-btn" title="AI: ATS Friendly" onclick="sendAiAction('Optimize my summary for ATS keyword matching')">
+                        <button class="doc-sha-btn" title="AI: ATS Friendly" onclick="sendAiAction('Optimize my summary for ATS keyword matching', 'summary')">
                           <span>✦ ATS Friendly</span>
                         </button>
                       </div>
@@ -2055,7 +2055,7 @@
     </div>
   </div>
 
-  <script src="/frontend/engines/doc-editor.js?v=2.8"></script>
+  <script src="/frontend/engines/doc-editor.js?v=2.9"></script>
   <script src="/frontend/engines/editor-engine.js?v=2.5"></script>
   <script src="/frontend/engines/ats-analyzer.js?v=2.5"></script>
   <script src="/frontend/engines/job-tracker.js?v=2.5"></script>

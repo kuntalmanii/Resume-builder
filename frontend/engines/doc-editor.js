@@ -705,7 +705,7 @@
   };
 
   /* ── 14. AI WRITING ASSISTANT & CHAT ── */
-  window.sendAiAction = async function (promptText) {
+  window.sendAiAction = async function (promptText, explicitSection, explicitText) {
     if (!promptText) return;
     appendUserMsg(promptText);
     switchRPanel('ai');
@@ -735,23 +735,49 @@
       ? window.docBullets.filter(Boolean).join('\n')
       : (domBullets.length > 0 ? domBullets.join('\n') : (document.getElementById('bulletPoints')?.value || '').trim());
 
-    var skills     = docSkills.length > 0 ? docSkills.join(', ') : (document.getElementById('previewSkills')?.textContent || '');
+    var skills       = docSkills.length > 0 ? docSkills.join(', ') : (document.getElementById('previewSkills')?.textContent || '');
+    var projects     = (document.getElementById('docFieldProjects')?.innerText || document.getElementById('inputProjects')?.value || '').trim();
+    var education    = (document.getElementById('docFieldEducation')?.innerText || document.getElementById('inputEducation')?.value || '').trim();
+    var certs        = (document.getElementById('docFieldCerts')?.innerText || document.getElementById('inputCertifications')?.value || '').trim();
+    var achievements = (document.getElementById('docFieldAchievements')?.innerText || document.getElementById('inputAchievements')?.value || '').trim();
 
-    // Determine target section
-    var targetSection = 'summary';
-    var targetText    = summary;
-    if (/summary|about/i.test(promptText)) {
-      targetSection = 'summary';
-      targetText    = summary || experience || 'Results-driven software engineer with expertise in building scalable applications.';
-    } else if (/bullet|experience|work|quantify|star|achievement|action/i.test(promptText)) {
-      targetSection = 'experience';
-      targetText    = experience || 'Engineered high-performance web applications and optimized system latency.';
-    } else if (/skill|tag/i.test(promptText)) {
-      targetSection = 'skills';
-      targetText    = skills || 'TypeScript, React, Node.js, System Design';
-    } else if (/ats|executive|technical|tone|improve/i.test(promptText)) {
-      targetSection = (summary && summary.length > 20) ? 'summary' : 'experience';
-      targetText    = targetSection === 'summary' ? (summary || 'Results-driven developer shipping high-impact products.') : (experience || 'Architected scalable software solutions.');
+    // Determine target section accurately
+    var targetSection = explicitSection || 'summary';
+    var targetText    = explicitText || '';
+
+    if (!explicitSection) {
+      if (/bullet|experience|work|star|action verb/i.test(promptText)) {
+        targetSection = 'experience';
+        targetText    = experience || 'Engineered high-performance web applications and optimized system latency.';
+      } else if (/project/i.test(promptText)) {
+        targetSection = 'projects';
+        targetText    = projects || 'Full Stack Web Application built with React and Node.js';
+      } else if (/education|university|degree/i.test(promptText)) {
+        targetSection = 'education';
+        targetText    = education || 'B.Tech in Computer Science';
+      } else if (/certif|license|credential/i.test(promptText)) {
+        targetSection = 'certifications';
+        targetText    = certs || 'AWS Certified Solutions Architect';
+      } else if (/achiev|award|honor/i.test(promptText)) {
+        targetSection = 'achievements';
+        targetText    = achievements || 'Hackathon Winner 2024';
+      } else if (/skill|tag|categorize/i.test(promptText)) {
+        targetSection = 'skills';
+        targetText    = skills || 'TypeScript, React, Node.js, System Design';
+      } else if (/summary|about|profile|shorten|executive|technical|writing|ats/i.test(promptText)) {
+        targetSection = (summary && summary.length > 20) ? 'summary' : 'experience';
+        targetText    = targetSection === 'summary' ? (summary || 'Results-driven developer shipping high-impact products.') : (experience || 'Architected scalable software solutions.');
+      }
+    } else {
+      if (!targetText) {
+        if (targetSection === 'summary') targetText = summary;
+        else if (targetSection === 'experience') targetText = experience;
+        else if (targetSection === 'skills') targetText = skills;
+        else if (targetSection === 'projects') targetText = projects;
+        else if (targetSection === 'education') targetText = education;
+        else if (targetSection === 'certifications') targetText = certs;
+        else if (targetSection === 'achievements') targetText = achievements;
+      }
     }
 
     try {
@@ -783,31 +809,50 @@
       if (loadingDiv && loadingDiv.parentNode) loadingDiv.parentNode.removeChild(loadingDiv);
 
       if (rewrittenText) {
-        // Clean text formatting
+        // Clean text formatting and apply output to the correct section
         if (targetSection === 'summary') {
           rewrittenText = rewrittenText.replace(/^[\s•\-\*]+/gm, '').replace(/\s+/g, ' ').trim();
           const sumEl    = document.getElementById('docFieldSummary');
           const inputSum = document.getElementById('inputSummary');
           if (sumEl)    sumEl.innerText  = rewrittenText;
           if (inputSum) inputSum.value   = rewrittenText;
-          if (typeof syncLivePreview === 'function')     syncLivePreview();
-          if (typeof autoSaveFormFields === 'function')  autoSaveFormFields();
           if (typeof showToast === 'function') showToast('Summary optimized with AI!', 'success');
         } else if (targetSection === 'experience') {
           const bulletsArr = rewrittenText.split('\n').map(b => b.replace(/^[\s•\-\*]+/, '').trim()).filter(Boolean);
           if (typeof window.setDocBullets === 'function') window.setDocBullets(bulletsArr);
-          if (typeof syncLivePreview === 'function')     syncLivePreview();
-          if (typeof autoSaveFormFields === 'function')  autoSaveFormFields();
           if (typeof showToast === 'function') showToast('Experience bullets optimized with AI!', 'success');
         } else if (targetSection === 'skills') {
           const newSkills = rewrittenText
             .split(/[,•\n]+/)
             .map(s => s.trim().replace(/^[\s•\-\*]+/, ''))
             .filter(Boolean);
-          newSkills.forEach(s => window.addDocSkill?.(s));
-          if (typeof syncLivePreview === 'function')     syncLivePreview();
-          if (typeof autoSaveFormFields === 'function')  autoSaveFormFields();
+          if (typeof window.setDocSkills === 'function') window.setDocSkills(newSkills);
+          else newSkills.forEach(s => window.addDocSkill?.(s));
           if (typeof showToast === 'function') showToast('Skills updated with AI!', 'success');
+        } else if (targetSection === 'projects') {
+          const projEl = document.getElementById('docFieldProjects');
+          const inputProj = document.getElementById('inputProjects');
+          if (projEl) projEl.innerText = rewrittenText;
+          if (inputProj) inputProj.value = rewrittenText;
+          if (typeof showToast === 'function') showToast('Projects optimized with AI!', 'success');
+        } else if (targetSection === 'education') {
+          const eduEl = document.getElementById('docFieldEducation');
+          const inputEdu = document.getElementById('inputEducation');
+          if (eduEl) eduEl.innerText = rewrittenText;
+          if (inputEdu) inputEdu.value = rewrittenText;
+          if (typeof showToast === 'function') showToast('Education formatted with AI!', 'success');
+        } else if (targetSection === 'certifications') {
+          const certEl = document.getElementById('docFieldCerts');
+          const inputCert = document.getElementById('inputCertifications');
+          if (certEl) certEl.innerText = rewrittenText;
+          if (inputCert) inputCert.value = rewrittenText;
+          if (typeof showToast === 'function') showToast('Certifications updated with AI!', 'success');
+        } else if (targetSection === 'achievements') {
+          const achEl = document.getElementById('docFieldAchievements');
+          const inputAch = document.getElementById('inputAchievements');
+          if (achEl) achEl.innerText = rewrittenText;
+          if (inputAch) inputAch.value = rewrittenText;
+          if (typeof showToast === 'function') showToast('Achievements updated with AI!', 'success');
         }
 
         // Add suggested skills if returned
@@ -815,8 +860,11 @@
           suggestedSkills.forEach(s => window.addDocSkill?.(s));
         }
 
+        if (typeof syncLivePreview === 'function')    syncLivePreview();
+        if (typeof autoSaveFormFields === 'function') autoSaveFormFields();
+
         appendAiMsg(
-          '<b>AI Rewritten Content:</b><br>' +
+          '<b>AI Rewritten Content (' + targetSection.toUpperCase() + '):</b><br>' +
           escapeHTML(rewrittenText).replace(/\n/g, '<br>') +
           '<br><br><i>✓ Applied directly to your resume.</i>',
           true

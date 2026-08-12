@@ -3,38 +3,19 @@ const { GEMINI_MODELS, sanitizeInputText, setCorsHeaders } = require('./_shared'
 
 function runServerFallbackOptimization(jobTitle, text, section, action) {
   let cleanText = (text || '').trim();
-
-  // Extract companies mentioned in input
-  const companies = [];
-  if (/google/i.test(cleanText)) companies.push('Google');
-  if (/amazon/i.test(cleanText)) companies.push('Amazon');
-  if (/microsoft/i.test(cleanText)) companies.push('Microsoft');
-  if (/apple/i.test(cleanText)) companies.push('Apple');
-  if (/meta|facebook/i.test(cleanText)) companies.push('Meta');
-  if (/netflix/i.test(cleanText)) companies.push('Netflix');
-  if (/stripe/i.test(cleanText)) companies.push('Stripe');
-
-  let companyContext = companies.length > 0
-    ? `at leading technology companies including ${companies.join(' and ')}`
-    : 'in high-growth technology environments';
-
-  let shortCompanyContext = companies.length > 0
-    ? `at ${companies.join(' and ')}`
-    : 'at top technology firms';
-
   const roleTitle = jobTitle || 'Software Engineer';
 
-  if (!section || section === 'summary') {
-    let summaryParagraph = `Results-driven ${roleTitle} with proven experience ${companyContext}. Demonstrated track record architecting high-availability systems, optimizing performance, and collaborating across engineering teams to ship scalable products.`;
+  if (section === 'summary') {
+    let summaryParagraph = `Results-driven ${roleTitle} with a proven track record architecting high-availability systems, optimizing performance, and collaborating across engineering teams to ship scalable products.`;
 
     if (/shorten/i.test(action)) {
-      summaryParagraph = `${roleTitle} ${shortCompanyContext} with expertise in building high-performance web applications and scalable cloud services.`;
+      summaryParagraph = `${roleTitle} with expertise in building high-performance web applications and scalable cloud services.`;
     } else if (/executive/i.test(action)) {
-      summaryParagraph = `Strategic ${roleTitle} ${companyContext}. Demonstrated expertise driving technical architecture decisions, scaling cloud infrastructure, and leading high-performing engineering teams.`;
+      summaryParagraph = `Strategic ${roleTitle}. Demonstrated expertise driving technical architecture decisions, scaling cloud infrastructure, and leading high-performing engineering teams.`;
     } else if (/technical/i.test(action)) {
-      summaryParagraph = `Senior ${roleTitle} ${companyContext}. Specialized in distributed cloud architecture, high-throughput microservices, TypeScript/React systems, and CI/CD pipelines.`;
+      summaryParagraph = `Senior ${roleTitle}. Specialized in distributed cloud architecture, high-throughput microservices, TypeScript/React systems, and CI/CD pipelines.`;
     } else if (/ats/i.test(action)) {
-      summaryParagraph = `Results-oriented ${roleTitle} ${shortCompanyContext}. Skilled in full-stack web development, system architecture, database optimization, and agile software delivery.`;
+      summaryParagraph = `Results-oriented ${roleTitle}. Skilled in full-stack web development, system architecture, database optimization, and agile software delivery.`;
     }
 
     return {
@@ -45,8 +26,58 @@ function runServerFallbackOptimization(jobTitle, text, section, action) {
     };
   }
 
+  if (section === 'skills') {
+    const skillsText = cleanText || 'TypeScript, React, Node.js, Express, PostgreSQL, Supabase, System Design, CI/CD';
+    return {
+      section: 'skills',
+      optimizedText: skillsText,
+      optimizedBulletPoints: skillsText,
+      suggestedSkills: ['TypeScript', 'React.js', 'Node.js', 'PostgreSQL', 'Docker', 'AWS']
+    };
+  }
+
+  if (section === 'projects') {
+    const projText = cleanText ? `### ${cleanText}\n* Engineered technical architecture and scalable database pipeline.\n* Improved system response time and reliability by 40%.` : `### Full Stack Web Application\n**Tech Stack:** React.js, Node.js, Express.js, PostgreSQL\n* Built a high-performance web application with secure REST APIs.\n* Designed responsive user interface optimized for performance and accessibility.\n* Reduced server query latency by 45% through optimized database indexing.`;
+    return {
+      section: 'projects',
+      optimizedText: projText,
+      optimizedBulletPoints: projText,
+      suggestedSkills: ['React.js', 'Node.js', 'PostgreSQL', 'REST APIs']
+    };
+  }
+
+  if (section === 'education') {
+    const eduText = cleanText || `### Bachelor of Technology — Computer Science & Engineering\n**University Name**, City, India\n2025 – 2029 | CGPA: 9.1 / 10`;
+    return {
+      section: 'education',
+      optimizedText: eduText,
+      optimizedBulletPoints: eduText,
+      suggestedSkills: ['Computer Science', 'Algorithms', 'Data Structures']
+    };
+  }
+
+  if (section === 'certifications') {
+    const certText = cleanText || `AWS Certified Solutions Architect (2024) · Google Cloud Professional Cloud Architect (2024) · CKA Certified Kubernetes Administrator`;
+    return {
+      section: 'certifications',
+      optimizedText: certText,
+      optimizedBulletPoints: certText,
+      suggestedSkills: ['AWS', 'Kubernetes', 'Docker']
+    };
+  }
+
+  if (section === 'achievements') {
+    const achText = cleanText || `National Hackathon Winner 2024 (1st Place among 500+ teams) · Published research paper on Distributed System Optimization · Reduced cloud infra costs by $120k/yr`;
+    return {
+      section: 'achievements',
+      optimizedText: achText,
+      optimizedBulletPoints: achText,
+      suggestedSkills: ['Problem Solving', 'Leadership', 'Optimization']
+    };
+  }
+
   // Work Experience fallback
-  let bullets = `• Architected scalable web services ${shortCompanyContext}, maintaining 99.99% uptime for high-volume user traffic.\n• Optimized application performance and database queries, cutting average p99 response latency significantly.\n• Spearheaded technical initiatives across cross-functional engineering teams, boosting deployment velocity.`;
+  let bullets = `• Architected scalable web services, maintaining 99.99% uptime for high-volume user traffic.\n• Optimized application performance and database queries, cutting average p99 response latency by 45%.\n• Spearheaded technical initiatives across cross-functional engineering teams, boosting deployment velocity.`;
 
   return {
     section: 'experience',
