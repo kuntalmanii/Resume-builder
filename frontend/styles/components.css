@@ -867,7 +867,7 @@ i[data-feather] svg { width: 1em; height: 1em; }
 }
 
 .field-validation-msg {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center !important;
   gap: 6px !important;
   position: absolute !important;

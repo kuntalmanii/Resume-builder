@@ -173,6 +173,9 @@
         target.dispatchEvent(new Event('input', { bubbles: true }));
       }
       this.validateField(el);
+      if (window.editorEngine && typeof window.editorEngine.validateField === 'function') {
+        window.editorEngine.validateField(el);
+      }
       this.calculateCompleteness();
       updateAutosave();
       if (typeof window.syncLivePreview === 'function') {
@@ -318,7 +321,9 @@
   /* ── 3. WIRE all contenteditable fields ── */
   function wireEditorFields() {
     PersonalDetailsEngine.init();
-    document.querySelectorAll('[data-syncs]:not([id^="docField"])').forEach(function (el) {
+    const personalIds = new Set(['docFieldName', 'docFieldTitle', 'docFieldEmail', 'docFieldPhone', 'docFieldLocation', 'docFieldGithub', 'docFieldLinkedin', 'docFieldPortfolio']);
+    document.querySelectorAll('[data-syncs]').forEach(function (el) {
+      if (personalIds.has(el.id)) return;
       el.addEventListener('input',  function () { syncField(el); });
       el.addEventListener('blur',   function () { syncField(el); });
       el.addEventListener('keydown', function (e) {
@@ -549,6 +554,9 @@
       skillInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
     updateAutosave();
+    if (typeof window.syncLivePreview === 'function') {
+      window.syncLivePreview();
+    }
   }
 
   var docSkillInput = document.getElementById('docSkillInput');
@@ -874,8 +882,8 @@
           suggestedSkills.forEach(s => window.addDocSkill?.(s));
         }
 
-        if (typeof syncLivePreview === 'function')    syncLivePreview();
-        if (typeof autoSaveFormFields === 'function') autoSaveFormFields();
+        if (typeof window.syncLivePreview === 'function')    window.syncLivePreview();
+        if (typeof window.autoSaveFormFields === 'function') window.autoSaveFormFields();
 
         appendAiMsg(
           '<b>AI Rewritten Content (' + targetSection.toUpperCase() + '):</b><br>' +

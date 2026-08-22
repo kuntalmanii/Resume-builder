@@ -36,6 +36,14 @@ function escapeHTML(str) {
     .replace(/'/g,  '&#39;');
 }
 
+function updateTextNode(el, text) {
+  if (!el) return;
+  if (el.textContent !== text) {
+    el.textContent = text;
+  }
+}
+window.updateTextNode = updateTextNode;
+
 window.openJobModal = window.openJobModal || function(jobId = null) {
   if (typeof window._openJobModalInternal === 'function') {
     window._openJobModalInternal(jobId);
@@ -1342,7 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Update live Score Analytics when navigating to analytics tab
-    if (tabId === 'score-analytics' && typeof updateAnalyticsDashboard === 'function') {
+    if ((tabId === 'analytics' || tabId === 'score-analytics') && typeof updateAnalyticsDashboard === 'function') {
       updateAnalyticsDashboard();
     }
 
@@ -2383,6 +2391,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.parseFormattedSectionHTML = parseFormattedSectionHTML;
   window.formatEducationHTML = parseFormattedSectionHTML;
+
+  function updateTextNode(el, text) {
+    if (!el) return;
+    if (el.textContent !== text) {
+      el.textContent = text;
+    }
+  }
+  window.updateTextNode = updateTextNode;
+  window.renderPaperPreview = syncLivePreview;
 
   function syncLivePreview() {
     const docName = document.getElementById('docFieldName')?.innerText?.trim();
@@ -4414,7 +4431,7 @@ Key Requirements:
               <button type="button" class="card-action-btn btn-edit-job" data-id="${job.id}" title="Edit Application">
                 <i data-feather="edit-2"></i> Edit
               </button>
-              ${job.jdText ? `<button type="button" class="card-action-btn btn-scan-ats" data-id="${job.id}" title="Scan JD in ATS Analyzer" style="color:var(--primary); font-weight:700;"><i data-feather="sparkles"></i> ATS Scan</button>` : ''}
+              ${job.jdText ? `<button type="button" class="card-action-btn btn-scan-ats" data-id="${job.id}" title="Scan JD in ATS Analyzer" style="color:var(--primary); font-weight:700;"><i data-feather="zap"></i> ATS Scan</button>` : ''}
               <button type="button" class="card-action-btn btn-delete-job" data-id="${job.id}" title="Delete Application" style="color:#ef4444;">
                 <i data-feather="trash-2"></i> Delete
               </button>

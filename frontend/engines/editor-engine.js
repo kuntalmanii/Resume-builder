@@ -87,11 +87,11 @@ class EditorEngine {
 
   /* ------ Real-Time Input Field Validation ------ */
   validateField(el) {
-    if (!el || el.closest('#authForm')) return true;
+    if (!el || el.closest('#authForm') || el.closest('#legacyResumeInputs')) return true;
 
     const val = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
       ? el.value.trim()
-      : el.innerText.trim();
+      : (el.innerText || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
 
     const label = (el.getAttribute('aria-label') || el.getAttribute('data-placeholder') || el.placeholder || el.id || '').toLowerCase();
 
@@ -125,22 +125,20 @@ class EditorEngine {
       }
     }
 
-    const parent = el.closest('.doc-contact-item') || el.parentNode;
-    let tooltip = parent ? parent.querySelector('.field-validation-msg') : null;
+    const parent = el.closest('.doc-contact-item') || el.closest('.doc-field-wrapper') || el.parentNode;
 
     if (!isValid) {
       el.classList.add('field-invalid');
       el.classList.remove('field-valid');
       if (parent) {
+        let tooltip = parent.querySelector('.field-validation-msg');
         if (!tooltip) {
           tooltip = document.createElement('span');
           tooltip.className = 'field-validation-msg';
           parent.appendChild(tooltip);
         }
         tooltip.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${errorMsg}</span>`;
-        tooltip.style.display = 'inline-flex';
       }
-
     } else {
       el.classList.remove('field-invalid');
       if (val.length > 0) {
@@ -148,8 +146,8 @@ class EditorEngine {
       } else {
         el.classList.remove('field-valid');
       }
-      if (tooltip) {
-        tooltip.style.display = 'none';
+      if (parent) {
+        parent.querySelectorAll('.field-validation-msg').forEach(t => t.remove());
       }
     }
 
@@ -179,7 +177,9 @@ class EditorEngine {
   }
 
   updatePreviewSilently() {
-    if (typeof window.renderPaperPreview === 'function') {
+    if (typeof window.syncLivePreview === 'function') {
+      window.syncLivePreview();
+    } else if (typeof window.renderPaperPreview === 'function') {
       window.renderPaperPreview();
     }
   }
