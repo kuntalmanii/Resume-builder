@@ -1165,7 +1165,14 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     Export Report
                   </button>
+                  <div id="selectedFileBadge" style="display:none;" class="badge-tag blue"><span id="selectedFileName">resume.pdf</span></div>
                   <input type="file" id="pdfFileInput" accept=".pdf,.docx,.txt" style="display:none;" />
+                </div>
+                <div class="ats-mode-container">
+                  <span class="ats-mode-pill general" id="atsActiveModeBadge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span id="atsActiveModeText">Mode: General ATS Quality Audit</span>
+                  </span>
                 </div>
               </div>
 
@@ -1178,9 +1185,9 @@
                   <button type="button" class="parser-chip" data-engine="faang">FAANG</button>
                 </div>
                 <div class="sample-jd-wrapper">
-                  <label for="sampleJdSelect" class="sample-jd-label">Preset JD:</label>
+                  <label for="sampleJdSelect" class="sample-jd-label">Target Role:</label>
                   <select id="sampleJdSelect" class="sample-jd-select">
-                    <option value="" selected>&#x1F4CB; Select Sample Job Description...</option>
+                    <option value="" selected>&#x1F4CB; General ATS Quality Audit (No Target Role)</option>
                     <optgroup label="Software &amp; Engineering">
                       <option value="frontend">Senior Frontend Architect</option>
                       <option value="fullstack">Senior Full Stack Engineer</option>
@@ -1222,16 +1229,36 @@
                       <option value="qa_automation">Principal SDET &amp; QA Engineer</option>
                     </optgroup>
                   </select>
+                  <button type="button" class="topbar-action-btn" id="btnToggleCustomJd" title="View, paste or customize target job description requirements">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Custom JD
+                  </button>
+                  <button type="button" class="topbar-action-btn ats-btn-clear-jd" id="btnClearTargetJd" style="display:none;" title="Reset target job and return to General ATS Audit">
+                    &times; Clear JD
+                  </button>
+                </div>
+              </div>
+
+              <!-- TARGET JOB DESCRIPTION EXPANDABLE DRAWER -->
+              <div class="ats-target-jd-drawer collapsed" id="atsTargetJdDrawer">
+                <div class="ats-jd-drawer-header">
+                  <div class="ats-jd-drawer-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#B9824A" stroke-width="2" width="14" height="14"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span id="atsJdDrawerLabel">Target Job Description &amp; Requirements</span>
+                  </div>
+                  <div class="ats-jd-drawer-actions">
+                    <span class="ats-jd-char-count" id="atsJdCharCount">0 characters</span>
+                    <button type="button" class="topbar-action-btn ats-btn-clear-jd" id="btnDrawerClearJd" style="display:none;">Clear</button>
+                  </div>
+                </div>
+                <textarea id="atsJdInput" class="ats-jd-textarea" rows="3" placeholder="Paste target job requirements from LinkedIn, Indeed, or company career page (or select a preset role above)..."></textarea>
+                <div class="ats-jd-drawer-footer">
+                  <span>💡 <strong>Tip:</strong> Leave empty to perform a <strong>General ATS Quality &amp; Structure Audit</strong>. Enter text to perform <strong>Targeted Keyword &amp; Gap Matching</strong>.</span>
                 </div>
               </div>
             </div>
 
-            <!-- HIDDEN FORM ELEMENTS (Preserved for script.js) -->
-            <div id="selectedFileBadge" style="display:none;"><span id="selectedFileName">resume.pdf</span></div>
             <div id="atsDropZone" style="display:none;"></div>
-            <div style="display:none;">
-              <textarea id="atsJdInput" rows="4" placeholder="Paste target job description here..."></textarea>
-            </div>
 
             <!-- 2. EXECUTIVE SUMMARY SCORE HERO BANNER -->
             <div class="ats-executive-summary-banner">

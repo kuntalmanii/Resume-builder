@@ -377,6 +377,7 @@ const server = http.createServer((req, res) => {
         log('INFO', `Received ${pathname} request from IP ${clientIp}`);
 
         // Delegate entirely to api/ats-analyze.js — it owns the full prompt, Gemini calls, and rich fallback
+        try { delete require.cache[require.resolve('./api/ats-analyze.js')]; } catch(_) {}
         const atsAnalyzeHandler = require('./api/ats-analyze.js');
 
         // Build a minimal Express-compatible shim around Node's raw req/res

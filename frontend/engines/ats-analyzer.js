@@ -18,10 +18,11 @@ class AtsAnalyzer {
     if (this.initialized) return;
     this.bindAtsScanButton();
     this.bindSampleJdSelector();
+    this.bindTargetJdControls();
     this.bindFileUpload();
     this.bindAddKeywordBtns();
     this.bindExportReportButton();
-    // Do NOT auto-run or show fake default data — wait for user action
+    this.syncTargetJdMode();
     this.initialized = true;
   }
 
@@ -49,13 +50,106 @@ class AtsAnalyzer {
     sel.dataset.boundAts = 'true';
     sel.addEventListener('change', () => {
       const val = sel.value;
-      if (!val) return;
       const jdInput = document.getElementById('atsJdInput');
-      if (jdInput) {
-        jdInput.value = SAMPLE_JD_TEMPLATES[val] || '';
-        jdInput.style.display = 'block';
+      const drawer = document.getElementById('atsTargetJdDrawer');
+
+      if (!val) {
+        // Switched to General ATS Quality Audit
+        if (jdInput) jdInput.value = '';
+        this.syncTargetJdMode();
+      } else if (SAMPLE_JD_TEMPLATES[val]) {
+        if (jdInput) jdInput.value = SAMPLE_JD_TEMPLATES[val];
+        if (drawer) drawer.classList.remove('collapsed');
+        this.syncTargetJdMode();
       }
+      if (typeof window.autoSaveFormFields === 'function') window.autoSaveFormFields();
     });
+  }
+
+  bindTargetJdControls() {
+    const toggleBtn = document.getElementById('btnToggleCustomJd');
+    const drawer    = document.getElementById('atsTargetJdDrawer');
+    const clearBtn  = document.getElementById('btnClearTargetJd');
+    const drawerClr = document.getElementById('btnDrawerClearJd');
+    const jdInput   = document.getElementById('atsJdInput');
+
+    if (toggleBtn && drawer && !toggleBtn.dataset.boundAts) {
+      toggleBtn.dataset.boundAts = 'true';
+      toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        drawer.classList.toggle('collapsed');
+        toggleBtn.classList.toggle('active', !drawer.classList.contains('collapsed'));
+      });
+    }
+
+    const handleClear = (e) => {
+      if (e) e.preventDefault();
+      if (jdInput) jdInput.value = '';
+      const sel = document.getElementById('sampleJdSelect');
+      if (sel) sel.value = '';
+      this.syncTargetJdMode();
+      if (typeof window.autoSaveFormFields === 'function') window.autoSaveFormFields();
+      if (typeof showToast === 'function') showToast('Switched to General ATS Quality Audit mode.', 'info');
+    };
+
+    if (clearBtn && !clearBtn.dataset.boundAts) {
+      clearBtn.dataset.boundAts = 'true';
+      clearBtn.addEventListener('click', handleClear);
+    }
+    if (drawerClr && !drawerClr.dataset.boundAts) {
+      drawerClr.dataset.boundAts = 'true';
+      drawerClr.addEventListener('click', handleClear);
+    }
+
+    if (jdInput && !jdInput.dataset.boundAts) {
+      jdInput.dataset.boundAts = 'true';
+      jdInput.addEventListener('input', () => {
+        this.syncTargetJdMode();
+      });
+    }
+  }
+
+  syncTargetJdMode() {
+    const jdInput   = document.getElementById('atsJdInput');
+    const sel       = document.getElementById('sampleJdSelect');
+    const modeBadge = document.getElementById('atsActiveModeBadge');
+    const modeText  = document.getElementById('atsActiveModeText');
+    const charCount = document.getElementById('atsJdCharCount');
+    const clearBtn  = document.getElementById('btnClearTargetJd');
+    const drawerClr = document.getElementById('btnDrawerClearJd');
+    const val       = jdInput ? jdInput.value.trim() : '';
+
+    if (charCount) {
+      charCount.textContent = `${val.length} characters`;
+    }
+
+    if (val.length >= 15) {
+      // Target Role mode
+      let label = 'Custom Job Description';
+      if (sel && sel.value && SAMPLE_JD_TEMPLATES[sel.value] && SAMPLE_JD_TEMPLATES[sel.value].trim() === val) {
+        const opt = sel.options[sel.selectedIndex];
+        if (opt) label = opt.text.replace(/^📋\s*/, '');
+      } else if (sel && sel.value) {
+        // Text was customized away from preset
+        label = 'Custom Target Role';
+      }
+
+      if (modeBadge) {
+        modeBadge.className = 'ats-mode-pill targeted';
+        if (modeText) modeText.textContent = `🎯 Target Role: ${label}`;
+      }
+      if (clearBtn) clearBtn.style.display = 'inline-flex';
+      if (drawerClr) drawerClr.style.display = 'inline-flex';
+    } else {
+      // General ATS Quality Audit mode
+      if (sel && sel.value !== '') sel.value = '';
+      if (modeBadge) {
+        modeBadge.className = 'ats-mode-pill general';
+        if (modeText) modeText.textContent = '📋 Mode: General ATS Quality Audit';
+      }
+      if (clearBtn) clearBtn.style.display = 'none';
+      if (drawerClr) drawerClr.style.display = 'none';
+    }
   }
 
   bindFileUpload() {
@@ -149,23 +243,20 @@ class AtsAnalyzer {
     const resumeContent = this.getResumeText();
     let   jdText        = jdInput?.value?.trim() || '';
 
-    // Check for preset JD from select
+    // Check for preset JD from select if input is empty
     if (!jdText) {
       const sel = document.getElementById('sampleJdSelect');
       const val = sel?.value;
       if (val && SAMPLE_JD_TEMPLATES[val]) {
         jdText = SAMPLE_JD_TEMPLATES[val];
-        if (jdInput) { jdInput.value = jdText; jdInput.style.display = 'block'; }
+        if (jdInput) { jdInput.value = jdText; }
+        this.syncTargetJdMode();
       }
     }
 
-    if (!jdText) {
-    if (typeof showToast === 'function') showToast('Please paste a Job Description or select a preset role above before scanning.', 'warning');
-      this.isScanning = false;
-      return;
-    }
+    const isGeneralAudit = !jdText || jdText.length < 15;
 
-  if (!resumeContent) {
+    if (!resumeContent) {
       if (typeof showToast === 'function') showToast('No resume content found. Please build your resume or upload a file first.', 'warning');
       this.isScanning = false;
       return;
@@ -183,10 +274,10 @@ class AtsAnalyzer {
       if (progressFill) progressFill.style.width = `${progress}%`;
       if (progressPct)  progressPct.textContent  = `${progress}%`;
       if (stepText) {
-        if (progress < 25)      stepText.textContent = 'Connecting to Gemini AI Engine...';
-        else if (progress < 55) stepText.textContent = 'Parsing resume against job requirements...';
-        else if (progress < 80) stepText.textContent = 'Generating ATS diagnostic report...';
-        else                    stepText.textContent = 'Computing hiring probability...';
+        if (progress < 25)      stepText.textContent = isGeneralAudit ? 'Auditing resume layout and ATS formatting...' : 'Connecting to Gemini AI Engine...';
+        else if (progress < 55) stepText.textContent = isGeneralAudit ? 'Analyzing action verbs, metric density, and skills...' : 'Parsing resume against job requirements...';
+        else if (progress < 80) stepText.textContent = 'Generating ATS diagnostic report & smart rewrites...';
+        else                    stepText.textContent = 'Computing ATS gatekeeper pass rate...';
       }
       if (progress >= 90) clearInterval(timer);
     }, 80);
@@ -212,11 +303,12 @@ class AtsAnalyzer {
         try { data = await response.json(); } catch(_) {}
       }
 
-      // If API key missing (400), fall back to local heuristic
-      if (!data || response.status === 400) {
+      // If API key missing or parse failed, fall back to local heuristic
+      if (!data || response.status === 400 || response.status === 500) {
         data = this.localFallback(resumeContent, jdText);
       }
 
+      data.isGeneralAudit = isGeneralAudit;
       this.lastResult = data;
       window.atsLastResult = data; // expose for script.js cross-section reads
 
@@ -238,6 +330,7 @@ class AtsAnalyzer {
       console.warn('[ATS] Network error, using local fallback:', err.message);
       if (loadingState) loadingState.style.display = 'none';
       const local = this.localFallback(resumeContent, jdText);
+      local.isGeneralAudit = isGeneralAudit;
       this.lastResult = local;
       window.atsLastResult = local;
       this.renderBreakdownUi(local);
@@ -258,21 +351,47 @@ class AtsAnalyzer {
     const commonKws = [
       'javascript','typescript','react','next.js','node.js','express','python','django','fastapi',
       'docker','kubernetes','aws','gcp','postgresql','mongodb','graphql','rest api','ci/cd','git',
-      'microservices','unit testing','system design','redis','kafka','web vitals','performance','agile','scrum','sql','html','css'
+      'microservices','unit testing','system design','redis','kafka','web vitals','performance','agile','scrum','sql','html','css',
+      'java','spring boot','tailwind','c++','figma','ui/ux','problem-solving','leadership','communication'
     ];
-    const jdLower  = jdText.toLowerCase();
+    const isGeneralAudit = !jdText || jdText.trim().length < 15;
     const resLower = resumeText.toLowerCase();
-    let targets    = commonKws.filter(kw => jdLower.includes(kw));
-    if (targets.length === 0) {
-      const words   = jdText.match(/\b[A-Za-z]{4,}\b/g)||[];
-      const stops   = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience']);
-      targets = [...new Set(words.map(w=>w.toLowerCase()).filter(w=>!stops.has(w)))].slice(0,10);
+    const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k)\b/i.test(resumeText);
+    const hasVerbs = /(managed|led|architected|engineered|built|optimized|spearheaded|implemented|developed|designed|scaled|delivered)\b/i.test(resumeText);
+    const hasDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(resLower);
+    const hasContact = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|\+?\d[\d\s\-().]{7,}\d|linkedin\.com|github\.com)/i.test(resumeText);
+
+    let matched = [];
+    let missing = [];
+    let score   = 75;
+
+    if (isGeneralAudit) {
+      // Detect industry skills present in candidate resume
+      matched = commonKws.filter(kw => resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
+      if (matched.length === 0) matched = ['Problem-Solving', 'Communication', 'Technical Leadership'];
+
+      const benchmarkSkills = ['CI/CD', 'Git', 'REST API', 'Docker', 'Agile', 'Unit Testing', 'System Design'];
+      missing = benchmarkSkills.filter(sk => !resLower.includes(sk.toLowerCase())).slice(0, 4);
+
+      const fmtScore   = hasContact ? 96 : 85;
+      const verbScore  = hasVerbs ? 90 : 55;
+      const numScore   = hasNums ? 88 : 45;
+      const skillScore = Math.min(96, Math.max(65, 60 + matched.length * 4));
+      const readScore  = 90;
+
+      score = Math.round((fmtScore * 0.25) + (verbScore * 0.2) + (numScore * 0.2) + (skillScore * 0.2) + (readScore * 0.15));
+    } else {
+      const jdLower = jdText.toLowerCase();
+      let targets   = commonKws.filter(kw => jdLower.includes(kw));
+      if (targets.length === 0) {
+        const words = jdText.match(/\b[A-Za-z]{4,}\b/g) || [];
+        const stops = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','looking','senior','lead']);
+        targets = [...new Set(words.map(w => w.toLowerCase()).filter(w => !stops.has(w)))].slice(0, 10);
+      }
+      matched = targets.filter(kw => resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
+      missing = targets.filter(kw => !resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
+      score   = targets.length ? Math.min(100, Math.round((matched.length / targets.length) * 100)) : 70;
     }
-    const matched  = targets.filter(kw => resLower.includes(kw));
-    const missing  = targets.filter(kw => !resLower.includes(kw));
-    const score    = targets.length ? Math.round((matched.length/targets.length)*100) : 0;
-    const hasNums  = /\d+[%x+]|\$\d+/.test(resumeText);
-    const hasVerbs = /(managed|led|architected|engineered|built|optimized|spearheaded|implemented|developed)\b/i.test(resumeText);
 
     // Extract actual bullets from candidate's resume text for dynamic Smart Rewrites
     const rawBullets = resumeText
@@ -283,7 +402,7 @@ class AtsAnalyzer {
     const generatedRewrites = [];
     if (rawBullets.length > 0) {
       const topBullet = rawBullets[0];
-      const targetKw = missing[0] || matched[0] || 'Technical Stack';
+      const targetKw = missing[0] || matched[0] || (isGeneralAudit ? 'Scalable System Architecture' : 'Technical Stack');
       generatedRewrites.push({
         before: topBullet,
         after: `Architected high-performance architecture incorporating ${targetKw}, improving application throughput by 38% and reducing p99 latency.`,
@@ -292,7 +411,7 @@ class AtsAnalyzer {
 
       if (rawBullets.length > 1) {
         const secondBullet = rawBullets[1];
-        const targetKw2 = missing[1] || matched[1] || 'CI/CD Pipelines';
+        const targetKw2 = missing[1] || matched[1] || (isGeneralAudit ? 'Automated CI/CD' : 'CI/CD Pipelines');
         generatedRewrites.push({
           before: secondBullet,
           after: `Spearheaded automated delivery pipelines integrating ${targetKw2}, cutting deployment release latency by 45% with zero downtime.`,
@@ -301,38 +420,51 @@ class AtsAnalyzer {
       }
     }
 
+    const recs = isGeneralAudit ? [
+      `General ATS Readiness: Detected ${matched.length} core technical & professional competencies in your resume.`,
+      !hasNums  ? 'Add quantified business metrics (%, $, user scale, latency reductions) to experience bullets.' : 'Strong quantified impact detected across achievements.',
+      !hasVerbs ? 'Begin every bullet with strong action verbs (Architected, Engineered, Optimized) rather than passive duties.' : 'Proactive action verbs detected across experience entries.',
+      missing.length > 0 ? `Industry Benchmark: Consider highlighting ${missing.slice(0, 3).join(', ')} where applicable.` : 'Great coverage of foundational technical competencies.'
+    ] : [
+      missing.length > 0 ? `Incorporate missing target keywords (${missing.slice(0, 4).join(', ')}) into your experience bullets.` : 'Great role keyword alignment!',
+      !hasNums  ? 'Add quantified metrics (%, $, user counts) to every bullet point.' : 'Good use of metrics.',
+      !hasVerbs ? 'Start bullets with strong action verbs (Architected, Engineered, Optimized).' : 'Strong action verb usage detected.',
+      'Ensure skills appear in work experience context, not only in a standalone Skills section.'
+    ];
+
     return {
       score,
-      verdict: score>=85?'SHORTLIST':score>=70?'HOLD':'REJECT',
+      isGeneralAudit,
+      verdict: score >= 85 ? 'SHORTLIST' : score >= 70 ? 'HOLD' : 'REJECT',
       matchedKeywords: matched,
       missingKeywords: missing,
-      recommendations: [
-        missing.length>0 ? `Add missing skills (${missing.slice(0,4).join(', ')}) into your experience bullets.` : 'Great keyword coverage!',
-        !hasNums  ? 'Add quantified metrics (%, $, user counts) to every bullet point.' : 'Good use of metrics.',
-        !hasVerbs ? 'Start bullets with strong action verbs (Architected, Engineered, Optimized).' : 'Strong action verb usage detected.',
-        'Ensure skills appear in work experience context, not only in a standalone Skills section.'
-      ],
-      recruiterVerdict: score>=75
-        ? 'This candidate demonstrates reasonable alignment with the role requirements and would likely clear automated ATS filters.'
-        : `Moderate gaps detected. Adding ${missing.slice(0,3).join(', ')} in context would significantly boost ATS ranking.`,
+      recommendations: recs,
+      recruiterVerdict: isGeneralAudit
+        ? (score >= 80
+          ? `Strong ATS baseline (${score}%). Clean structural parsing, strong skill density, and solid presentation. Adding more quantified metrics will push it into the top 5%.`
+          : `Moderate ATS baseline (${score}%). The resume has solid core content but needs stronger quantified metrics and proactive action verbs to pass strict ATS filters.`)
+        : (score >= 75
+          ? 'This candidate demonstrates reasonable alignment with the role requirements and would likely clear automated ATS filters.'
+          : `Moderate gaps detected. Adding ${missing.slice(0, 3).join(', ')} in context would significantly boost ATS ranking.`),
       hiringProbability: {
-        interview:  score>=85?'89%':score>=70?'71%':'47%',
-        offer:      score>=85?'80%':score>=70?'58%':'30%',
-        atsGatePass:score>=85?'96%':score>=70?'78%':'49%'
+        interview:  score >= 85 ? '89%' : score >= 70 ? '71%' : '47%',
+        offer:      score >= 85 ? '80%' : score >= 70 ? '58%' : '30%',
+        atsGatePass:score >= 85 ? '96%' : score >= 70 ? '78%' : '49%'
       },
       smartRewrites: generatedRewrites,
       sectionScores: {
-        keywordMatch:    score,
-        skillsAlignment: Math.min(100,Math.round(score*0.95)),
-        formattingATS:   92,
-        experienceImpact:hasNums?85:58,
-        metricDensity:   hasNums?74:38,
+        keywordMatch:    isGeneralAudit ? Math.min(95, Math.max(60, matched.length * 6 + 40)) : score,
+        skillsAlignment: Math.min(100, Math.round(score * 0.95)),
+        formattingATS:   hasContact ? 96 : 88,
+        experienceImpact:hasNums ? 88 : 58,
+        metricDensity:   hasNums ? 78 : 38,
         educationCerts:  100,
-        readabilityScore:88,
-        actionVerbs:     hasVerbs?82:50
+        readabilityScore:90,
+        actionVerbs:     hasVerbs ? 88 : 50
       }
     };
   }
+
 
   /* ─── Render full breakdown UI from API result ─── */
   renderBreakdownUi(data) {
@@ -377,24 +509,31 @@ class AtsAnalyzer {
     // ── Summary heading ──
     const h = document.getElementById('scoreSummaryHeading');
     const d = document.getElementById('scoreSummaryDesc');
+    const isGen = data.isGeneralAudit;
     if (h && d) {
-      if (score>=85)      { h.textContent = 'Excellent ATS Compatibility';        d.textContent = `Your resume matches ${score}% of core qualifications. Strong position for this role.`; }
-      else if (score>=65) { h.textContent = 'Moderate Match — Action Required';   d.textContent = `Your resume matches ${score}% of requirements. Add missing keywords to boost ATS rank.`; }
-      else                { h.textContent = 'Low Match — Critical Keyword Gaps';  d.textContent = `Your resume matches ${score}% of requirements. Incorporate missing skills urgently.`; }
+      if (isGen) {
+        if (score >= 85)      { h.textContent = 'Excellent ATS Health & Readiness';  d.textContent = `Your resume shows ${score}% structural ATS readiness with strong formatting, action verbs, and skill density.`; }
+        else if (score >= 68) { h.textContent = 'Solid ATS Baseline — Impact Gaps';  d.textContent = `Your resume achieves ${score}% ATS readiness. Add quantified metrics (%, $, scale) and leadership verbs to rank higher.`; }
+        else                  { h.textContent = 'Low ATS Score — Optimization Urgently Needed'; d.textContent = `Your resume matches ${score}% of standard ATS formatting and metric guidelines. Restructure experience bullets.`; }
+      } else {
+        if (score >= 85)      { h.textContent = 'Excellent Target Role Alignment';        d.textContent = `Your resume matches ${score}% of core qualifications. Strong position for this role.`; }
+        else if (score >= 65) { h.textContent = 'Moderate Match — Action Required';       d.textContent = `Your resume matches ${score}% of requirements. Add missing keywords to boost ATS rank.`; }
+        else                  { h.textContent = 'Low Match — Critical Keyword Gaps';      d.textContent = `Your resume matches ${score}% of requirements. Incorporate missing skills urgently.`; }
+      }
     }
 
     // ── KPI metrics ──
     const ss = sectionScores;
-    this.setEl('kpiEstPassRate',  `${Math.min(99,score+2)}%`);
-    this.setEl('kpiReadability',  `${(7.5+(score/100)*2.3).toFixed(1)} / 10`);
-    this.setEl('kpiHiringProb',   score>=80?'High':score>=60?'Moderate':'Low');
-    this.setEl('kpiQualityScore', score>=85?'Top 5%':score>=70?'Top 20%':'Top 50%');
+    this.setEl('kpiEstPassRate',  `${Math.min(99, score + 2)}%`);
+    this.setEl('kpiReadability',  `${(7.5 + (score / 100) * 2.3).toFixed(1)} / 10`);
+    this.setEl('kpiHiringProb',   score >= 80 ? 'High' : score >= 60 ? 'Moderate' : 'Low');
+    this.setEl('kpiQualityScore', score >= 85 ? 'Top 5%' : score >= 70 ? 'Top 20%' : 'Top 50%');
 
     // ── Score matrix bars (using real section_scores) ──
     const mKw     = ss.keywordMatch    ?? score;
-    const mExp    = ss.experienceImpact?? Math.min(98,score+5);
-    const mSkills = ss.skillsAlignment ?? Math.min(95,score+3);
-    const mMetric = ss.metricDensity   ?? Math.max(40,score-8);
+    const mExp    = ss.experienceImpact?? Math.min(98, score + 5);
+    const mSkills = ss.skillsAlignment ?? Math.min(95, score + 3);
+    const mMetric = ss.metricDensity   ?? Math.max(40, score - 8);
 
     this.setEl('matrixScoreKw',     `${mKw}%`);
     this.setEl('matrixScoreExp',    `${mExp}%`);
@@ -408,51 +547,51 @@ class AtsAnalyzer {
     // ── Category sidebar badges (real scores) ──
     const catMap = {
       catBadgeKw:     ss.keywordMatch    ?? score,
-      catBadgeExp:    ss.experienceImpact?? Math.min(98,score+5),
-      catBadgeSkills: ss.skillsAlignment ?? Math.min(95,score+3),
+      catBadgeExp:    ss.experienceImpact?? Math.min(98, score + 5),
+      catBadgeSkills: ss.skillsAlignment ?? Math.min(95, score + 3),
       catBadgeEdu:    ss.educationCerts  ?? 100,
       catBadgeFmt:    ss.formattingATS   ?? 95,
       catBadgeRead:   ss.readabilityScore?? 96,
-      catBadgeDensity:ss.metricDensity   ?? Math.max(40,score-8),
-      catBadgeVerbs:  ss.actionVerbs     ?? Math.min(96,score+5)
+      catBadgeDensity:ss.metricDensity   ?? Math.max(40, score - 8),
+      catBadgeVerbs:  ss.actionVerbs     ?? Math.min(96, score + 5)
     };
-    Object.entries(catMap).forEach(([id,val]) => this.setEl(id, `${val}%`));
+    Object.entries(catMap).forEach(([id, val]) => this.setEl(id, `${val}%`));
 
     // ── Keyword counts subtitle ──
-    this.setEl('kwCountsSubtitle', `${matched.length} Matched · ${missing.length} Gaps`);
+    this.setEl('kwCountsSubtitle', isGen ? `${matched.length} Skills Detected · ${missing.length} Recommendations` : `${matched.length} Matched · ${missing.length} Gaps`);
 
     // ── Matched keywords ──
     const matchTitle = document.getElementById('matchedKeywordsTitle');
     const matchBox   = document.getElementById('matchedKeywordsContainer');
-    if (matchTitle) matchTitle.innerHTML = `✓ Matched Required Keywords (${matched.length})`;
+    if (matchTitle) matchTitle.innerHTML = isGen ? `✓ Detected Skills &amp; Competencies (${matched.length})` : `✓ Matched Required Keywords (${matched.length})`;
     if (matchBox) {
-      matchBox.innerHTML = matched.length>0
-        ? matched.map(kw=>`<span class="badge-tag green">${this.escapeHTML(kw)}</span>`).join('')
+      matchBox.innerHTML = matched.length > 0
+        ? matched.map(kw => `<span class="badge-tag green">${this.escapeHTML(kw)}</span>`).join('')
         : `<span class="badge-tag amber">No specific keywords detected — ensure your resume includes relevant technical terms.</span>`;
     }
 
     // ── Missing keywords ──
     const existingSkills = new Set(
       Array.from(document.querySelectorAll('#skillsTagsContainer .tag'))
-        .map(t=>t.textContent.replace(/[×\u00d7]/g,'').trim().toLowerCase())
+        .map(t => t.textContent.replace(/[×\u00d7]/g, '').trim().toLowerCase())
     );
     const missTitle = document.getElementById('missingKeywordsTitle');
     const missBox   = document.getElementById('missingKeywordsContainer') || document.getElementById('atsMissingBadgeList');
-    if (missTitle) missTitle.innerHTML = `⚠ Missing / Gap Keywords (${missing.length})`;
+    if (missTitle) missTitle.innerHTML = isGen ? `💡 High-Leverage Skills to Consider (${missing.length})` : `⚠ Missing / Gap Keywords (${missing.length})`;
     if (missBox) {
-      missBox.innerHTML = missing.length>0
+      missBox.innerHTML = missing.length > 0
         ? missing.map(kw => {
             const added = existingSkills.has(kw.toLowerCase());
             return `<span class="missing-keyword-tag">
               <span>${this.escapeHTML(kw)}</span>
-              <span class="tag-add-btn ${added?'added':''}" data-keyword="${this.escapeHTML(kw)}"
-                title="${added?'Already added':'Add '+this.escapeHTML(kw)+' to Core Skills'}"
-                ${added?'style="pointer-events:none;"':''}>
-                ${added?'Added ✓':'+ Add'}
+              <span class="tag-add-btn ${added ? 'added' : ''}" data-keyword="${this.escapeHTML(kw)}"
+                title="${added ? 'Already added' : 'Add ' + this.escapeHTML(kw) + ' to Core Skills'}"
+                ${added ? 'style="pointer-events:none;"' : ''}>
+                ${added ? 'Added ✓' : '+ Add'}
               </span>
             </span>`;
           }).join('')
-        : `<span class="badge-tag green">✓ All required keywords matched!</span>`;
+        : `<span class="badge-tag green">✓ All core competencies present!</span>`;
     }
 
     // ── Recommendations ──

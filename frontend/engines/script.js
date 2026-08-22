@@ -2159,6 +2159,9 @@ document.addEventListener('DOMContentLoaded', () => {
           syncFormInputsToCenterCanvas();
           syncLivePreview();
           syncLiveSkills();
+          if (window.atsAnalyzer && typeof window.atsAnalyzer.syncTargetJdMode === 'function') {
+            window.atsAnalyzer.syncTargetJdMode();
+          }
           loaded = true;
         }
       }
@@ -4087,8 +4090,17 @@ Key Requirements:
           atsAuditJobTitle.value = selectedOption.text;
           autoFitMetaInput(atsAuditJobTitle);
         }
-        autoSaveFormFields();
+      } else if (!selected) {
+        atsJdInput.value = '';
+        if (atsAuditJobTitle) {
+          atsAuditJobTitle.value = 'Target Role';
+          autoFitMetaInput(atsAuditJobTitle);
+        }
       }
+      if (window.atsAnalyzer && typeof window.atsAnalyzer.syncTargetJdMode === 'function') {
+        window.atsAnalyzer.syncTargetJdMode();
+      }
+      autoSaveFormFields();
     });
   }
 

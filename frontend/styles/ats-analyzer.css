@@ -213,6 +213,116 @@
 .sample-jd-select option { background: #FFFFFF; color: #111111; }
 .sample-jd-select optgroup { background: #F8F6F2; color: #8C8C8C; }
 
+/* Mode Indicator Pill */
+.ats-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--ats-border);
+  white-space: nowrap;
+}
+.ats-mode-pill.general {
+  background: rgba(46, 139, 87, 0.08);
+  border-color: rgba(46, 139, 87, 0.25);
+  color: #2E8B57;
+}
+.ats-mode-pill.targeted {
+  background: rgba(185, 130, 74, 0.10);
+  border-color: rgba(185, 130, 74, 0.35);
+  color: #8E6338;
+}
+
+/* Target JD Expandable Drawer */
+.ats-target-jd-drawer {
+  background: #FFFFFF;
+  border: 1px solid var(--ats-border);
+  border-radius: var(--ats-radius-sm);
+  padding: 12px 14px;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+.ats-target-jd-drawer.collapsed {
+  display: none;
+}
+.ats-jd-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ats-jd-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ats-text-primary);
+  letter-spacing: 0.02em;
+}
+.ats-jd-drawer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ats-jd-char-count {
+  font-size: 11px;
+  color: var(--ats-text-muted);
+  font-weight: 500;
+}
+.ats-jd-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ats-text-primary);
+  background: #FCFBF8;
+  border: 1px solid var(--ats-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  resize: vertical;
+  min-height: 64px;
+  max-height: 180px;
+  transition: all 0.15s;
+  outline: none;
+}
+.ats-jd-textarea:focus {
+  border-color: var(--ats-accent);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px var(--ats-accent-glow);
+}
+.ats-jd-drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ats-text-muted);
+}
+.ats-btn-clear-jd {
+  color: var(--ats-red) !important;
+  border-color: rgba(199, 75, 75, 0.25) !important;
+  background: rgba(199, 75, 75, 0.04) !important;
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+}
+.ats-btn-clear-jd:hover {
+  background: rgba(199, 75, 75, 0.10) !important;
+  border-color: var(--ats-red) !important;
+}
+.topbar-action-btn.active {
+  background: var(--ats-surface-3);
+  border-color: var(--ats-accent);
+  color: var(--ats-text-primary);
+}
+
 /* ─────────────────────────────────────────────────────────────
    EXECUTIVE SUMMARY HERO BANNER — Compact design
    ───────────────────────────────────────────────────────────── */
