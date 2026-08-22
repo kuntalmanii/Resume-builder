@@ -1057,17 +1057,43 @@ class AtsAnalyzer {
       doc.text(`Page ${p} of ${totalPages}`, PW - M, PH - 4, { align: 'right' });
     }
 
-    const safeName = `ATS_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+    const safeName = `ATS_Diagnostic_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
     
-    // Generate PDF Blob URL
+    // ── Guaranteed Direct .pdf File Download ──
+    this.downloadPdfDirect(doc, safeName);
+
+    // ── Generate PDF Blob URL & Open Interactive Modal Preview ──
     try {
-      const pdfBlob = doc.output('blob');
+      const arrayBuffer = doc.output('arraybuffer');
+      const pdfBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
       const pdfBlobUrl = URL.createObjectURL(pdfBlob);
       this.openPdfReportModal(pdfBlobUrl, safeName, doc, score, candidateName);
     } catch (err) {
-      console.warn('[ATS] Could not generate blob preview, falling back to direct save:', err);
+      console.warn('[ATS] Could not generate blob preview modal:', err);
+    }
+  }
+
+  /* ─── Guaranteed Native .pdf File Downloader ─── */
+  downloadPdfDirect(doc, fileName) {
+    const safeName = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
+    try {
+      const arrayBuffer = doc.output('arraybuffer');
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = safeName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        try { document.body.removeChild(a); } catch (_) {}
+        URL.revokeObjectURL(url);
+      }, 2000);
+      if (typeof showToast === 'function') showToast(`Downloaded ${safeName}!`, 'success');
+    } catch (err) {
+      console.warn('[ATS] ArrayBuffer download fallback:', err);
       doc.save(safeName);
-      if (typeof showToast === 'function') showToast('ATS Diagnostic Report downloaded!', 'success');
     }
   }
 
@@ -1128,8 +1154,7 @@ class AtsAnalyzer {
     if (dlBtn) {
       dlBtn.onclick = (e) => {
         e.preventDefault();
-        doc.save(fileName);
-        if (typeof showToast === 'function') showToast('PDF Report downloaded!', 'success');
+        this.downloadPdfDirect(doc, fileName);
       };
     }
 
@@ -1152,7 +1177,26 @@ class AtsAnalyzer {
     if (tabBtn) {
       tabBtn.onclick = (e) => {
         e.preventDefault();
-        window.open(blobUrl, '_blank');
+        const viewerWin = window.open('', '_blank');
+        if (viewerWin) {
+          viewerWin.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>${fileName}</title>
+  <meta charset="utf-8">
+  <style>
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#525659; }
+    iframe { width:100%; height:100%; border:none; }
+  </style>
+</head>
+<body>
+  <iframe src="${blobUrl}" type="application/pdf" title="${fileName}"></iframe>
+</body>
+</html>`);
+          viewerWin.document.close();
+        } else {
+          window.open(blobUrl, '_blank');
+        }
       };
     }
 
