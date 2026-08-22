@@ -424,6 +424,7 @@ const server = http.createServer((req, res) => {
           return;
         }
 
+        try { delete require.cache[require.resolve('./api/ats-chat.js')]; } catch(_) {}
         const atsChatHandler = require('./api/ats-chat.js');
 
         // Pre-parse body so req.body is populated before the handler runs

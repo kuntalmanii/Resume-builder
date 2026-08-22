@@ -1080,23 +1080,24 @@
 
     var resumeText   = window.atsAnalyzer ? window.atsAnalyzer.getResumeText() : '';
     var jdInput      = document.getElementById('atsJdInput') || document.getElementById('atsTargetJdInput');
-    var jdText       = jdInput ? jdInput.value : '';
+    var jdText       = jdInput ? jdInput.value.trim() : '';
     var sampleSelect = document.getElementById('sampleJdSelect');
-    var jobTitle     = (sampleSelect && sampleSelect.options[sampleSelect.selectedIndex])
-      ? sampleSelect.options[sampleSelect.selectedIndex].text
-      : 'Target Role';
-    var currentScore = document.getElementById('scoreNumber')
-      ? document.getElementById('scoreNumber').textContent.replace('%', '')
-      : '';
+    var jobTitle     = (sampleSelect && sampleSelect.value && sampleSelect.options[sampleSelect.selectedIndex])
+      ? sampleSelect.options[sampleSelect.selectedIndex].text.replace(/^📋\s*/, '').trim()
+      : (jdText.length > 20 ? 'Custom Target Role' : 'General Software Role');
 
     var lastResult      = window.atsLastResult || {};
+    var currentScore    = lastResult.score != null ? String(lastResult.score) : (document.getElementById('scoreNumber') ? document.getElementById('scoreNumber').textContent.replace('%', '').trim() : '85');
     var missingKeywords = Array.isArray(lastResult.missingKeywords) ? lastResult.missingKeywords : [];
     var matchedKeywords = Array.isArray(lastResult.matchedKeywords) ? lastResult.matchedKeywords : [];
+    var sectionScores   = lastResult.sectionScores || {};
+    var isGeneralAudit  = lastResult.isGeneralAudit ?? (!jdText || jdText.length < 15);
 
     var FALLBACK_MSG =
-      '<b>ATS Career Coach Advice:</b><br>' +
-      'To maximize your match rate, ensure your Work Experience includes quantified metrics ' +
-      '(e.g. % performance improvement, team size, scale) alongside core skills required for this job description.';
+      '<b>ATS Career Coach Advice:</b><br><br>' +
+      'To maximize your score, focus on two high-impact areas:<br>' +
+      '1. <b>Quantified Metrics:</b> Add numbers (%, $, user scale, latency reductions) to each project bullet.<br>' +
+      '2. <b>Leadership Action Verbs:</b> Start each bullet with strong verbs like <i>Architected, Spearheaded, Engineered, Optimized</i>.';
 
     try {
       var response = await fetch('/api/ats-chat', {
@@ -1109,7 +1110,9 @@
           resumeText: resumeText,
           currentScore: currentScore,
           missingKeywords: missingKeywords,
-          matchedKeywords: matchedKeywords
+          matchedKeywords: matchedKeywords,
+          sectionScores: sectionScores,
+          isGeneralAudit: isGeneralAudit
         })
       });
 
@@ -1138,7 +1141,7 @@
 
       if (response.ok) {
         var replyJson = await response.json();
-        loadingMsg.innerHTML = formatAiMarkdownResponse(replyJson.reply || 'Here is how you can improve your resume...');
+        loadingMsg.innerHTML = formatAiMarkdownResponse(replyJson.reply || FALLBACK_MSG);
       } else {
         loadingMsg.innerHTML = FALLBACK_MSG;
       }

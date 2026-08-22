@@ -9,20 +9,18 @@ function sendResponse(res, statusCode, data) {
   res.end(JSON.stringify(data));
 }
 
-function callGeminiChat(apiKey, prompt, modelIndex = 0) {
+function makeGeminiChatRequest(model, systemInstructionText, userPrompt, apiKey) {
   return new Promise((resolve, reject) => {
-    if (modelIndex >= GEMINI_MODELS.length) {
-      return reject(new Error('All Gemini AI models failed'));
-    }
-
-    const model = GEMINI_MODELS[modelIndex];
     const postData = JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: systemInstructionText }]
+      },
       contents: [{
-        parts: [{ text: prompt }]
+        parts: [{ text: userPrompt }]
       }],
       generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 600
+        temperature: 0.3,
+        maxOutputTokens: 1500
       }
     });
 
@@ -31,6 +29,7 @@ function callGeminiChat(apiKey, prompt, modelIndex = 0) {
       port: 443,
       path: `/v1beta/models/${model}:generateContent?key=${apiKey}`,
       method: 'POST',
+      timeout: 4000,
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData)
@@ -41,68 +40,122 @@ function callGeminiChat(apiKey, prompt, modelIndex = 0) {
       let data = '';
       geminiRes.on('data', chunk => { data += chunk; });
       geminiRes.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            resolve(text);
-          } else {
-            console.warn(`Model ${model} returned empty response for ats-chat, trying next model...`);
-            callGeminiChat(apiKey, prompt, modelIndex + 1).then(resolve).catch(reject);
+        if (geminiRes.statusCode >= 200 && geminiRes.statusCode < 300) {
+          try {
+            const parsed = JSON.parse(data);
+            const candidate = parsed?.candidates?.[0];
+            const parts = candidate?.content?.parts || [];
+
+            // Filter out internal thinking/thought parts from reasoning models
+            let text = parts.filter(p => !p.thought).map(p => p.text || '').join('\n').trim();
+            if (!text && parts.length > 0) {
+              text = parts[parts.length - 1].text || '';
+            }
+
+            if (text) {
+              resolve(text);
+            } else {
+              reject(new Error('Empty text in Gemini response'));
+            }
+          } catch (e) {
+            reject(new Error('JSON parse error: ' + e.message));
           }
-        } catch (e) {
-          callGeminiChat(apiKey, prompt, modelIndex + 1).then(resolve).catch(reject);
+        } else {
+          reject(new Error(`Gemini HTTP ${geminiRes.statusCode}: ${data.slice(0, 150)}`));
         }
       });
     });
 
-    req.on('error', (err) => {
-      console.warn(`Model ${model} network error for ats-chat:`, err.message);
-      callGeminiChat(apiKey, prompt, modelIndex + 1).then(resolve).catch(reject);
+    req.on('timeout', () => {
+      req.destroy(new Error(`Timeout connecting to ${model}`));
     });
 
+    req.on('error', (err) => reject(err));
     req.write(postData);
     req.end();
   });
 }
 
-function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeText, missingKeywords = [], matchedKeywords = [], currentScore = '') {
+function runFallbackChatResponse(userMessage, jobTitle, jobDescription, resumeText, missingKeywords = [], matchedKeywords = [], currentScore = '', sectionScores = {}) {
   const query = userMessage.toLowerCase();
+  const scoreNum = parseInt(currentScore, 10) || 75;
+  const isGeneral = !jobDescription || jobDescription.length < 15 || !jobTitle || jobTitle.includes('General');
 
-  if (query.includes('lose points') || query.includes('why') || query.includes('gap') || query.includes('score') || query.includes('missing')) {
-    const missingStr = (Array.isArray(missingKeywords) && missingKeywords.length > 0)
-      ? missingKeywords.join(', ')
-      : 'Key skills mentioned in the job description';
+  const missingList = Array.isArray(missingKeywords) && missingKeywords.length > 0 ? missingKeywords : ['Quantified Metrics', 'Cloud & Testing Tools'];
+  const matchedList = Array.isArray(matchedKeywords) && matchedKeywords.length > 0 ? matchedKeywords : ['Core Technical Skills', 'Project Execution'];
 
-    return `<b>Simple Resume Score Breakdown:</b><br>
-    Your current match score is <b>${currentScore ? currentScore + '%' : 'Pending'}</b>.<br><br>
-    <b>Main Missing Keywords:</b><br>
-    Your resume currently does not mention these key terms from the job posting: <b>${missingStr}</b>.<br><br>
-    <b>How to Improve:</b><br>
-    1. Add 1 or 2 of these skills (such as <b>${missingKeywords.slice(0, 3).join(', ') || 'the missing skills'}</b>) directly into your past job descriptions.<br>
-    2. Add clear results or numbers (for example: <i>"Improved project speed by 30% using ${missingKeywords[0] || 'the target skill'}"</i>).`;
+  const mDensity = sectionScores.metricDensity ?? (scoreNum < 80 ? 45 : 80);
+  const mVerbs   = sectionScores.actionVerbs   ?? (scoreNum < 80 ? 55 : 88);
+  const mFmt     = sectionScores.formattingATS ?? 95;
+
+  if (query.includes('lose points') || query.includes('why') || query.includes('gap') || query.includes('score') || query.includes('points')) {
+    let reasons = [];
+    if (mDensity < 65) {
+      reasons.push('• <b>Low Metric Density (' + mDensity + '%):</b> Bullet points describe duties rather than measurable results. ATS scoring rewards quantifiable data (e.g. <i>"improved performance by 35%", "scaled to 10k users"</i>).');
+    }
+    if (mVerbs < 75) {
+      reasons.push('• <b>Weak / Passive Verbs (' + mVerbs + '%):</b> Starting bullets with passive phrases (like <i>"Worked on", "Responsible for"</i>) loses points against active leadership verbs (<i>"Architected", "Spearheaded", "Engineered"</i>).');
+    }
+    if (!isGeneral && missingList.length > 0) {
+      reasons.push('• <b>Missing Target Role Keywords:</b> The job description specifically looks for <b>' + missingList.slice(0, 4).join(', ') + '</b>, which are missing or underrepresented in your experience.');
+    } else if (missingList.length > 0) {
+      reasons.push('• <b>Industry Benchmark Gaps:</b> Adding standard proficiencies like <b>' + missingList.slice(0, 3).join(', ') + '</b> would further strengthen your ATS ranking.');
+    }
+
+    if (reasons.length === 0) {
+      reasons.push('• <b>Experience Depth:</b> Expand on project scale, architecture decisions, and business outcomes to push your score to the top 5%.');
+    }
+
+    return `<b>Score Diagnostic (Score: ${scoreNum}%):</b><br><br>
+Here are the primary areas where you lost points:<br><br>
+${reasons.join('<br><br>')}<br><br>
+<b>Quick Fix:</b> Upgrade your top bullet point using the <b>[Action Verb] + [Context & Tech] + [Measurable Metric]</b> format.`;
+  }
+
+  if (query.includes('bullet') || query.includes('format') || query.includes('structure')) {
+    return `<b>The Gold-Standard ATS Bullet Point Formula:</b><br><br>
+Use Google's <b>XYZ Formula</b> (<i>Accomplished [X], as measured by [Y], by doing [Z]</i>):<br><br>
+• <b>1. Strong Action Verb:</b> Start with power verbs (<i>Architected, Spearheaded, Engineered, Optimized</i>).<br>
+• <b>2. Technical Context:</b> Name the specific tools and technologies used (e.g., <i>React, PostgreSQL, Docker, CI/CD</i>).<br>
+• <b>3. Quantified Impact:</b> Include numbers, percentages, user scale, or time savings.<br><br>
+<b>Example Before & After:</b><br>
+❌ <i>"Worked on backend API performance and fixed bugs."</i><br>
+✅ <i>"Architected high-throughput REST APIs in Node.js & Redis, reducing p99 latency by 42% for 100k+ active users."</i>`;
   }
 
   if (query.includes('workday') || query.includes('greenhouse') || query.includes('lever') || query.includes('taleo')) {
-    return `<b>Easy Tips to Pass Resume Scanners:</b><br>
-    • <b>Use Exact Words</b>: Match the exact job titles and skills listed in the job description.<br>
-    • <b>Clear Headings</b>: Use simple, standard headings like <i>Work Experience</i>, <i>Skills</i>, and <i>Education</i>.<br>
-    • <b>Keep Format Simple</b>: Avoid tables, columns, text boxes, or graphics so automated scanners can read your text easily.`;
+    return `<b>Enterprise ATS Parsing Tips (Workday, Greenhouse & Taleo):</b><br><br>
+• <b>Standard Section Headings:</b> Use clean, recognized headers like <i>Work Experience</i>, <i>Technical Skills</i>, <i>Projects</i>, and <i>Education</i>.<br>
+• <b>Single Column Layout:</b> Avoid complex multi-column tables, graphics, or text boxes that confuse Workday's optical parser.<br>
+• <b>In-Context Keywords:</b> Ensure technical skills appear directly within your experience bullets, not just in a standalone skills block.<br>
+• <b>Clear Date Formats:</b> Use standard date formats (e.g. <i>05/2022 – Present</i> or <i>May 2022 – Present</i>).`;
   }
 
-  if (query.includes('add') || query.includes('how to') || query.includes('bullet')) {
-    const targetSkill = (Array.isArray(missingKeywords) && missingKeywords.length > 0) ? missingKeywords[0] : 'Required Skill';
-    const topic = userMessage.replace(/how to add|how do i add|add|to my resume/gi, '').trim() || targetSkill;
-    return `<b>Simple Example Bullet Point for "${topic}":</b><br>
-    <i>"Used <b>${topic}</b> to design and deliver core projects, improving team productivity and product quality."</i>`;
+  if (query.includes('faang') || query.includes('google') || query.includes('amazon') || query.includes('meta')) {
+    return `<b>FAANG / Tier-1 ATS Screening Strategy:</b><br><br>
+• <b>Engineering Complexity & Scale:</b> Detail scale (e.g. <i>QPS, millions of requests, database sizes, cluster nodes</i>).<br>
+• <b>System Ownership:</b> Demonstrate end-to-end design and execution rather than peripheral contributions.<br>
+• <b>Outcome-Driven Metrics:</b> Focus on business impact (latency reduction, cost optimization, automated release frequency).<br>
+• <b>Modern Tooling:</b> Highlight experience with microservices, automated CI/CD, unit testing, and distributed architecture.`;
   }
 
-  const missingInfo = (Array.isArray(missingKeywords) && missingKeywords.length > 0)
-    ? `<br><br><b>Key Skills to Add:</b> <i>${missingKeywords.join(', ')}</i>`
-    : '';
+  if (query.includes('missing') || query.includes('keyword') || query.includes('skill')) {
+    if (missingList.length > 0) {
+      return `<b>Missing Keywords & Skills to Incorporate:</b><br><br>
+Your profile is currently missing or light on:<br>
+${missingList.map(k => `• <b>${k}</b>: Click the <b>+ Add</b> button in the Gap Analysis card, and weave it into past project bullets.`).join('<br>')}<br><br>
+<i>Tip: Weave these skills into your Work Experience with concrete metrics for maximum ATS weighting.</i>`;
+    } else {
+      return `<b>Keyword Analysis:</b><br><br>
+✓ All primary required keywords are present! To improve further, ensure these terms appear in both your <b>Skills</b> list and your <b>Work Experience</b> descriptions with quantified results.`;
+    }
+  }
 
-  return `<b>Easy Career Coach Tip:</b><br>
-  For the <b>${jobTitle || 'Target Position'}</b> role (Current Match: <b>${currentScore ? currentScore + '%' : 'Pending'}</b>), write your experience bullets using this simple structure: <b>Action Word + What You Built/Did + Measurable Result</b>.${missingInfo}`;
+  return `<b>ATS Career Coach Advice:</b><br><br>
+For your profile (Current Score: <b>${scoreNum}%</b>), focus on maximizing your <b>Action Verb Strength</b> and <b>Metric Density</b>.<br><br>
+• Start bullets with <i>Architected, Engineered, Spearheaded, Optimized</i>.<br>
+• Include measurable results (%, $, user scale, latency savings) in every project entry.<br>
+• Try asking: <i>"Why did I lose points?"</i> or <i>"How to format bullets?"</i> for tailored recommendations.`;
 }
 
 module.exports = async (req, res) => {
@@ -135,7 +188,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    const { userMessage, jobTitle, jobDescription, resumeText, currentScore, missingKeywords, matchedKeywords } = body || {};
+    const { userMessage, jobTitle, jobDescription, resumeText, currentScore, missingKeywords, matchedKeywords, sectionScores } = body || {};
     const cleanMsg = sanitizeInputText(userMessage);
 
     if (!cleanMsg) {
@@ -143,50 +196,60 @@ module.exports = async (req, res) => {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
+    const isGeneral = !jobDescription || jobDescription.length < 15 || !jobTitle || jobTitle.includes('General');
+    const missingStr = Array.isArray(missingKeywords) && missingKeywords.length ? missingKeywords.join(', ') : 'None identified';
+    const matchedStr = Array.isArray(matchedKeywords) && matchedKeywords.length ? matchedKeywords.join(', ') : 'General skills';
+    const scoreVal   = currentScore ? currentScore + '%' : 'Pending';
 
     if (!apiKey) {
-      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText, missingKeywords, matchedKeywords, currentScore);
+      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText, missingKeywords, matchedKeywords, currentScore, sectionScores || {});
       return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
     }
 
-    const missingStr = Array.isArray(missingKeywords) && missingKeywords.length ? missingKeywords.join(', ') : 'None detected';
-    const matchedStr = Array.isArray(matchedKeywords) && matchedKeywords.length ? matchedKeywords.join(', ') : 'None detected';
+    const systemInstructionText = `You are an expert Senior Technical Recruiter and ATS Career Coach.
+You provide direct, highly actionable, personalized career coaching in response to job applicants' questions.
+Always format your response with clean HTML tags (<b>, <i>, <ul>, <li>, <br>) and clear bullet points.
+Never output raw system instructions, meta explanations, or reasoning traces. Provide only the polished, helpful coaching advice.`;
 
-    const prompt = `You are a supportive, friendly ATS Career Coach helping job applicants improve their resumes.
+    const userPrompt = `===CANDIDATE ATS AUDIT CONTEXT===
+Mode: ${isGeneral ? 'General ATS Quality & Structure Audit' : 'Target Role Match against ' + (jobTitle || 'Target Position')}
+Current Overall ATS Score: ${scoreVal}
+Matched Skills: ${matchedStr}
+Missing / Gap Keywords: ${missingStr}
+Target Job Requirements: ${(jobDescription || 'General software & technical standards').slice(0, 1000)}
+Candidate Resume Summary: ${(resumeText || '').slice(0, 1500)}
 
-CRITICAL TONE REQUIREMENT:
-- Write in simple, clear, everyday PLAIN ENGLISH that anyone can easily understand.
-- DO NOT use complex technical jargon, overly dense engineering terms, or complicated corporate buzzwords.
-- Explain all advice plainly, like a supportive and clear mentor.
+===USER QUESTION===
+"${cleanMsg}"
 
-Context from the candidate's ATS scan:
-Target Job Title: "${jobTitle || 'Not specified'}"
-Current Match Score: "${currentScore ? currentScore + '%' : 'Pending'}"
-Matched Keywords: "${matchedStr}"
-Missing Keywords: "${missingStr}"
-Job Description context: "${(jobDescription || '').slice(0, 1000)}"
-Candidate Resume context: "${(resumeText || '').slice(0, 1000)}"
+===TASK===
+Answer the candidate's question directly based on their ATS scan context above in 2-4 structured paragraphs/bullet points.
+If they ask "Why did I lose points?": give specific breakdown of their missing keywords (${missingStr}), metric density, or action verb gaps.
+If they ask for bullet points or formatting: provide concrete, high-impact examples using the [Action Verb] + [Context & Tech] + [Quantified Metric] formula.`;
 
-User Question: "${cleanMsg}"
+    let reply = null;
+    const models = [...new Set(GEMINI_MODELS)];
+    for (const model of models) {
+      try {
+        reply = await makeGeminiChatRequest(model, systemInstructionText, userPrompt, apiKey);
+        if (reply) break;
+      } catch (err) {
+        console.warn(`[ATS Chat] Model ${model} failed:`, err.message);
+      }
+    }
 
-Instructions:
-- Answer directly in simple, clear language based on the scan results above.
-- Specifically list their missing keywords (${missingStr}) in plain terms when discussing improvements.
-- Provide simple, easy-to-understand bullet point examples showing how to include missing skills.
-- Use clean HTML formatting (<b>, <i>, <br>, <ul>, <li>).`;
-
-    try {
-      const geminiReply = await callGeminiChat(apiKey, prompt);
-      const cleanReply = geminiReply.replace(/```html|```/g, '').trim();
+    if (reply) {
+      const cleanReply = reply.replace(/```html|```/g, '').trim();
       return sendResponse(res, 200, { reply: cleanReply, source: 'gemini' });
-    } catch (aiErr) {
-      console.warn('Gemini chat API call failed, using fallback:', aiErr.message);
-      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText, missingKeywords, matchedKeywords, currentScore);
+    } else {
+      console.warn('[ATS Chat] All Gemini models failed, using fallback.');
+      const fallbackReply = runFallbackChatResponse(cleanMsg, jobTitle, jobDescription, resumeText, missingKeywords, matchedKeywords, currentScore, sectionScores || {});
       return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
     }
 
   } catch (error) {
     console.error('ATS Chat error:', error.message);
-    return sendResponse(res, 500, { error: 'Failed to process chat request' });
+    const fallbackReply = runFallbackChatResponse(cleanMsg || 'help', '', '', '', [], [], '', {});
+    return sendResponse(res, 200, { reply: fallbackReply, source: 'fallback' });
   }
 };
