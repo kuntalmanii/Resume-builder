@@ -1059,16 +1059,12 @@ class AtsAnalyzer {
 
     const safeName = `ATS_Diagnostic_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
 
-    // ── Generate PDF Blob URL & Open Interactive Modal Preview ──
-    // (Modal has Download + Open in Browser buttons — no auto-download)
+    // ── Generate PDF & Open Modal Preview ──
     try {
-      const arrayBuffer = doc.output('arraybuffer');
-      const pdfBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const pdfBlobUrl = URL.createObjectURL(pdfBlob);
-      this.openPdfReportModal(pdfBlobUrl, safeName, doc, score, candidateName);
+      const dataUri = doc.output('datauristring');
+      this.openPdfReportModal(dataUri, safeName, doc, score, candidateName);
     } catch (err) {
-      console.warn('[ATS] Could not generate blob preview modal:', err);
-      // Fallback: direct save
+      console.warn('[ATS] Could not open modal preview:', err);
       doc.save(safeName);
     }
   }
@@ -1136,48 +1132,55 @@ class AtsAnalyzer {
     if (titleEl) titleEl.textContent = `ATS Report — ${candidateName} (${score}% Match)`;
     if (subEl)   subEl.textContent   = `PDF generated at ${new Date().toLocaleTimeString()}`;
 
-    // ── PDF Preview via <object> tag ──
+    // ── PDF Preview via <object> with data: URI ──
     const container = modal.querySelector('#atsReportPdfContainer');
     if (container) {
       const objEl = document.createElement('object');
-      objEl.setAttribute('data', blobUrl);
+      objEl.setAttribute('data', blobUrl);   // blobUrl is now a data: URI
       objEl.setAttribute('type', 'application/pdf');
       objEl.style.cssText = 'width:100%;height:100%;min-height:520px;display:block;border:none;';
-      // Fallback content shown when browser blocks inline PDF
-      objEl.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:520px;gap:18px;background:#F8F7F4;padding:40px;text-align:center;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#B9824A" stroke-width="1.5" width="56" height="56"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <div>
-            <p style="font-size:1rem;font-weight:700;color:#1E1E1E;margin:0 0 8px;">Your PDF report is ready!</p>
-            <p style="font-size:0.85rem;color:#6B6B6B;margin:0;">Browser cannot show inline preview.<br>Click <strong>Download PDF</strong> above to save it.</p>
-          </div>
+      // Fallback shown if browser cannot embed PDF inline
+      const fallbackDiv = document.createElement('div');
+      fallbackDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:520px;gap:18px;background:#F8F7F4;padding:40px;text-align:center;';
+      fallbackDiv.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="#B9824A" stroke-width="1.5" width="56" height="56"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <div>
+          <p style="font-size:1rem;font-weight:700;color:#1E1E1E;margin:0 0 8px;">Your PDF report is ready!</p>
+          <p style="font-size:0.85rem;color:#6B6B6B;margin:0;">Click <strong>Download PDF</strong> above to save your report.</p>
         </div>
       `;
+      objEl.appendChild(fallbackDiv);
       container.appendChild(objEl);
     }
 
-    // ── Download: use jsPDF doc.save() — most reliable ──
+    // ── Download: anchor click with filename — most reliable cross-browser ──
     const dlBtn = modal.querySelector('#btnDownloadAtsPdf');
     if (dlBtn) {
       dlBtn.onclick = () => {
         try {
-          doc.save(fileName);
-          if (typeof showToast === 'function') showToast(`Saved: ${fileName}`, 'success');
-        } catch (err) {
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = fileName;
+          // Convert data URI back to blob for named download
+          const base64 = blobUrl.split(',')[1];
+          const bytes   = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+          const blob    = new Blob([bytes], { type: 'application/pdf' });
+          const url     = URL.createObjectURL(blob);
+          const a       = document.createElement('a');
+          a.href        = url;
+          a.download    = fileName;
           document.body.appendChild(a);
           a.click();
-          setTimeout(() => { try { document.body.removeChild(a); } catch (_) {} }, 500);
+          setTimeout(() => { try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch (_) {} }, 2000);
+          if (typeof showToast === 'function') showToast(`Saved: ${fileName}`, 'success');
+        } catch (err) {
+          console.error('[ATS] Download failed:', err);
+          doc.save(fileName);
         }
       };
     }
 
     // ── Close ──
     const closeBtn = modal.querySelector('#btnCloseAtsModal');
-    if (closeBtn) closeBtn.onclick = () => { modal.remove(); URL.revokeObjectURL(blobUrl); };
-    modal.addEventListener('click', (e) => { if (e.target === modal) { modal.remove(); URL.revokeObjectURL(blobUrl); } });
+    if (closeBtn) closeBtn.onclick = () => modal.remove();
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
   }
 
   /* ─── DOM helpers ─── */
