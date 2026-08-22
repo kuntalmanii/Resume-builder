@@ -342,7 +342,8 @@ Respond STRICTLY with a single valid JSON object — no markdown fences, no pros
 }`;
     }
 
-    const models = [...new Set([pref, ...GEMINI_MODELS].filter(Boolean))];
+    const validModels = new Set(GEMINI_MODELS);
+    const models = [...new Set([pref && validModels.has(pref) ? pref : null, ...GEMINI_MODELS].filter(Boolean))];
     let result = null;
     for (const model of models) {
       try { result = await makeGeminiRequest(model, prompt, key); if (result) break; }

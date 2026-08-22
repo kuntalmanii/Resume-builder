@@ -1058,11 +1058,9 @@ class AtsAnalyzer {
     }
 
     const safeName = `ATS_Diagnostic_Report_${candidateName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-    
-    // ── Guaranteed Direct .pdf File Download ──
-    this.downloadPdfDirect(doc, safeName);
 
     // ── Generate PDF Blob URL & Open Interactive Modal Preview ──
+    // (Modal has Download + Open in Browser buttons — no auto-download)
     try {
       const arrayBuffer = doc.output('arraybuffer');
       const pdfBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
@@ -1070,6 +1068,8 @@ class AtsAnalyzer {
       this.openPdfReportModal(pdfBlobUrl, safeName, doc, score, candidateName);
     } catch (err) {
       console.warn('[ATS] Could not generate blob preview modal:', err);
+      // Fallback: direct save
+      doc.save(safeName);
     }
   }
 
@@ -1180,7 +1180,15 @@ class AtsAnalyzer {
     if (tabBtn) {
       tabBtn.onclick = (e) => {
         e.preventDefault();
-        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+        // Trigger a named download so the file saves with the correct .pdf filename
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { try { document.body.removeChild(a); } catch (_) {} }, 500);
       };
     }
 
