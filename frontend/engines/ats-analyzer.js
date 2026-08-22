@@ -1119,37 +1119,56 @@ class AtsAnalyzer {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Download PDF
               </button>
-              <button type="button" class="btn-secondary" id="btnPrintAtsPdfModal" style="padding:6px 12px;font-size:0.85rem;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Print
-              </button>
               <button type="button" class="btn-secondary" id="btnOpenTabAtsPdfModal" style="padding:6px 12px;font-size:0.85rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Open Tab
+                Open in Browser
               </button>
               <button type="button" class="modal-close-btn" id="btnCloseAtsReportModal" title="Close" onclick="this.closest('.modal-overlay').style.display='none';">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
           </div>
-          <div class="modal-body" style="padding:12px;height:75vh;display:flex;flex-direction:column;">
-            <iframe id="atsReportPdfIframe" style="width:100%;height:100%;border:none;border-radius:10px;background:#F8F9FA;" title="ATS PDF Report Preview"></iframe>
+          <div class="modal-body" style="padding:0;height:75vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div id="atsReportPdfContainer" style="width:100%;height:100%;"></div>
           </div>
         </div>
       `;
       document.body.appendChild(modal);
     }
 
-    const titleEl = document.getElementById('atsReportModalTitle');
-    const subEl   = document.getElementById('atsReportModalSubtitle');
-    const ifr     = document.getElementById('atsReportPdfIframe');
-    const dlBtn   = document.getElementById('btnDownloadAtsPdfModal');
-    const printBtn= document.getElementById('btnPrintAtsPdfModal');
-    const tabBtn  = document.getElementById('btnOpenTabAtsPdfModal');
+    const titleEl  = document.getElementById('atsReportModalTitle');
+    const subEl    = document.getElementById('atsReportModalSubtitle');
+    const container= document.getElementById('atsReportPdfContainer');
+    const dlBtn    = document.getElementById('btnDownloadAtsPdfModal');
+    const tabBtn   = document.getElementById('btnOpenTabAtsPdfModal');
 
     if (titleEl) titleEl.textContent = `ATS Report — ${candidateName} (${score}% Match)`;
     if (subEl)   subEl.textContent   = `Full Vector PDF diagnostic report generated at ${new Date().toLocaleTimeString()}`;
-    if (ifr)     ifr.src = blobUrl;
+
+    // ── PDF Viewer: object tag (best CSP compatibility for blob: URLs) ──
+    if (container) {
+      container.innerHTML = '';
+      const objEl = document.createElement('object');
+      objEl.type  = 'application/pdf';
+      objEl.data  = blobUrl;
+      objEl.style.cssText = 'width:100%;height:100%;border:none;';
+      // Fallback UI shown if <object> can't load the PDF
+      objEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;background:#F8F7F4;padding:40px;text-align:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#B9824A" stroke-width="1.5" width="48" height="48"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <div>
+            <p style="font-size:1rem;font-weight:700;color:#1E1E1E;margin:0 0 6px;">PDF ready — click below to view or download</p>
+            <p style="font-size:0.85rem;color:#6B6B6B;margin:0;">Your browser may not support inline PDF preview.<br>Use the buttons above to open or save.</p>
+          </div>
+          <a id="atsPdfFallbackLink" href="${blobUrl}" target="_blank" rel="noopener noreferrer"
+             style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#B9824A;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View PDF Report
+          </a>
+        </div>
+      `;
+      container.appendChild(objEl);
+    }
 
     if (dlBtn) {
       dlBtn.onclick = (e) => {
@@ -1158,45 +1177,10 @@ class AtsAnalyzer {
       };
     }
 
-    if (printBtn) {
-      printBtn.onclick = (e) => {
-        e.preventDefault();
-        try {
-          if (ifr && ifr.contentWindow) {
-            ifr.contentWindow.focus();
-            ifr.contentWindow.print();
-          } else {
-            window.open(blobUrl, '_blank');
-          }
-        } catch (_) {
-          window.open(blobUrl, '_blank');
-        }
-      };
-    }
-
     if (tabBtn) {
       tabBtn.onclick = (e) => {
         e.preventDefault();
-        const viewerWin = window.open('', '_blank');
-        if (viewerWin) {
-          viewerWin.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <title>${fileName}</title>
-  <meta charset="utf-8">
-  <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#525659; }
-    iframe { width:100%; height:100%; border:none; }
-  </style>
-</head>
-<body>
-  <iframe src="${blobUrl}" type="application/pdf" title="${fileName}"></iframe>
-</body>
-</html>`);
-          viewerWin.document.close();
-        } else {
-          window.open(blobUrl, '_blank');
-        }
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
       };
     }
 
