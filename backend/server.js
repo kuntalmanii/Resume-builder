@@ -68,7 +68,7 @@ function log(level, message) {
 // 3. SECURITY & MIDDLEWARE SERVICES
 // ============================================================================
 function setCorsHeaders(req, res) {
-  const origin = req.headers.origin;
+  const origin = req.headers ? req.headers.origin : null;
   if (ALLOWED_ORIGINS.length > 0) {
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
@@ -79,7 +79,8 @@ function setCorsHeaders(req, res) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
 }
 
 function setSecurityHeaders(req, res) {

@@ -36,8 +36,20 @@ function sanitizeInputText(str) {
 function setCorsHeaders(req, res) {
   if (!res || typeof res.setHeader !== 'function') return;
   const reqOrigin = req && req.headers ? req.headers.origin : null;
-  const allowedOrigin = process.env.ALLOWED_ORIGIN || reqOrigin || '*';
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || process.env.ALLOWED_ORIGIN || '';
+  const allowedOrigins = allowedOriginsEnv
+    ? allowedOriginsEnv.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  if (allowedOrigins.length > 0) {
+    if (reqOrigin && allowedOrigins.includes(reqOrigin)) {
+      res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
+    }
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', reqOrigin || '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Vary', 'Origin');
