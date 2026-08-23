@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingAtsEngine = document.getElementById('settingAtsEngine');
 
     return {
-      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-3.6-flash',
+      geminiModel: settingGeminiModel ? settingGeminiModel.value : 'gemini-2.0-flash',
       sensitivity: settingOptimizationSensitivity ? settingOptimizationSensitivity.value : '0.7',
       atsEngine: settingAtsEngine ? settingAtsEngine.value : 'greenhouse-lever'
     };
