@@ -169,6 +169,7 @@ module.exports = async (req, res) => {
     return sendResponse(res, 405, { error: 'Method Not Allowed' });
   }
 
+  let cleanMsg = '';
   try {
     let body = req.body;
     if (!body || typeof body !== 'object') {
@@ -189,7 +190,7 @@ module.exports = async (req, res) => {
     }
 
     const { userMessage, jobTitle, jobDescription, resumeText, currentScore, missingKeywords, matchedKeywords, sectionScores } = body || {};
-    const cleanMsg = sanitizeInputText(userMessage);
+    cleanMsg = sanitizeInputText(userMessage);
 
     if (!cleanMsg) {
       return sendResponse(res, 400, { error: 'Message content is required.' });
