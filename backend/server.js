@@ -59,6 +59,7 @@ const optimizeResumeHandler = require('./api/optimize-resume.js');
 const parseResumeHandler = require('./api/parse-resume.js');
 const atsAnalyzeHandler = require('./api/ats-analyze.js');
 const atsChatHandler = require('./api/ats-chat.js');
+const loginHandler = require('./api/login.js');
 
 // ============================================================================
 // 2. LOGGING SERVICE
@@ -449,17 +450,21 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
           return;
         }
-        const { email } = await readJsonBody(req, res);
-        const emailToUse = (email && email.trim()) ? email.trim() : 'developer@resuai.dev';
-        const token = 'token_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
-
-        log('INFO', `Successful login request for ${emailToUse}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          token: token,
-          user: { email: emailToUse, name: emailToUse.split('@')[0] || 'Developer' }
-        }));
+        log('INFO', `Received /api/login request from IP ${clientIp}`);
+        const body = await readJsonBody(req, res);
+        req.body = body;
+        const resMock = {
+          _statusCode: 200, _headers: {}, _ended: false,
+          status(code) { this._statusCode = code; return this; },
+          json(data) {
+            if (this._ended) return; this._ended = true;
+            res.writeHead(this._statusCode, { 'Content-Type': 'application/json', ...this._headers });
+            res.end(JSON.stringify(data));
+          },
+          setHeader(k, v) { this._headers[k] = v; },
+          end() { if (!this._ended) { this._ended = true; res.writeHead(this._statusCode); res.end(); } }
+        };
+        await loginHandler(req, resMock);
       } catch (err) {
         log('ERROR', `Login request failure: ${err.message}`);
         if (!res.headersSent) {
