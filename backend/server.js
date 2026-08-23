@@ -117,10 +117,21 @@ const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 20;
 
+/**
+ * Simple Fixed-Window In-Memory Rate Limiter.
+ * Tracks total requests per IP within a 15-minute sliding window.
+ * - Request #1 (initial or post-reset): count is initialized to 1 and permitted.
+ * - Requests #2 to #20: count increments (count <= 20 permitted).
+ * - Request #21+: count > 20, returns true (rate limit blocked).
+ *
+ * @param {string} ip - Client IP address
+ * @returns {boolean} true if client has exceeded MAX_REQUESTS_PER_WINDOW
+ */
 function isRateLimited(ip) {
   const now = Date.now();
   const userRecord = rateLimitMap.get(ip) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
 
+  // If window has elapsed, reset window and record current request as #1
   if (now > userRecord.resetTime) {
     userRecord.count = 1;
     userRecord.resetTime = now + RATE_LIMIT_WINDOW_MS;
@@ -128,6 +139,7 @@ function isRateLimited(ip) {
     return false;
   }
 
+  // Increment count for ongoing window (requests #2..N)
   userRecord.count += 1;
   rateLimitMap.set(ip, userRecord);
 
