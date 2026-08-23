@@ -55,6 +55,10 @@ const MIME_TYPES = {
 };
 
 const { GEMINI_MODELS, SHARED_TAXONOMY_KEYWORDS } = require('./api/_shared');
+const optimizeResumeHandler = require('./api/optimize-resume.js');
+const parseResumeHandler = require('./api/parse-resume.js');
+const atsAnalyzeHandler = require('./api/ats-analyze.js');
+const atsChatHandler = require('./api/ats-chat.js');
 
 // ============================================================================
 // 2. LOGGING SERVICE
@@ -295,7 +299,6 @@ const server = http.createServer((req, res) => {
         log('INFO', `Received /api/optimize-resume request from IP ${clientIp}`);
 
         // Delegate to the standalone handler (supports both old 'experienceText' and new 'text'/'section'/'action' schema)
-        const optimizeResumeHandler = require('./api/optimize-resume.js');
         const body = await readJsonBody(req, res);
 
         // Bridge: if frontend sends 'experienceText' (old field), map to 'text' for the handler
@@ -339,7 +342,6 @@ const server = http.createServer((req, res) => {
           return;
         }
         log('INFO', `Received /api/parse-resume request from IP ${clientIp}`);
-        const parseResumeHandler = require('./api/parse-resume.js');
         const body = await readJsonBody(req, res);
         req.body = body;
         const resMock = {
@@ -376,10 +378,6 @@ const server = http.createServer((req, res) => {
         }
 
         log('INFO', `Received ${pathname} request from IP ${clientIp}`);
-
-        // Delegate entirely to api/ats-analyze.js — it owns the full prompt, Gemini calls, and rich fallback
-        try { delete require.cache[require.resolve('./api/ats-analyze.js')]; } catch(_) {}
-        const atsAnalyzeHandler = require('./api/ats-analyze.js');
 
         // Build a minimal Express-compatible shim around Node's raw req/res
         const body = await readJsonBody(req, res);
@@ -424,9 +422,6 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per 15 minutes allowed.' }));
           return;
         }
-
-        try { delete require.cache[require.resolve('./api/ats-chat.js')]; } catch(_) {}
-        const atsChatHandler = require('./api/ats-chat.js');
 
         // Pre-parse body so req.body is populated before the handler runs
         const body = await readJsonBody(req, res);
