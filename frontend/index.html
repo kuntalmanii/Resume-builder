@@ -1261,7 +1261,7 @@
             <div id="atsDropZone" style="display:none;"></div>
 
             <!-- 2. EXECUTIVE SUMMARY SCORE HERO BANNER -->
-            <div class="ats-executive-summary-banner">
+            <div class="ats-executive-summary-banner" id="ats-sec-overview">
               <div class="ats-main-score-box">
                 <div class="ats-score-ring-lg" id="scoreCircle" style="background:conic-gradient(#6C63FF 0% 0%,#222840 0% 100%);">
                   <span class="ats-score-ring-val" id="scoreNumber">--</span>
@@ -1315,42 +1315,51 @@
                 <div class="ats-sidebar-title">Audit Navigator</div>
                 <div class="ats-cat-item active" data-target="ats-sec-overview" onclick="switchAtsCategory('ats-sec-overview', this)">
                   <span>Executive Summary</span>
-                  <span class="ats-cat-badge pass">Score</span>
+                  <span class="ats-cat-badge pass" id="catBadgeOverview">Score</span>
                 </div>
                 <div class="ats-cat-item" data-target="ats-sec-keywords" onclick="switchAtsCategory('ats-sec-keywords', this)">
                   <span>Keyword Matrix</span>
                   <span class="ats-cat-badge" id="catBadgeKeywords">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-skills" onclick="switchAtsCategory('ats-sec-skills', this)">
+                <div class="ats-cat-item" data-target="ats-sec-matrix" onclick="switchAtsCategory('ats-sec-matrix', this)">
                   <span>Skills Alignment</span>
                   <span class="ats-cat-badge warn" id="catBadgeSkills">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-impact" onclick="switchAtsCategory('ats-sec-impact', this)">
+                <div class="ats-cat-item" data-target="ats-sec-matrix" onclick="switchAtsCategory('ats-sec-matrix', this)">
                   <span>Experience Impact</span>
                   <span class="ats-cat-badge warn" id="catBadgeImpact">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-formatting" onclick="switchAtsCategory('ats-sec-formatting', this)">
+                <div class="ats-cat-item" data-target="ats-sec-matrix" onclick="switchAtsCategory('ats-sec-matrix', this)">
                   <span>Formatting &amp; Parsing</span>
                   <span class="ats-cat-badge warn" id="catBadgeFmt">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-readability" onclick="switchAtsCategory('ats-sec-readability', this)">
+                <div class="ats-cat-item" data-target="ats-sec-matrix" onclick="switchAtsCategory('ats-sec-matrix', this)">
                   <span>Readability Score</span>
                   <span class="ats-cat-badge pass" id="catBadgeRead">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-achievements" onclick="switchAtsCategory('ats-sec-achievements', this)">
+                <div class="ats-cat-item" data-target="ats-sec-matrix" onclick="switchAtsCategory('ats-sec-matrix', this)">
                   <span>Metric Density</span>
                   <span class="ats-cat-badge warn" id="catBadgeDensity">--</span>
                 </div>
-                <div class="ats-cat-item" data-target="ats-sec-verbs" onclick="switchAtsCategory('ats-sec-verbs', this)">
+                <div class="ats-cat-item" data-target="ats-sec-matrix" onclick="switchAtsCategory('ats-sec-matrix', this)">
                   <span>Action Verbs</span>
                   <span class="ats-cat-badge pass" id="catBadgeVerbs">--</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-recommendations" onclick="switchAtsCategory('ats-sec-recommendations', this)">
+                  <span>AI Recommendations</span>
+                  <span class="ats-cat-badge" id="catBadgeRecs">--</span>
+                </div>
+                <div class="ats-cat-item" data-target="ats-sec-coach" onclick="switchAtsCategory('ats-sec-coach', this)">
+                  <span>AI Career Coach</span>
+                  <span class="ats-cat-badge pass" id="catBadgeCoach">Coach</span>
+                </div>
               </aside>
 
               <!-- COL 2+3: Detailed AI Audit Report -->
               <main class="ats-col-center">
 
                 <!-- Score Matrix -->
-                <div class="ats-score-matrix-grid">
+                <div class="ats-score-matrix-grid" id="ats-sec-matrix">
                   <div class="ats-score-card">
                     <div class="ats-score-card-header">
                       <span class="ats-score-card-name">Keyword Match</span>
@@ -1382,7 +1391,7 @@
                 </div>
 
                 <!-- Keyword Intelligence -->
-                <div class="ats-keyword-intelligence-box ats-report-block" id="ats-sec-overview">
+                <div class="ats-keyword-intelligence-box ats-report-block" id="ats-sec-keywords">
                   <div class="ats-report-header" onclick="toggleReportBlock(this)" style="cursor:pointer;">
                     <div class="ats-report-title">
                       <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1411,7 +1420,7 @@
                 </div>
 
                 <!-- AI Recommendations -->
-                <div class="ats-report-block">
+                <div class="ats-report-block" id="ats-sec-recommendations">
                   <div class="ats-report-header" onclick="toggleReportBlock(this)">
                     <div class="ats-report-title">
                       <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -1435,7 +1444,7 @@
               </main>
 
               <!-- COL 4: Right AI Chat Assistant -->
-              <aside class="ats-col-right">
+              <aside class="ats-col-right" id="ats-sec-coach">
                 <div class="ats-ai-chat-card">
                   <div class="ats-chat-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>

@@ -1012,7 +1012,16 @@
     if (el) el.classList.add('active');
     var target = document.getElementById(targetId);
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // If block was collapsed, automatically expand it
+      var body = target.querySelector('.ats-report-body');
+      if (body && body.style.display === 'none') {
+        body.style.display = 'block';
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.remove('ats-section-highlight');
+      void target.offsetWidth;
+      target.classList.add('ats-section-highlight');
+      setTimeout(function () { target.classList.remove('ats-section-highlight'); }, 1400);
     }
   };
 

@@ -582,16 +582,29 @@ class AtsAnalyzer {
 
     // ── Category sidebar badges (real scores) ──
     const catMap = {
-      catBadgeKw:     ss.keywordMatch    ?? score,
-      catBadgeExp:    ss.experienceImpact?? Math.min(98, score + 5),
-      catBadgeSkills: ss.skillsAlignment ?? Math.min(95, score + 3),
-      catBadgeEdu:    ss.educationCerts  ?? 100,
-      catBadgeFmt:    ss.formattingATS   ?? 95,
-      catBadgeRead:   ss.readabilityScore?? 96,
-      catBadgeDensity:ss.metricDensity   ?? Math.max(40, score - 8),
-      catBadgeVerbs:  ss.actionVerbs     ?? Math.min(96, score + 5)
+      catBadgeOverview: `${score}%`,
+      catBadgeKeywords: ss.keywordMatch    ?? score,
+      catBadgeKw:       ss.keywordMatch    ?? score,
+      catBadgeSkills:   ss.skillsAlignment ?? Math.min(95, score + 3),
+      catBadgeImpact:   ss.experienceImpact?? Math.min(98, score + 5),
+      catBadgeExp:      ss.experienceImpact?? Math.min(98, score + 5),
+      catBadgeEdu:      ss.educationCerts  ?? 100,
+      catBadgeFmt:      ss.formattingATS   ?? 95,
+      catBadgeRead:     ss.readabilityScore?? 96,
+      catBadgeDensity:  ss.metricDensity   ?? Math.max(40, score - 8),
+      catBadgeVerbs:    ss.actionVerbs     ?? Math.min(96, score + 5),
+      catBadgeRecs:     `${recommendations.length || 4} Tips`
     };
-    Object.entries(catMap).forEach(([id, val]) => this.setEl(id, `${val}%`));
+    Object.entries(catMap).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) {
+        const num = typeof val === 'number' ? val : parseInt(val);
+        el.textContent = typeof val === 'number' ? `${val}%` : String(val);
+        if (!isNaN(num)) {
+          el.className = 'ats-cat-badge ' + (num >= 80 ? 'pass' : num >= 60 ? 'warn' : 'fail');
+        }
+      }
+    });
 
     // ── Keyword counts subtitle ──
     this.setEl('kwCountsSubtitle', isGen ? `${matched.length} Skills Detected · ${missing.length} Recommendations` : `${matched.length} Matched · ${missing.length} Gaps`);
