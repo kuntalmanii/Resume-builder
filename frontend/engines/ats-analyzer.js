@@ -356,10 +356,11 @@ class AtsAnalyzer {
     ];
     const isGeneralAudit = !jdText || jdText.trim().length < 15;
     const resLower = resumeText.toLowerCase();
-    const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k)\b/i.test(resumeText);
     const hasVerbs = /(managed|led|architected|engineered|built|optimized|spearheaded|implemented|developed|designed|scaled|delivered)\b/i.test(resumeText);
     const hasDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(resLower);
+    const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k)\b/i.test(resumeText);
     const hasContact = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|\+?\d[\d\s\-().]{7,}\d|linkedin\.com|github\.com)/i.test(resumeText);
+    const totalWords = (resumeText.match(/\b[A-Za-z]{3,}\b/g) || []).length;
 
     let matched = [];
     let missing = [];
@@ -390,7 +391,18 @@ class AtsAnalyzer {
       }
       matched = targets.filter(kw => resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
       missing = targets.filter(kw => !resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
-      score   = targets.length ? Math.min(100, Math.round((matched.length / targets.length) * 100)) : 70;
+      // BUG FIX: blend keyword ratio with content quality to avoid score = 0
+      const kwRatio = targets.length ? (matched.length / targets.length) * 100 : 50;
+      const contentQuality = Math.min(100, 40
+        + (hasVerbs   ? 20 : 0)
+        + (hasDates   ? 15 : 0)
+        + (hasNums    ? 12 : 0)
+        + (hasContact ? 8  : 0)
+        + Math.min(15, matched.length * 2)
+      );
+      const combined = (kwRatio * 0.65) + (contentQuality * 0.35);
+      const contentFloor = totalWords > 5 ? 35 : 0;
+      score = Math.max(contentFloor, Math.min(100, Math.round(combined)));
     }
 
     // Extract actual bullets from candidate's resume text for dynamic Smart Rewrites

@@ -23,7 +23,10 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
   const hasDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(cleanResume);
   const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k)\b/i.test(cleanResume);
   const hasContact = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|\+?\d[\d\s\-().]{7,}\d|linkedin\.com|github\.com)/i.test(cleanResume);
-  const stuffed  = (total > 15 && lexDiv < 0.35) || (total > 10 && !hasVerbs && !hasDates);
+  // A resume is only "stuffed" if it has many words with extremely low lexical diversity
+  // (pure keyword list), OR if it's a mid-to-long document with NO action verbs AND NO dates.
+  // Threshold raised from 10→50 to avoid flagging short but valid resume entries.
+  const stuffed  = (total > 15 && lexDiv < 0.35) || (total > 50 && !hasVerbs && !hasDates);
 
   let finalScore = 75;
   let matched = [];
@@ -86,8 +89,26 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
       (resumeKws.has(kw) || cleanResume.toLowerCase().includes(kw.toLowerCase())) ? matched.push(kw) : missing.push(kw);
     });
 
-    const pct = jdKws.size > 0 ? Math.min(100, Math.round((matched.length / jdKws.size) * 100)) : 70;
-    finalScore = stuffed ? Math.min(20, Math.round(pct * 0.2)) : pct;
+    // BUG FIX 2: Blend keyword match ratio with content quality signals.
+    // Pure ratio crashes to 0 when resume has no taxonomy keywords in the JD.
+    const matchPct = jdKws.size > 0 ? (matched.length / jdKws.size) * 100 : 50;
+    // Content quality bonus: reward verbs, dates, numbers, contact, taxonomy skills
+    const contentQuality = Math.min(100, 40
+      + (hasVerbs   ? 20 : 0)
+      + (hasDates   ? 15 : 0)
+      + (hasNums    ? 12 : 0)
+      + (hasContact ? 8  : 0)
+      + Math.min(15, resumeKws.size * 2)
+    );
+    // Weighted blend: 65% keyword match ratio + 35% content quality
+    const combinedScore = (matchPct * 0.65) + (contentQuality * 0.35);
+
+    // BUG FIX 3: Apply a minimum floor of 35 for any resume with real content (total > 5 words)
+    // so a valid resume with poor keyword overlap never shows 0 or near-0.
+    const contentFloor = total > 5 ? 35 : 0;
+    finalScore = stuffed
+      ? Math.min(20, Math.round(combinedScore * 0.2))
+      : Math.max(contentFloor, Math.round(combinedScore));
 
     if (stuffed) {
       recs.push('Keyword Stuffing Detected: Resume appears to be a keyword list without structured experience, dates, or action verbs. ATS parsers penalize this pattern severely.');
