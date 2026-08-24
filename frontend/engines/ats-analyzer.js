@@ -349,60 +349,83 @@ class AtsAnalyzer {
   /* ─── Client-side heuristic fallback ─── */
   localFallback(resumeText, jdText) {
     const commonKws = [
-      'javascript','typescript','react','next.js','node.js','express','python','django','fastapi',
-      'docker','kubernetes','aws','gcp','postgresql','mongodb','graphql','rest api','ci/cd','git',
-      'microservices','unit testing','system design','redis','kafka','web vitals','performance','agile','scrum','sql','html','css',
-      'java','spring boot','tailwind','c++','figma','ui/ux','problem-solving','leadership','communication'
+      'typescript','react','next.js','javascript','html','css','vanilla css',
+      'node.js','express','python','django','fastapi','go','rust','java',
+      'spring boot','c++','graphql','rest api','postgresql','mysql','mongodb',
+      'redis','supabase','firebase','aws','docker','kubernetes','ci/cd',
+      'git','jest','tailwind','microservices','system design',
+      'machine learning','pytorch','tensorflow','nlp','data science','pandas',
+      'numpy','scikit-learn','deep learning','photoshop','illustrator','figma',
+      'graphic design','ui/ux','indesign','typography','vector graphics',
+      'agile','scrum','jira','budget management','project management','sprint planning',
+      'risk mitigation','resource allocation','communication','problem-solving',
+      'conflict resolution','client retention','customer success','customer satisfaction',
+      'stakeholder engagement','presentation','relationship management','cross-functional leadership',
+      'tableau','powerbi','sql','data analytics','data analysis'
     ];
     const isGeneralAudit = !jdText || jdText.trim().length < 15;
     const resLower = resumeText.toLowerCase();
-    const hasVerbs = /(managed|led|architected|engineered|built|optimized|spearheaded|implemented|developed|designed|scaled|delivered)\b/i.test(resumeText);
-    const hasDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(resLower);
-    const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k)\b/i.test(resumeText);
+
+    // Comprehensive action verbs list
+    const verbRegex = /\b(managed|led|directed|architected|engineered|built|scaled|delivered|optimized|spearheaded|implemented|developed|designed|formulated|executed|created|programmed|authored|established|collaborated|contributed|deployed|configured|maintained|automated|reduced|increased|improved|accelerated|streamlined|resolved|conducted|analyzed|tested|launched|integrated|mentored|facilitated|produced|transformed|orchestrated)\b/gi;
+    const matchedVerbs = (resumeText.match(verbRegex) || []);
+    const hasVerbs = matchedVerbs.length > 0;
+    const verbCount = matchedVerbs.length;
+
+    // Dates & Timeline Detection
+    const dateRegex = /\b(20\d\d|19\d\d|present|current|\d{1,2}[\/\-]\d{2,4}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/gi;
+    const hasDates = dateRegex.test(resumeText);
+
+    // Metrics & Quantified Impact Detection
+    const numRegex = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k|ms|s|clients?|engineers?|members?|queries|reqs?|rps|fps|points?|stars?|downloads?)\b/gi;
+    const matchedNums = (resumeText.match(numRegex) || []);
+    const hasNums = matchedNums.length > 0;
+    const numCount = matchedNums.length;
+
     const hasContact = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|\+?\d[\d\s\-().]{7,}\d|linkedin\.com|github\.com)/i.test(resumeText);
-    const totalWords = (resumeText.match(/\b[A-Za-z]{3,}\b/g) || []).length;
+
+    const words = resumeText.match(/\b[A-Za-z]{3,}\b/g) || [];
+    const totalWords = words.length;
+    const unique = new Set(words.map(w => w.toLowerCase())).size;
+    const lexDiv = totalWords > 0 ? unique / totalWords : 1;
+
+    // Sub-scores
+    const verbScore  = hasVerbs ? Math.min(98, 70 + Math.min(28, verbCount * 4)) : 55;
+    const numScore   = hasNums  ? Math.min(96, 68 + Math.min(28, numCount * 5))  : 50;
+    const fmtScore   = hasContact ? (hasDates ? 98 : 88) : 80;
+    const readScore  = Math.min(98, Math.max(68, 74 + Math.round(lexDiv * 26)));
+    const expScore   = Math.round((verbScore * 0.5) + (numScore * 0.5));
 
     let matched = [];
     let missing = [];
     let score   = 75;
 
     if (isGeneralAudit) {
-      // Detect industry skills present in candidate resume
       matched = commonKws.filter(kw => resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
       if (matched.length === 0) matched = ['Problem-Solving', 'Communication', 'Technical Leadership'];
 
       const benchmarkSkills = ['CI/CD', 'Git', 'REST API', 'Docker', 'Agile', 'Unit Testing', 'System Design'];
       missing = benchmarkSkills.filter(sk => !resLower.includes(sk.toLowerCase())).slice(0, 4);
 
-      const fmtScore   = hasContact ? 96 : 85;
-      const verbScore  = hasVerbs ? 90 : 55;
-      const numScore   = hasNums ? 88 : 45;
-      const skillScore = Math.min(96, Math.max(65, 60 + matched.length * 4));
-      const readScore  = 90;
-
-      score = Math.round((fmtScore * 0.25) + (verbScore * 0.2) + (numScore * 0.2) + (skillScore * 0.2) + (readScore * 0.15));
+      const skillScore = Math.min(98, Math.max(65, 55 + Math.min(43, matched.length * 4)));
+      score = Math.min(99, Math.max(45, Math.round(
+        (skillScore * 0.35) + (expScore * 0.35) + (fmtScore * 0.20) + (readScore * 0.10)
+      )));
     } else {
       const jdLower = jdText.toLowerCase();
       let targets   = commonKws.filter(kw => jdLower.includes(kw));
       if (targets.length === 0) {
-        const words = jdText.match(/\b[A-Za-z]{4,}\b/g) || [];
+        const jdWords = jdText.match(/\b[A-Za-z]{4,}\b/g) || [];
         const stops = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your','requirements','experience','looking','senior','lead']);
-        targets = [...new Set(words.map(w => w.toLowerCase()).filter(w => !stops.has(w)))].slice(0, 10);
+        targets = [...new Set(jdWords.map(w => w.toLowerCase()).filter(w => !stops.has(w)))].slice(0, 12);
       }
       matched = targets.filter(kw => resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
       missing = targets.filter(kw => !resLower.includes(kw)).map(kw => kw.charAt(0).toUpperCase() + kw.slice(1));
-      // BUG FIX: blend keyword ratio with content quality to avoid score = 0
-      const kwRatio = targets.length ? (matched.length / targets.length) * 100 : 50;
-      const contentQuality = Math.min(100, 40
-        + (hasVerbs   ? 20 : 0)
-        + (hasDates   ? 15 : 0)
-        + (hasNums    ? 12 : 0)
-        + (hasContact ? 8  : 0)
-        + Math.min(15, matched.length * 2)
-      );
-      const combined = (kwRatio * 0.65) + (contentQuality * 0.35);
-      const contentFloor = totalWords > 5 ? 35 : 0;
-      score = Math.max(contentFloor, Math.min(100, Math.round(combined)));
+
+      const matchPct = targets.length ? Math.round((matched.length / targets.length) * 100) : 70;
+      score = Math.min(99, Math.max(35, Math.round(
+        (matchPct * 0.55) + (verbScore * 0.15) + (numScore * 0.15) + (fmtScore * 0.15)
+      )));
     }
 
     // Extract actual bullets from candidate's resume text for dynamic Smart Rewrites
@@ -447,7 +470,7 @@ class AtsAnalyzer {
     return {
       score,
       isGeneralAudit,
-      verdict: score >= 85 ? 'SHORTLIST' : score >= 70 ? 'HOLD' : 'REJECT',
+      verdict: score >= 80 ? 'SHORTLIST' : score >= 65 ? 'HOLD' : 'REJECT',
       matchedKeywords: matched,
       missingKeywords: missing,
       recommendations: recs,
@@ -455,28 +478,29 @@ class AtsAnalyzer {
         ? (score >= 80
           ? `Strong ATS baseline (${score}%). Clean structural parsing, strong skill density, and solid presentation. Adding more quantified metrics will push it into the top 5%.`
           : `Moderate ATS baseline (${score}%). The resume has solid core content but needs stronger quantified metrics and proactive action verbs to pass strict ATS filters.`)
-        : (score >= 75
-          ? 'This candidate demonstrates reasonable alignment with the role requirements and would likely clear automated ATS filters.'
-          : `Moderate gaps detected. Adding ${missing.slice(0, 3).join(', ')} in context would significantly boost ATS ranking.`),
+        : (score >= 80
+          ? 'Strong candidate. Clear technical depth and keyword alignment. Would pass ATS screening and warrant a phone screen. Adding impact metrics would make this top 5%.'
+          : score >= 65
+          ? `Moderate fit (${score}%). Missing ${missing.length > 0 ? missing.slice(0, 3).join(', ') : 'some key skills'}. Incorporating these into experience bullets will clear ATS filters.`
+          : `Significant keyword gaps (${missing.slice(0, 3).join(', ')}). Target role requires specialized competencies not yet emphasized in your resume.`),
       hiringProbability: {
-        interview:  score >= 85 ? '89%' : score >= 70 ? '71%' : '47%',
-        offer:      score >= 85 ? '80%' : score >= 70 ? '58%' : '30%',
-        atsGatePass:score >= 85 ? '96%' : score >= 70 ? '78%' : '49%'
+        interview:  score >= 80 ? '92%' : score >= 65 ? '75%' : '45%',
+        offer:      score >= 80 ? '84%' : score >= 65 ? '62%' : '32%',
+        atsGatePass:score >= 80 ? '98%' : score >= 65 ? '82%' : '50%'
       },
       smartRewrites: generatedRewrites,
       sectionScores: {
-        keywordMatch:    isGeneralAudit ? Math.min(95, Math.max(60, matched.length * 6 + 40)) : score,
-        skillsAlignment: Math.min(100, Math.round(score * 0.95)),
-        formattingATS:   hasContact ? 96 : 88,
-        experienceImpact:hasNums ? 88 : 58,
-        metricDensity:   hasNums ? 78 : 38,
+        keywordMatch:    isGeneralAudit ? Math.min(98, Math.max(60, matched.length * 5 + 40)) : (matched.length > 0 ? Math.round((matched.length / (matched.length + missing.length)) * 100) : score),
+        skillsAlignment: Math.min(100, Math.round(score * 0.96)),
+        formattingATS:   fmtScore,
+        experienceImpact:expScore,
+        metricDensity:   numScore,
         educationCerts:  100,
-        readabilityScore:90,
-        actionVerbs:     hasVerbs ? 88 : 50
+        readabilityScore:readScore,
+        actionVerbs:     verbScore
       }
     };
   }
-
 
   /* ─── Render full breakdown UI from API result ─── */
   renderBreakdownUi(data) {

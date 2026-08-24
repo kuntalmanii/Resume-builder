@@ -19,69 +19,78 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
   const total    = words.length;
   const unique   = new Set(words.map(w => w.toLowerCase())).size;
   const lexDiv   = total > 0 ? unique / total : 1;
-  const hasVerbs = /(managed|led|directed|architected|engineered|built|scaled|delivered|optimized|spearheaded|implemented|developed|designed|formulated|executed)\b/i.test(cleanResume);
-  const hasDates = /\b(20\d\d|19\d\d|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(cleanResume);
-  const hasNums  = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k)\b/i.test(cleanResume);
+
+  // Comprehensive action verbs list (FAANG ATS benchmark)
+  const verbRegex = /\b(managed|led|directed|architected|engineered|built|scaled|delivered|optimized|spearheaded|implemented|developed|designed|formulated|executed|created|programmed|authored|established|collaborated|contributed|deployed|configured|maintained|automated|reduced|increased|improved|accelerated|streamlined|resolved|conducted|analyzed|tested|launched|integrated|mentored|facilitated|produced|transformed|orchestrated)\b/gi;
+  const matchedVerbs = (cleanResume.match(verbRegex) || []);
+  const hasVerbs = matchedVerbs.length > 0;
+  const verbCount = matchedVerbs.length;
+
+  // Dates & Timeline Detection
+  const dateRegex = /\b(20\d\d|19\d\d|present|current|\d{1,2}[\/\-]\d{2,4}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/gi;
+  const hasDates = dateRegex.test(cleanResume);
+
+  // Metrics & Quantified Impact Detection
+  const numRegex = /\d+[%x+]|\$\d+|\d+\s*(million|billion|users?|teams?|latency|uptime|projects?|k|ms|s|clients?|engineers?|members?|queries|reqs?|rps|fps|points?|stars?|downloads?)\b/gi;
+  const matchedNums = (cleanResume.match(numRegex) || []);
+  const hasNums = matchedNums.length > 0;
+  const numCount = matchedNums.length;
+
+  // Contact info detection
   const hasContact = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|\+?\d[\d\s\-().]{7,}\d|linkedin\.com|github\.com)/i.test(cleanResume);
-  // A resume is only "stuffed" if it has many words with extremely low lexical diversity
-  // (pure keyword list), OR if it's a mid-to-long document with NO action verbs AND NO dates.
-  // Threshold raised from 10→50 to avoid flagging short but valid resume entries.
-  const stuffed  = (total > 15 && lexDiv < 0.35) || (total > 50 && !hasVerbs && !hasDates);
+
+  // Sub-scores
+  const verbScore  = hasVerbs ? Math.min(98, 70 + Math.min(28, verbCount * 4)) : 55;
+  const numScore   = hasNums  ? Math.min(96, 68 + Math.min(28, numCount * 5))  : 50;
+  const fmtScore   = hasContact ? (hasDates ? 98 : 88) : 80;
+  const readScore  = Math.min(98, Math.max(68, 74 + Math.round(lexDiv * 26)));
+  const expScore   = Math.round((verbScore * 0.5) + (numScore * 0.5));
 
   let finalScore = 75;
   let matched = [];
   let missing = [];
+  let jdKws = new Set();
   const recs = [];
 
   if (isGeneralAudit) {
     // ── GENERAL ATS RESUME HEALTH AUDIT MODE ──
     matched = Array.from(resumeKws);
     if (matched.length === 0) {
-      matched = ['Problem-Solving', 'Communication', 'Project Management'];
+      matched = ['Problem-Solving', 'Communication', 'Technical Leadership'];
     }
 
-    // Identify high-impact recommended additions if not already in resume
     const recommendedStandardSkills = ['CI/CD', 'Git', 'REST API', 'Docker', 'Agile', 'Unit Testing', 'System Design'];
     missing = recommendedStandardSkills.filter(sk => !resumeKws.has(sk) && !cleanResume.toLowerCase().includes(sk.toLowerCase())).slice(0, 4);
 
-    const fmtScore   = stuffed ? 35 : (hasContact ? 96 : 84);
-    const verbScore  = stuffed ? 25 : (hasVerbs ? 90 : 54);
-    const numScore   = stuffed ? 20 : (hasNums ? 88 : 48);
-    const readScore  = Math.min(98, Math.max(65, 72 + Math.round(lexDiv * 35)));
-    const skillScore = Math.min(98, Math.max(60, 65 + Math.min(30, matched.length * 4)));
-    const expScore   = Math.round((verbScore * 0.5) + (numScore * 0.5));
+    const skillScore = Math.min(98, Math.max(65, 55 + Math.min(43, matched.length * 4)));
+    finalScore = Math.min(99, Math.max(45, Math.round(
+      (skillScore * 0.35) + (expScore * 0.35) + (fmtScore * 0.20) + (readScore * 0.10)
+    )));
 
-    finalScore = stuffed ? 22 : Math.round((fmtScore * 0.25) + (expScore * 0.3) + (skillScore * 0.25) + (readScore * 0.2));
-
-    if (stuffed) {
-      recs.push('Keyword Stuffing Warning: Resume appears to be a raw keyword list without structured experience, dates, or action verbs. ATS parsers penalize this format severely.');
-      recs.push('Restructure into standard reverse-chronological sections: Experience, Projects, Skills, and Education.');
+    recs.push(`General ATS Readiness: Detected ${matched.length} core technical & professional competencies.`);
+    if (!hasNums) {
+      recs.push('Quantify Business Impact: Add measurable metrics (e.g. "% improvement", "p99 latency", "$ revenue saved", "user scale") to your work experience bullets.');
     } else {
-      recs.push(`General ATS Readiness: Detected ${matched.length} core technical & professional competencies.`);
-      if (!hasNums) {
-        recs.push('Quantify Business Impact: Add measurable metrics (e.g. "% improvement", "p99 latency", "$ revenue saved", "user scale") to your work experience bullets.');
-      } else {
-        recs.push('Strong Metric Density: Quantified metrics detected across experience entries.');
-      }
-      if (!hasVerbs) {
-        recs.push('Strengthen Action Verbs: Begin each bullet with proactive leadership verbs (e.g. Architected, Engineered, Spearheaded, Optimized).');
-      } else {
-        recs.push('Proactive Action Verbs: Strong action verbs detected throughout experience descriptions.');
-      }
-      if (missing.length > 0) {
-        recs.push(`Industry Benchmark: Consider incorporating industry-standard proficiencies (${missing.join(', ')}) where applicable.`);
-      }
+      recs.push('Strong Metric Density: Quantified metrics detected across experience entries.');
+    }
+    if (!hasVerbs) {
+      recs.push('Strengthen Action Verbs: Begin each bullet with proactive leadership verbs (e.g. Architected, Engineered, Spearheaded, Optimized).');
+    } else {
+      recs.push('Proactive Action Verbs: Strong action verbs detected throughout experience descriptions.');
+    }
+    if (missing.length > 0) {
+      recs.push(`Industry Benchmark: Consider incorporating industry-standard proficiencies (${missing.join(', ')}) where applicable.`);
     }
   } else {
     // ── TARGETED JOB MATCH MODE ──
-    const jdKws = extractKeywords(cleanJd);
+    jdKws = extractKeywords(cleanJd);
     if (jdKws.size === 0 && cleanJd.length > 20) {
-      const words = cleanJd.match(/\b[A-Za-z]{4,}\b/g) || [];
+      const jdWords = cleanJd.match(/\b[A-Za-z]{4,}\b/g) || [];
       const stops = new Set(['and','the','with','for','you','are','our','will','have','this','that','from','your',
         'requirements','experience','seeking','senior','lead','developer','engineer','ability','work','team',
         'using','their','about','which','where','other','must','also','such','both','some','more','well']);
       const freq = {};
-      words.forEach(w => { if (!stops.has(w.toLowerCase())) freq[w] = (freq[w]||0)+1; });
+      jdWords.forEach(w => { if (!stops.has(w.toLowerCase())) freq[w] = (freq[w]||0)+1; });
       Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).slice(0,12).forEach(w=>jdKws.add(w));
     }
 
@@ -89,48 +98,38 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
       (resumeKws.has(kw) || cleanResume.toLowerCase().includes(kw.toLowerCase())) ? matched.push(kw) : missing.push(kw);
     });
 
-    // BUG FIX 2: Blend keyword match ratio with content quality signals.
-    // Pure ratio crashes to 0 when resume has no taxonomy keywords in the JD.
-    const matchPct = jdKws.size > 0 ? (matched.length / jdKws.size) * 100 : 50;
-    // Content quality bonus: reward verbs, dates, numbers, contact, taxonomy skills
-    const contentQuality = Math.min(100, 40
-      + (hasVerbs   ? 20 : 0)
-      + (hasDates   ? 15 : 0)
-      + (hasNums    ? 12 : 0)
-      + (hasContact ? 8  : 0)
-      + Math.min(15, resumeKws.size * 2)
-    );
-    // Weighted blend: 65% keyword match ratio + 35% content quality
-    const combinedScore = (matchPct * 0.65) + (contentQuality * 0.35);
+    const matchPct = jdKws.size > 0 ? Math.round((matched.length / jdKws.size) * 100) : 70;
+    // Standard industry weighting: 55% keyword overlap + 15% action verbs + 15% metrics + 15% formatting
+    finalScore = Math.min(99, Math.max(35, Math.round(
+      (matchPct * 0.55) + (verbScore * 0.15) + (numScore * 0.15) + (fmtScore * 0.15)
+    )));
 
-    // BUG FIX 3: Apply a minimum floor of 35 for any resume with real content (total > 5 words)
-    // so a valid resume with poor keyword overlap never shows 0 or near-0.
-    const contentFloor = total > 5 ? 35 : 0;
-    finalScore = stuffed
-      ? Math.min(20, Math.round(combinedScore * 0.2))
-      : Math.max(contentFloor, Math.round(combinedScore));
-
-    if (stuffed) {
-      recs.push('Keyword Stuffing Detected: Resume appears to be a keyword list without structured experience, dates, or action verbs. ATS parsers penalize this pattern severely.');
-      recs.push('Rewrite each bullet using: [Action Verb] + [Project/Technology Context] + [Quantified Business Impact].');
+    if (missing.length > 0) {
+      recs.push(`Critical Skill Gap: Missing ${missing.length} required keywords (${missing.slice(0, 4).join(', ')}). Incorporate these into your experience bullets.`);
     } else {
-      if (missing.length > 0) recs.push(`Critical Skill Gap: Missing ${missing.length} required keywords (${missing.slice(0,4).join(', ')}). Incorporate these into your experience bullets.`);
-      if (!hasNums)  recs.push('Metric Density Low: Add quantified achievements (%, $, user counts, team size, performance gains) to boost ATS experience scoring.');
-      if (!hasVerbs) recs.push('Strengthen action verbs: Start every bullet with a powerful verb (Architected, Optimized, Engineered) instead of passive language.');
-      if (matched.length > 0) recs.push(`Strong alignment on: ${matched.slice(0,5).join(', ')}. Ensure these appear in role-specific context, not only in a skills section.`);
+      recs.push('Excellent keyword alignment with target job requirements.');
+    }
+    if (!hasNums) {
+      recs.push('Metric Density Low: Add quantified achievements (%, $, user counts, team size, performance gains) to boost ATS experience scoring.');
+    } else {
+      recs.push('Quantified Business Impact: Solid metric density detected across experience bullets.');
+    }
+    if (!hasVerbs) {
+      recs.push('Strengthen Action Verbs: Start every bullet with a powerful verb (Architected, Optimized, Engineered) instead of passive language.');
+    }
+    if (matched.length > 0) {
+      recs.push(`Strong alignment on: ${matched.slice(0, 5).join(', ')}. Ensure these appear in role-specific context, not only in a skills section.`);
     }
   }
 
-  const verdict = stuffed
-    ? 'This resume would not pass basic ATS parsing — it reads as a keyword dump without structured work experience or dates. Reject at screening stage.'
-    : isGeneralAudit
+  const verdict = isGeneralAudit
     ? (finalScore >= 80
       ? `Strong ATS baseline (${finalScore}%). Clean structural parsing, strong skill density, and solid presentation. Adding more quantified metrics will push it into the top 5%.`
       : `Moderate ATS baseline (${finalScore}%). The resume has solid core content but needs stronger quantified metrics and proactive action verbs to pass strict ATS filters.`)
-    : (finalScore >= 85
+    : (finalScore >= 80
       ? 'Strong candidate. Clear technical depth and keyword alignment. Would pass ATS screening and warrant a phone screen. Adding impact metrics would make this top 5%.'
       : finalScore >= 65
-      ? `Moderate fit. Missing ${missing.length > 0 ? missing.slice(0, 3).join(', ') : 'some key skills'}. With targeted additions in experience sections this could clear ATS filters.`
+      ? `Moderate fit (${finalScore}%). Missing ${missing.length > 0 ? missing.slice(0, 3).join(', ') : 'some key skills'}. Incorporating these into experience bullets will clear ATS filters.`
       : `Significant keyword gaps (${missing.slice(0, 3).join(', ')}). Target role requires specialized competencies not yet emphasized in your resume.`);
 
   // Extract actual candidate bullets from resume text for dynamic Smart Rewrites
@@ -160,33 +159,29 @@ function runServerFallbackAnalysis(resumeText, jobDescription) {
     }
   }
 
-  const fmt = stuffed ? 30 : (hasContact ? 96 : 88);
-  const exp = stuffed ? 15 : (hasNums ? 88 : 62);
-  const metric = stuffed ? 10 : (hasNums ? 78 : 42);
-
   return {
     score: finalScore,
     isGeneralAudit,
-    verdict: finalScore >= 85 ? 'SHORTLIST' : finalScore >= 70 ? 'HOLD' : 'REJECT',
+    verdict: finalScore >= 80 ? 'SHORTLIST' : finalScore >= 65 ? 'HOLD' : 'REJECT',
     matchedKeywords: matched,
     missingKeywords: missing,
     recommendations: recs,
     recruiterVerdict: verdict,
     hiringProbability: {
-      interview:  finalScore >= 85 ? '91%' : finalScore >= 70 ? '74%' : '48%',
-      offer:      finalScore >= 85 ? '82%' : finalScore >= 70 ? '61%' : '33%',
-      atsGatePass:finalScore >= 85 ? '97%' : finalScore >= 70 ? '81%' : '52%'
+      interview:  finalScore >= 80 ? '92%' : finalScore >= 65 ? '75%' : '45%',
+      offer:      finalScore >= 80 ? '84%' : finalScore >= 65 ? '62%' : '32%',
+      atsGatePass:finalScore >= 80 ? '98%' : finalScore >= 65 ? '82%' : '50%'
     },
     smartRewrites: generatedRewrites,
     sectionScores: {
-      keywordMatch:    isGeneralAudit ? Math.min(95, Math.max(60, matched.length * 7 + 40)) : finalScore,
-      skillsAlignment: Math.min(100, Math.round(finalScore * 0.95)),
-      formattingATS:   fmt,
-      experienceImpact:exp,
-      metricDensity:   metric,
+      keywordMatch:    isGeneralAudit ? Math.min(98, Math.max(60, matched.length * 5 + 40)) : (jdKws.size > 0 ? Math.round((matched.length / jdKws.size) * 100) : finalScore),
+      skillsAlignment: Math.min(100, Math.round(finalScore * 0.96)),
+      formattingATS:   fmtScore,
+      experienceImpact:expScore,
+      metricDensity:   numScore,
       educationCerts:  100,
-      readabilityScore:Math.min(98, 70 + Math.round(lexDiv * 40)),
-      actionVerbs:     hasVerbs ? Math.min(96, finalScore + 10) : Math.max(40, finalScore - 20)
+      readabilityScore:readScore,
+      actionVerbs:     verbScore
     }
   };
 }
