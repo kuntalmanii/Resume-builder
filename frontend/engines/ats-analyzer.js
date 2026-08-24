@@ -643,9 +643,6 @@ class AtsAnalyzer {
         </div>`).join('');
     }
 
-    // ── Smart rewrites (dynamic from Gemini) ──
-    this.renderSmartRewrites(smartRewrites);
-
     // ── Recruiter verdict ──
     this.renderRecruiterVerdict(score, recruiterVerdict, hiringProbability);
 
@@ -654,31 +651,6 @@ class AtsAnalyzer {
     if (exportBtn) exportBtn.style.display = 'inline-flex';
 
     if (window.feather) feather.replace();
-  }
-
-  renderSmartRewrites(rewrites) {
-    const container = document.querySelector('#ats-sec-experience .ats-report-body');
-    if (!container) return;
-
-    if (!rewrites || rewrites.length===0) {
-      // Keep existing static demo content
-      return;
-    }
-
-    container.innerHTML = rewrites.map(r => `
-      <div class="diff-rewrite-card">
-        <div style="font-size:11px;font-weight:700;color:#7A7A7A;text-transform:uppercase;letter-spacing:0.06em;">Current Bullet Point:</div>
-        <div class="diff-orig-text">${this.escapeHTML(r.before)}</div>
-        <div style="font-size:11px;font-weight:700;color:#2E9B64;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;">AI-Optimized Bullet Point:</div>
-        <div class="diff-improved-text">${this.escapeHTML(r.after)}</div>
-        ${r.highlights && r.highlights.length>0 ? `
-        <div class="diff-highlights">
-          ${r.highlights.map(h=>{
-            const cls = h.toLowerCase().includes('verb') ? 'verb' : h.toLowerCase().includes('metric') ? 'metric' : 'kw';
-            return `<span class="diff-badge ${cls}">${this.escapeHTML(h)}</span>`;
-          }).join('')}
-        </div>` : ''}
-      </div>`).join('');
   }
 
   renderRecruiterVerdict(score, verdictText, hp) {
