@@ -104,7 +104,9 @@ class EditorEngine {
         errorMsg = 'Invalid email address format';
       }
     } else if (label.includes('phone')) {
-      if (val && !/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\./0-9]{6,15}$/.test(val)) {
+      // Allow valid phone numbers or placeholder templates with 'X'
+      const isPlaceholder = /X{2,}/i.test(val);
+      if (val && !isPlaceholder && !/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\./0-9]{6,15}$/.test(val)) {
         isValid = false;
         errorMsg = 'Invalid phone format (min 7 digits)';
       }
